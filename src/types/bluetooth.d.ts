@@ -1,23 +1,23 @@
 // Web Bluetooth API Type Definitions
-interface BluetoothDevice {
+export interface BluetoothDevice {
   id: string;
   name?: string;
   gatt?: BluetoothRemoteGATTServer;
   addEventListener(type: 'gattserverdisconnected', listener: () => void): void;
 }
 
-interface BluetoothRemoteGATTServer {
+export interface BluetoothRemoteGATTServer {
   connected: boolean;
   connect(): Promise<BluetoothRemoteGATTServer>;
   disconnect(): void;
   getPrimaryService(service: string): Promise<BluetoothRemoteGATTService>;
 }
 
-interface BluetoothRemoteGATTService {
+export interface BluetoothRemoteGATTService {
   getCharacteristic(characteristic: string): Promise<BluetoothRemoteGATTCharacteristic>;
 }
 
-interface BluetoothRemoteGATTCharacteristic {
+export interface BluetoothRemoteGATTCharacteristic {
   value: DataView | null;
   startNotifications(): Promise<BluetoothRemoteGATTCharacteristic>;
   stopNotifications(): Promise<BluetoothRemoteGATTCharacteristic>;
@@ -34,5 +34,3 @@ declare global {
     bluetooth?: Bluetooth;
   }
 }
-
-export {};

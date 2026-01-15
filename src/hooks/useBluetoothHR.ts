@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import '@/types/bluetooth.d.ts';
+import type { BluetoothDevice, BluetoothRemoteGATTCharacteristic } from '@/types/bluetooth';
 
 interface BluetoothHRState {
   isConnected: boolean;
@@ -22,8 +22,8 @@ export function useBluetoothHR() {
   const characteristicRef = useRef<BluetoothRemoteGATTCharacteristic | null>(null);
 
   const handleHeartRateMeasurement = useCallback((event: Event) => {
-    const value = (event.target as BluetoothRemoteGATTCharacteristic).value;
-    if (!value) return;
+    const target = event.target as unknown as BluetoothRemoteGATTCharacteristic;
+    const value = target.value;
 
     const flags = value.getUint8(0);
     const is16Bit = flags & 0x01;
