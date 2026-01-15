@@ -1,11 +1,15 @@
-import { Heart, Users, Monitor } from 'lucide-react';
+import { Heart, Monitor, Users, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useAuthContext } from '@/components/auth/AuthProvider';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 export type ViewMode = 'participant' | 'coach';
 
@@ -16,6 +20,23 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({ currentView, onViewChange, showViewSwitcher = true }: AppHeaderProps) {
+  const { user, isAuthenticated, signOut } = useAuthContext();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast({
+        title: 'Fehler beim Abmelden',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+    navigate('/');
+  };
+
   return (
     <header className="flex items-center justify-between p-4 bg-background border-b border-border">
       <div className="flex items-center gap-3">
@@ -30,41 +51,49 @@ export function AppHeader({ currentView, onViewChange, showViewSwitcher = true }
         </div>
       </div>
 
-      {showViewSwitcher && (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
-              {currentView === 'coach' ? (
-                <>
-                  <Monitor className="w-4 h-4" />
-                  Coach
-                </>
-              ) : (
-                <>
-                  <Users className="w-4 h-4" />
-                  Teilnehmer
-                </>
-              )}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-background border-border">
-            <DropdownMenuItem 
-              onClick={() => onViewChange('participant')}
-              className={currentView === 'participant' ? 'bg-accent' : ''}
-            >
-              <Users className="w-4 h-4 mr-2" />
-              Teilnehmer-Ansicht
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={() => onViewChange('coach')}
-              className={currentView === 'coach' ? 'bg-accent' : ''}
-            >
-              <Monitor className="w-4 h-4 mr-2" />
-              Coach Dashboard
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
+      <div className="flex items-center gap-2">
+        {showViewSwitcher && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                {currentView === 'coach' ? (
+                  <>
+                    <Monitor className="w-4 h-4" />
+                    Coach
+                  </>
+                ) : (
+                  <>
+                    <Users className="w-4 h-4" />
+                    Teilnehmer
+                  </>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-background border-border">
+              <DropdownMenuItem 
+                onClick={() => onViewChange('participant')}
+                className={currentView === 'participant' ? 'bg-accent' : ''}
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Teilnehmer-Ansicht
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => onViewChange('coach')}
+                className={currentView === 'coach' ? 'bg-accent' : ''}
+              >
+                <Monitor className="w-4 h-4 mr-2" />
+                Coach Dashboard
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+
+        {isAuthenticated && (
+          <Button variant="ghost" size="icon" onClick={handleSignOut} title="Abmelden">
+            <LogOut className="w-4 h-4" />
+          </Button>
+        )}
+      </div>
     </header>
   );
 }

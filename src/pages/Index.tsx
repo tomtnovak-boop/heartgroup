@@ -1,19 +1,22 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Heart, Monitor, Smartphone, Users, Activity, Zap } from 'lucide-react';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { useViewMode } from '@/hooks/useViewMode';
 import { CoachDashboard } from '@/components/dashboard/CoachDashboard';
+import { useAuthContext } from '@/components/auth/AuthProvider';
 
 export default function Index() {
   const { viewMode, changeView } = useViewMode('participant');
+  const { isAuthenticated, isCoach } = useAuthContext();
+  const navigate = useNavigate();
 
-  // Full-screen Coach Dashboard when in coach view
-  if (viewMode === 'coach') {
+  // Full-screen Coach Dashboard when in coach view (only for coaches)
+  if (viewMode === 'coach' && isCoach) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <AppHeader currentView={viewMode} onViewChange={changeView} />
+        <AppHeader currentView={viewMode} onViewChange={changeView} showViewSwitcher={isCoach} />
         <div className="flex-1">
           <CoachDashboard />
         </div>
@@ -25,7 +28,7 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header with view switcher */}
-      <AppHeader currentView={viewMode} onViewChange={changeView} />
+      <AppHeader currentView={viewMode} onViewChange={changeView} showViewSwitcher={isCoach} />
 
       {/* Hero Section */}
       <div className="relative overflow-hidden">
@@ -44,21 +47,30 @@ export default function Index() {
               aller Teilnehmer auf einem großen Bildschirm.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/participant">
-                <Button size="lg" className="w-full sm:w-auto gap-2">
+              {isAuthenticated ? (
+                <Button size="lg" className="w-full sm:w-auto gap-2" onClick={() => navigate('/participant')}>
                   <Smartphone className="w-5 h-5" />
-                  Teilnehmer-Ansicht
+                  Zum Training
                 </Button>
-              </Link>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="w-full sm:w-auto gap-2"
-                onClick={() => changeView('coach')}
-              >
-                <Monitor className="w-5 h-5" />
-                Coach Dashboard
-              </Button>
+              ) : (
+                <Link to="/auth">
+                  <Button size="lg" className="w-full sm:w-auto gap-2">
+                    <Smartphone className="w-5 h-5" />
+                    Anmelden / Registrieren
+                  </Button>
+                </Link>
+              )}
+              {isCoach && (
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="w-full sm:w-auto gap-2"
+                  onClick={() => changeView('coach')}
+                >
+                  <Monitor className="w-5 h-5" />
+                  Coach Dashboard
+                </Button>
+              )}
             </div>
           </div>
         </div>
