@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { HeartRateDisplay } from '@/components/participant/HeartRateDisplay';
+import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
 import { useViewMode } from '@/hooks/useViewMode';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Heart } from 'lucide-react';
+import { Loader2, Heart, Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface Profile {
   id: string;
@@ -19,6 +21,7 @@ export default function Participant() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isTrainingActive, setIsTrainingActive] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const { viewMode, changeView } = useViewMode('participant');
   const navigate = useNavigate();
   const { user, isCoach } = useAuthContext();
@@ -116,6 +119,15 @@ export default function Participant() {
             <p className="text-muted-foreground">
               Deine maximale Herzfrequenz: {profile.custom_max_hr || profile.max_hr} bpm
             </p>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setIsEditDialogOpen(true)}
+              className="mt-2"
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Profil bearbeiten
+            </Button>
           </div>
 
           {/* Start Training Button */}
@@ -134,6 +146,16 @@ export default function Participant() {
           </p>
         </div>
       </div>
+
+      {/* Profile Edit Dialog */}
+      {profile && (
+        <ProfileEditDialog
+          profile={profile}
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          onProfileUpdated={(updatedProfile) => setProfile(updatedProfile)}
+        />
+      )}
     </div>
   );
 }
