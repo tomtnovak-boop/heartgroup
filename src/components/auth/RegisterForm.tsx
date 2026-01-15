@@ -1,14 +1,19 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
+import { de } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuthContext } from './AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { calculateMaxHR } from '@/lib/heartRateUtils';
-import { Loader2, Mail, Lock, User, Calendar, Heart } from 'lucide-react';
+import { calculateMaxHR, calculateAgeFromBirthDate } from '@/lib/heartRateUtils';
+import { Loader2, Mail, Lock, User, CalendarIcon, Heart } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface RegisterFormProps {
   onSwitchToLogin: () => void;
@@ -18,25 +23,36 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [age, setAge] = useState('');
+  const [birthDate, setBirthDate] = useState<Date | undefined>();
   const [customMaxHr, setCustomMaxHr] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuthContext();
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const calculatedMaxHr = age ? calculateMaxHR(parseInt(age)) : null;
+  const calculatedAge = birthDate ? calculateAgeFromBirthDate(birthDate) : null;
+  const calculatedMaxHr = calculatedAge ? calculateMaxHR(calculatedAge) : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     // Validate inputs
-    const ageNum = parseInt(age);
-    if (isNaN(ageNum) || ageNum < 10 || ageNum > 120) {
+    if (!birthDate) {
       toast({
-        title: 'Ungültiges Alter',
-        description: 'Bitte gib ein gültiges Alter zwischen 10 und 120 ein.',
+        title: 'Geburtsdatum erforderlich',
+        description: 'Bitte wähle dein Geburtsdatum aus.',
+        variant: 'destructive',
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    const age = calculateAgeFromBirthDate(birthDate);
+    if (age < 10 || age > 120) {
+      toast({
+        title: 'Ungültiges Geburtsdatum',
+        description: 'Das berechnete Alter muss zwischen 10 und 120 liegen.',
         variant: 'destructive',
       });
       setIsLoading(false);
@@ -67,7 +83,7 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     }
 
     // Create profile
-    const maxHr = calculateMaxHR(ageNum);
+    const maxHr = calculateMaxHR(age);
     const customMaxHrNum = customMaxHr ? parseInt(customMaxHr) : null;
 
     const { error: profileError } = await supabase
@@ -75,7 +91,8 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
       .insert({
         user_id: authData.user.id,
         name: name.trim(),
-        age: ageNum,
+        age: age,
+        birth_date: format(birthDate, 'yyyy-MM-dd'),
         max_hr: maxHr,
         custom_max_hr: customMaxHrNum,
       });
@@ -159,25 +176,40 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="age">Alter</Label>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="age"
-                type="number"
-                placeholder="30"
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
-                className="pl-10"
-                min={10}
-                max={120}
-                required
-              />
-            </div>
-            {calculatedMaxHr && (
+            <Label>Geburtsdatum</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !birthDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {birthDate ? format(birthDate, "dd. MMMM yyyy", { locale: de }) : "Geburtsdatum wählen"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={birthDate}
+                  onSelect={setBirthDate}
+                  disabled={(date) =>
+                    date > new Date() || date < new Date("1900-01-01")
+                  }
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                  captionLayout="dropdown-buttons"
+                  fromYear={1920}
+                  toYear={new Date().getFullYear()}
+                />
+              </PopoverContent>
+            </Popover>
+            {calculatedAge && calculatedMaxHr && (
               <p className="text-xs text-muted-foreground">
-                Berechnete HFmax: {calculatedMaxHr} bpm 
-                {parseInt(age) > 40 ? ' (Tanaka-Formel)' : ' (220 - Alter)'}
+                Alter: {calculatedAge} Jahre | Berechnete HFmax: {calculatedMaxHr} bpm 
+                {calculatedAge > 40 ? ' (Tanaka-Formel)' : ' (220 - Alter)'}
               </p>
             )}
           </div>

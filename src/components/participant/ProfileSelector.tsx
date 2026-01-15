@@ -1,17 +1,23 @@
 import { useState, useEffect } from 'react';
+import { format } from 'date-fns';
+import { de } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
-import { User, Plus, Heart } from 'lucide-react';
-import { calculateMaxHR, getEffectiveMaxHR } from '@/lib/heartRateUtils';
+import { User, Plus, Heart, CalendarIcon } from 'lucide-react';
+import { calculateMaxHR, getEffectiveMaxHR, calculateAgeFromBirthDate } from '@/lib/heartRateUtils';
+import { cn } from '@/lib/utils';
 
 interface Profile {
   id: string;
   name: string;
   age: number;
   max_hr: number;
+  birth_date?: string | null;
   custom_max_hr?: number | null;
 }
 
@@ -23,11 +29,12 @@ export function ProfileSelector({ onProfileSelected }: ProfileSelectorProps) {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [newName, setNewName] = useState('');
-  const [newAge, setNewAge] = useState(30);
+  const [newBirthDate, setNewBirthDate] = useState<Date | undefined>();
   const [newCustomMaxHR, setNewCustomMaxHR] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
 
-  const calculatedMaxHR = calculateMaxHR(newAge);
+  const calculatedAge = newBirthDate ? calculateAgeFromBirthDate(newBirthDate) : null;
+  const calculatedMaxHR = calculatedAge ? calculateMaxHR(calculatedAge) : null;
   const effectiveMaxHR = newCustomMaxHR ? parseInt(newCustomMaxHR) : calculatedMaxHR;
 
   useEffect(() => {
@@ -56,16 +63,18 @@ export function ProfileSelector({ onProfileSelected }: ProfileSelectorProps) {
   }
 
   async function createProfile() {
-    if (!newName.trim()) return;
+    if (!newName.trim() || !newBirthDate) return;
 
     const customHR = newCustomMaxHR ? parseInt(newCustomMaxHR) : null;
+    const age = calculateAgeFromBirthDate(newBirthDate);
 
     try {
       const { data, error } = await supabase
         .from('profiles')
         .insert({ 
           name: newName.trim(), 
-          age: newAge,
+          age: age,
+          birth_date: format(newBirthDate, 'yyyy-MM-dd'),
           custom_max_hr: customHR
         })
         .select()
@@ -152,18 +161,41 @@ export function ProfileSelector({ onProfileSelected }: ProfileSelectorProps) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="age">Alter</Label>
-                <Input
-                  id="age"
-                  type="number"
-                  min={10}
-                  max={100}
-                  value={newAge}
-                  onChange={(e) => setNewAge(parseInt(e.target.value) || 30)}
-                />
-                <p className="text-sm text-muted-foreground">
-                  Berechnete HFmax: {calculatedMaxHR} bpm {newAge > 40 ? '(Tanaka)' : '(Standard)'}
-                </p>
+                <Label>Geburtsdatum</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !newBirthDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {newBirthDate ? format(newBirthDate, "dd. MMMM yyyy", { locale: de }) : "Geburtsdatum wählen"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={newBirthDate}
+                      onSelect={setNewBirthDate}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                      }
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                      captionLayout="dropdown-buttons"
+                      fromYear={1920}
+                      toYear={new Date().getFullYear()}
+                    />
+                  </PopoverContent>
+                </Popover>
+                {calculatedAge && calculatedMaxHR && (
+                  <p className="text-sm text-muted-foreground">
+                    Alter: {calculatedAge} Jahre | Berechnete HFmax: {calculatedMaxHR} bpm {calculatedAge > 40 ? '(Tanaka)' : '(Standard)'}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="customMaxHR">Individuelle HFmax (optional)</Label>
@@ -172,7 +204,7 @@ export function ProfileSelector({ onProfileSelected }: ProfileSelectorProps) {
                   type="number"
                   min={100}
                   max={250}
-                  placeholder={`${calculatedMaxHR}`}
+                  placeholder={calculatedMaxHR ? `${calculatedMaxHR}` : ''}
                   value={newCustomMaxHR}
                   onChange={(e) => setNewCustomMaxHR(e.target.value)}
                 />
@@ -194,7 +226,7 @@ export function ProfileSelector({ onProfileSelected }: ProfileSelectorProps) {
                 <Button
                   className="flex-1"
                   onClick={createProfile}
-                  disabled={!newName.trim()}
+                  disabled={!newName.trim() || !newBirthDate}
                 >
                   Erstellen
                 </Button>
