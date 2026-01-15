@@ -2,10 +2,31 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Heart, Monitor, Smartphone, Users, Activity, Zap } from 'lucide-react';
+import { AppHeader } from '@/components/layout/AppHeader';
+import { useViewMode } from '@/hooks/useViewMode';
+import { CoachDashboard } from '@/components/dashboard/CoachDashboard';
 
 export default function Index() {
+  const { viewMode, changeView } = useViewMode('participant');
+
+  // Full-screen Coach Dashboard when in coach view
+  if (viewMode === 'coach') {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <AppHeader currentView={viewMode} onViewChange={changeView} />
+        <div className="flex-1">
+          <CoachDashboard />
+        </div>
+      </div>
+    );
+  }
+
+  // Participant landing page
   return (
     <div className="min-h-screen bg-background">
+      {/* Header with view switcher */}
+      <AppHeader currentView={viewMode} onViewChange={changeView} />
+
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-background" />
@@ -29,12 +50,15 @@ export default function Index() {
                   Teilnehmer-Ansicht
                 </Button>
               </Link>
-              <Link to="/dashboard">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto gap-2">
-                  <Monitor className="w-5 h-5" />
-                  Coach Dashboard
-                </Button>
-              </Link>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="w-full sm:w-auto gap-2"
+                onClick={() => changeView('coach')}
+              >
+                <Monitor className="w-5 h-5" />
+                Coach Dashboard
+              </Button>
             </div>
           </div>
         </div>

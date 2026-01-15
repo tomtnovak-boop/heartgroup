@@ -5,12 +5,14 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Plus, Heart } from 'lucide-react';
+import { calculateMaxHR, getEffectiveMaxHR } from '@/lib/heartRateUtils';
 
 interface Profile {
   id: string;
   name: string;
   age: number;
   max_hr: number;
+  custom_max_hr?: number | null;
 }
 
 interface ProfileSelectorProps {
@@ -22,7 +24,11 @@ export function ProfileSelector({ onProfileSelected }: ProfileSelectorProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [newName, setNewName] = useState('');
   const [newAge, setNewAge] = useState(30);
+  const [newCustomMaxHR, setNewCustomMaxHR] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
+
+  const calculatedMaxHR = calculateMaxHR(newAge);
+  const effectiveMaxHR = newCustomMaxHR ? parseInt(newCustomMaxHR) : calculatedMaxHR;
 
   useEffect(() => {
     fetchProfiles();
@@ -36,7 +42,12 @@ export function ProfileSelector({ onProfileSelected }: ProfileSelectorProps) {
         .order('name');
 
       if (error) throw error;
-      setProfiles(data || []);
+      // Map profiles to include effective max_hr
+      const mappedProfiles = (data || []).map(p => ({
+        ...p,
+        max_hr: getEffectiveMaxHR(p.age, p.custom_max_hr)
+      }));
+      setProfiles(mappedProfiles);
     } catch (error) {
       console.error('Error fetching profiles:', error);
     } finally {
@@ -47,16 +58,26 @@ export function ProfileSelector({ onProfileSelected }: ProfileSelectorProps) {
   async function createProfile() {
     if (!newName.trim()) return;
 
+    const customHR = newCustomMaxHR ? parseInt(newCustomMaxHR) : null;
+
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .insert({ name: newName.trim(), age: newAge })
+        .insert({ 
+          name: newName.trim(), 
+          age: newAge,
+          custom_max_hr: customHR
+        })
         .select()
         .single();
 
       if (error) throw error;
       if (data) {
-        onProfileSelected(data);
+        // Return profile with effective max_hr
+        onProfileSelected({
+          ...data,
+          max_hr: getEffectiveMaxHR(data.age, data.custom_max_hr)
+        });
       }
     } catch (error) {
       console.error('Error creating profile:', error);
@@ -141,7 +162,25 @@ export function ProfileSelector({ onProfileSelected }: ProfileSelectorProps) {
                   onChange={(e) => setNewAge(parseInt(e.target.value) || 30)}
                 />
                 <p className="text-sm text-muted-foreground">
-                  Max. Herzfrequenz: {220 - newAge} bpm
+                  Berechnete HFmax: {calculatedMaxHR} bpm {newAge > 40 ? '(Tanaka)' : '(Standard)'}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="customMaxHR">Individuelle HFmax (optional)</Label>
+                <Input
+                  id="customMaxHR"
+                  type="number"
+                  min={100}
+                  max={250}
+                  placeholder={`${calculatedMaxHR}`}
+                  value={newCustomMaxHR}
+                  onChange={(e) => setNewCustomMaxHR(e.target.value)}
+                />
+                <p className="text-sm text-muted-foreground">
+                  {newCustomMaxHR 
+                    ? `Überschreibt berechneten Wert → ${effectiveMaxHR} bpm`
+                    : 'Leer lassen für automatische Berechnung'
+                  }
                 </p>
               </div>
               <div className="flex gap-2 pt-2">
