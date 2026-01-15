@@ -13,6 +13,7 @@ export interface LiveHRData {
   profile?: {
     id: string;
     name: string;
+    nickname?: string | null;
     age: number;
     max_hr: number;
     custom_max_hr?: number | null;
@@ -67,6 +68,7 @@ export function useLiveHR() {
                 profile: {
                   id: profile.id,
                   name: profile.name,
+                  nickname: profile.nickname,
                   age: profile.age,
                   max_hr: effectiveMaxHR,
                   custom_max_hr: profile.custom_max_hr,
@@ -129,6 +131,7 @@ export function useLiveHR() {
                 profile: {
                   id: profile.id,
                   name: profile.name,
+                  nickname: profile.nickname,
                   age: profile.age,
                   max_hr: effectiveMaxHR,
                   custom_max_hr: profile.custom_max_hr,

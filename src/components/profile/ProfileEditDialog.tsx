@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 interface Profile {
   id: string;
   name: string;
+  nickname?: string | null;
   age: number;
   max_hr: number;
   birth_date?: string | null;
@@ -43,6 +44,8 @@ export function ProfileEditDialog({
   onProfileUpdated 
 }: ProfileEditDialogProps) {
   const [name, setName] = useState(profile.name);
+  const [nickname, setNickname] = useState(profile.nickname || '');
+  const [nicknameError, setNicknameError] = useState('');
   const [birthDate, setBirthDate] = useState<Date | undefined>(
     profile.birth_date ? new Date(profile.birth_date) : undefined
   );
@@ -53,12 +56,34 @@ export function ProfileEditDialog({
   // Reset form when profile changes
   useEffect(() => {
     setName(profile.name);
+    setNickname(profile.nickname || '');
     setBirthDate(profile.birth_date ? new Date(profile.birth_date) : undefined);
     setCustomMaxHr(profile.custom_max_hr?.toString() || '');
+    setNicknameError('');
   }, [profile]);
 
   const calculatedAge = birthDate ? calculateAgeFromBirthDate(birthDate) : profile.age;
   const calculatedMaxHr = calculateMaxHR(calculatedAge);
+  const effectiveMaxHr = customMaxHr ? parseInt(customMaxHr) : calculatedMaxHr;
+
+  const checkNicknameAvailability = async (value: string) => {
+    if (!value.trim()) {
+      setNicknameError('');
+      return;
+    }
+    const { data } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('nickname', value.trim())
+      .neq('id', profile.id)
+      .maybeSingle();
+    
+    if (data) {
+      setNicknameError('Dieser Nickname ist bereits vergeben');
+    } else {
+      setNicknameError('');
+    }
+  };
 
   const handleSave = async () => {
     // Validate inputs
@@ -84,6 +109,21 @@ export function ProfileEditDialog({
       return;
     }
 
+    // Check nickname availability
+    if (nickname.trim()) {
+      const { data: existingNickname } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('nickname', nickname.trim())
+        .neq('id', profile.id)
+        .maybeSingle();
+      
+      if (existingNickname) {
+        toast({ title: 'Nickname bereits vergeben', variant: 'destructive' });
+        return;
+      }
+    }
+
     setIsLoading(true);
 
     const maxHr = calculateMaxHR(age);
@@ -92,6 +132,7 @@ export function ProfileEditDialog({
       .from('profiles')
       .update({
         name: name.trim(),
+        nickname: nickname.trim() || null,
         birth_date: format(birthDate, 'yyyy-MM-dd'),
         age: age,
         max_hr: maxHr,
@@ -138,6 +179,26 @@ export function ProfileEditDialog({
             />
           </div>
           <div className="grid gap-2">
+            <Label htmlFor="nickname">Nickname (optional)</Label>
+            <Input
+              id="nickname"
+              value={nickname}
+              onChange={(e) => {
+                setNickname(e.target.value);
+                checkNicknameAvailability(e.target.value);
+              }}
+              placeholder="Wird im Dashboard angezeigt"
+              maxLength={30}
+              className={cn(nicknameError && "border-destructive")}
+            />
+            {nicknameError && (
+              <p className="text-xs text-destructive">{nicknameError}</p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Wird anstelle deines Namens im Coach-Dashboard angezeigt
+            </p>
+          </div>
+          <div className="grid gap-2">
             <Label>Geburtsdatum</Label>
             <Popover>
               <PopoverTrigger asChild>
@@ -169,7 +230,15 @@ export function ProfileEditDialog({
               </PopoverContent>
             </Popover>
             <p className="text-xs text-muted-foreground">
-              Aktuelles Alter: {calculatedAge} Jahre | Berechnete HFmax: {calculatedMaxHr} bpm
+              Aktuelles Alter: {calculatedAge} Jahre
+            </p>
+          </div>
+          <div className="grid gap-2 p-3 bg-muted/50 rounded-lg">
+            <p className="text-sm font-medium">
+              Deine geschätzte HFmax (nach Tanaka): <span className="text-primary">{calculatedMaxHr} bpm</span>
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Formel: 208 - (0,7 × {calculatedAge}) = {calculatedMaxHr}
             </p>
           </div>
           <div className="grid gap-2">
@@ -184,7 +253,10 @@ export function ProfileEditDialog({
               max={250}
             />
             <p className="text-xs text-muted-foreground">
-              Überschreibt die automatische Berechnung, wenn gesetzt
+              {customMaxHr 
+                ? `Aktive HFmax: ${effectiveMaxHr} bpm (überschreibt Tanaka-Berechnung)`
+                : 'Überschreibt die Tanaka-Berechnung, wenn gesetzt'
+              }
             </p>
           </div>
         </div>
@@ -192,7 +264,7 @@ export function ProfileEditDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Abbrechen
           </Button>
-          <Button onClick={handleSave} disabled={isLoading}>
+          <Button onClick={handleSave} disabled={isLoading || !!nicknameError}>
             {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             Speichern
           </Button>
