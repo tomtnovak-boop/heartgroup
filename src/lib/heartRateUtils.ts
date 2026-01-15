@@ -17,8 +17,28 @@ export const HEART_RATE_ZONES: HeartRateZone[] = [
   { zone: 5, name: "Max Effort", minPercent: 90, maxPercent: 100, color: "hsl(0 100% 55%)", bgClass: "zone-5-bg" },
 ];
 
+/**
+ * Calculate max heart rate based on age
+ * Uses standard formula (220 - age) for age <= 40
+ * Uses Tanaka formula (208 - 0.7 * age) for age > 40
+ */
 export function calculateMaxHR(age: number): number {
+  if (age > 40) {
+    // Tanaka formula for better accuracy in older adults
+    return Math.round(208 - (0.7 * age));
+  }
   return 220 - age;
+}
+
+/**
+ * Get the effective max HR for a profile
+ * Uses custom_max_hr if set, otherwise calculates based on age
+ */
+export function getEffectiveMaxHR(age: number, customMaxHR?: number | null): number {
+  if (customMaxHR && customMaxHR > 0) {
+    return customMaxHR;
+  }
+  return calculateMaxHR(age);
 }
 
 export function calculateHRPercentage(bpm: number, maxHR: number): number {

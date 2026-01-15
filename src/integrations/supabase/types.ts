@@ -53,6 +53,7 @@ export type Database = {
         Row: {
           age: number
           created_at: string
+          custom_max_hr: number | null
           id: string
           max_hr: number | null
           name: string
@@ -62,6 +63,7 @@ export type Database = {
         Insert: {
           age?: number
           created_at?: string
+          custom_max_hr?: number | null
           id?: string
           max_hr?: number | null
           name: string
@@ -71,6 +73,7 @@ export type Database = {
         Update: {
           age?: number
           created_at?: string
+          custom_max_hr?: number | null
           id?: string
           max_hr?: number | null
           name?: string

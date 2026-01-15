@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { getEffectiveMaxHR } from '@/lib/heartRateUtils';
 
 export interface LiveHRData {
   id: string;
@@ -14,6 +15,7 @@ export interface LiveHRData {
     name: string;
     age: number;
     max_hr: number;
+    custom_max_hr?: number | null;
   };
 }
 
@@ -58,6 +60,7 @@ export function useLiveHR() {
           if (new Date(entry.timestamp) > thirtySecondsAgo) {
             const profile = profiles.find(p => p.id === profileId);
             if (profile) {
+              const effectiveMaxHR = getEffectiveMaxHR(profile.age, profile.custom_max_hr);
               latestByProfile.set(profileId, {
                 ...entry,
                 hr_percentage: Number(entry.hr_percentage),
@@ -65,7 +68,8 @@ export function useLiveHR() {
                   id: profile.id,
                   name: profile.name,
                   age: profile.age,
-                  max_hr: profile.max_hr,
+                  max_hr: effectiveMaxHR,
+                  custom_max_hr: profile.custom_max_hr,
                 },
               });
             }
@@ -112,6 +116,7 @@ export function useLiveHR() {
             .single();
 
           if (profile) {
+            const effectiveMaxHR = getEffectiveMaxHR(profile.age, profile.custom_max_hr);
             setParticipants(prev => {
               const updated = new Map(prev);
               updated.set(newData.profile_id, {
@@ -125,7 +130,8 @@ export function useLiveHR() {
                   id: profile.id,
                   name: profile.name,
                   age: profile.age,
-                  max_hr: profile.max_hr,
+                  max_hr: effectiveMaxHR,
+                  custom_max_hr: profile.custom_max_hr,
                 },
               });
               return updated;
