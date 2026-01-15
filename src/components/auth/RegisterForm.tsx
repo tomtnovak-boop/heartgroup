@@ -23,6 +23,8 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [nicknameError, setNicknameError] = useState('');
   const [birthDate, setBirthDate] = useState<Date | undefined>();
   const [customMaxHr, setCustomMaxHr] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -32,6 +34,24 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
 
   const calculatedAge = birthDate ? calculateAgeFromBirthDate(birthDate) : null;
   const calculatedMaxHr = calculatedAge ? calculateMaxHR(calculatedAge) : null;
+
+  const checkNicknameAvailability = async (value: string) => {
+    if (!value.trim()) {
+      setNicknameError('');
+      return;
+    }
+    const { data } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('nickname', value.trim())
+      .maybeSingle();
+    
+    if (data) {
+      setNicknameError('Dieser Nickname ist bereits vergeben');
+    } else {
+      setNicknameError('');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,6 +102,25 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
       return;
     }
 
+    // Check nickname availability one more time
+    if (nickname.trim()) {
+      const { data: existingNickname } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('nickname', nickname.trim())
+        .maybeSingle();
+      
+      if (existingNickname) {
+        toast({
+          title: 'Nickname bereits vergeben',
+          description: 'Bitte wähle einen anderen Nickname.',
+          variant: 'destructive',
+        });
+        setIsLoading(false);
+        return;
+      }
+    }
+
     // Create profile
     const maxHr = calculateMaxHR(age);
     const customMaxHrNum = customMaxHr ? parseInt(customMaxHr) : null;
@@ -91,6 +130,7 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
       .insert({
         user_id: authData.user.id,
         name: name.trim(),
+        nickname: nickname.trim() || null,
         age: age,
         birth_date: format(birthDate, 'yyyy-MM-dd'),
         max_hr: maxHr,
@@ -176,6 +216,31 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="nickname">Nickname (optional)</Label>
+            <div className="relative">
+              <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="nickname"
+                type="text"
+                placeholder="Wird im Dashboard angezeigt"
+                value={nickname}
+                onChange={(e) => {
+                  setNickname(e.target.value);
+                  checkNicknameAvailability(e.target.value);
+                }}
+                className={cn("pl-10", nicknameError && "border-destructive")}
+                maxLength={30}
+              />
+            </div>
+            {nicknameError && (
+              <p className="text-xs text-destructive">{nicknameError}</p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Wird anstelle deines Namens im Coach-Dashboard angezeigt
+            </p>
+          </div>
+
+          <div className="space-y-2">
             <Label>Geburtsdatum</Label>
             <Popover>
               <PopoverTrigger asChild>
@@ -208,8 +273,7 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
             </Popover>
             {calculatedAge && calculatedMaxHr && (
               <p className="text-xs text-muted-foreground">
-                Alter: {calculatedAge} Jahre | Berechnete HFmax: {calculatedMaxHr} bpm 
-                {calculatedAge > 40 ? ' (Tanaka-Formel)' : ' (220 - Alter)'}
+                Alter: {calculatedAge} Jahre | Geschätzte HFmax (nach Tanaka): {calculatedMaxHr} bpm
               </p>
             )}
           </div>

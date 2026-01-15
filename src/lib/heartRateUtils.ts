@@ -42,21 +42,17 @@ export const HEART_RATE_ZONES: HeartRateZone[] = [
 ];
 
 /**
- * Calculate max heart rate based on age
- * Uses standard formula (220 - age) for age <= 40
- * Uses Tanaka formula (208 - 0.7 * age) for age > 40
+ * Calculate max heart rate based on age using Tanaka formula
+ * HFmax = 208 - (0.7 * age)
+ * This formula is used for all age groups
  */
 export function calculateMaxHR(age: number): number {
-  if (age > 40) {
-    // Tanaka formula for better accuracy in older adults
-    return Math.round(208 - (0.7 * age));
-  }
-  return 220 - age;
+  return Math.round(208 - (0.7 * age));
 }
 
 /**
  * Get the effective max HR for a profile
- * Uses custom_max_hr if set, otherwise calculates based on age
+ * Uses custom_max_hr if set, otherwise calculates based on age using Tanaka
  */
 export function getEffectiveMaxHR(age: number, customMaxHR?: number | null): number {
   if (customMaxHR && customMaxHR > 0) {

@@ -48,9 +48,9 @@ export function ParticipantBubble({ data, index }: ParticipantBubbleProps) {
         boxShadow: `0 0 30px var(--glow-color), 0 0 60px var(--glow-color)`,
       }}
     >
-      {/* Name */}
+      {/* Name or Nickname */}
       <div className="text-xs font-medium text-white/90 uppercase tracking-wider mb-1 text-center px-2 truncate max-w-full">
-        {data.profile?.name || 'Unknown'}
+        {data.profile?.nickname || data.profile?.name || 'Unknown'}
       </div>
       
       {/* BPM - Large Center Value */}
