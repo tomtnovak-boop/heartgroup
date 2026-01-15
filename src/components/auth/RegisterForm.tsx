@@ -12,6 +12,7 @@ import { useAuthContext } from './AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { calculateMaxHR, calculateAgeFromBirthDate } from '@/lib/heartRateUtils';
+import { formatDateInput, parseDateString, formatDateToInput } from '@/lib/dateUtils';
 import { Loader2, Mail, Lock, User, CalendarIcon, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -26,6 +27,7 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
   const [nickname, setNickname] = useState('');
   const [nicknameError, setNicknameError] = useState('');
   const [birthDate, setBirthDate] = useState<Date | undefined>();
+  const [dateInput, setDateInput] = useState('');
   const [customMaxHr, setCustomMaxHr] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuthContext();
@@ -34,6 +36,25 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
 
   const calculatedAge = birthDate ? calculateAgeFromBirthDate(birthDate) : null;
   const calculatedMaxHr = calculatedAge ? calculateMaxHR(calculatedAge) : null;
+
+  const handleDateInputChange = (value: string) => {
+    const formatted = formatDateInput(value);
+    setDateInput(formatted);
+    
+    if (formatted.length === 10) {
+      const parsed = parseDateString(formatted);
+      if (parsed) {
+        setBirthDate(parsed);
+      }
+    } else {
+      setBirthDate(undefined);
+    }
+  };
+
+  const handleCalendarSelect = (date: Date | undefined) => {
+    setBirthDate(date);
+    setDateInput(date ? formatDateToInput(date) : '');
+  };
 
   const checkNicknameAvailability = async (value: string) => {
     if (!value.trim()) {
@@ -242,38 +263,45 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
 
           <div className="space-y-2">
             <Label>Geburtsdatum</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !birthDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {birthDate ? format(birthDate, "dd. MMMM yyyy", { locale: de }) : "Geburtsdatum wählen"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={birthDate}
-                  onSelect={setBirthDate}
-                  disabled={(date) =>
-                    date > new Date() || date < new Date("1900-01-01")
-                  }
-                  initialFocus
-                  className={cn("p-3 pointer-events-auto")}
-                  captionLayout="dropdown-buttons"
-                  fromYear={1920}
-                  toYear={new Date().getFullYear()}
-                />
-              </PopoverContent>
-            </Popover>
-            {calculatedAge && calculatedMaxHr && (
+            <div className="flex gap-2">
+              <Input
+                value={dateInput}
+                onChange={(e) => handleDateInputChange(e.target.value)}
+                placeholder="TT/MM/JJJJ"
+                className="flex-1"
+                maxLength={10}
+              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="icon" type="button" className="shrink-0">
+                    <CalendarIcon className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Calendar
+                    mode="single"
+                    selected={birthDate}
+                    onSelect={handleCalendarSelect}
+                    disabled={(date) =>
+                      date > new Date() || date < new Date("1900-01-01")
+                    }
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                    captionLayout="dropdown-buttons"
+                    fromYear={1920}
+                    toYear={new Date().getFullYear()}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            {birthDate && calculatedAge && calculatedMaxHr && (
               <p className="text-xs text-muted-foreground">
-                Alter: {calculatedAge} Jahre | Geschätzte HFmax (nach Tanaka): {calculatedMaxHr} bpm
+                {format(birthDate, "dd. MMMM yyyy", { locale: de })} • Alter: {calculatedAge} Jahre • HFmax (Tanaka): {calculatedMaxHr} bpm
+              </p>
+            )}
+            {!birthDate && (
+              <p className="text-xs text-muted-foreground">
+                Format: TT/MM/JJJJ (z.B. 15/03/1990)
               </p>
             )}
           </div>

@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { supabase } from '@/integrations/supabase/client';
 import { User, Plus, Heart, CalendarIcon } from 'lucide-react';
 import { calculateMaxHR, getEffectiveMaxHR, calculateAgeFromBirthDate } from '@/lib/heartRateUtils';
+import { formatDateInput, parseDateString, formatDateToInput } from '@/lib/dateUtils';
 import { cn } from '@/lib/utils';
 
 interface Profile {
@@ -30,12 +31,32 @@ export function ProfileSelector({ onProfileSelected }: ProfileSelectorProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [newName, setNewName] = useState('');
   const [newBirthDate, setNewBirthDate] = useState<Date | undefined>();
+  const [dateInput, setDateInput] = useState('');
   const [newCustomMaxHR, setNewCustomMaxHR] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
 
   const calculatedAge = newBirthDate ? calculateAgeFromBirthDate(newBirthDate) : null;
   const calculatedMaxHR = calculatedAge ? calculateMaxHR(calculatedAge) : null;
   const effectiveMaxHR = newCustomMaxHR ? parseInt(newCustomMaxHR) : calculatedMaxHR;
+
+  const handleDateInputChange = (value: string) => {
+    const formatted = formatDateInput(value);
+    setDateInput(formatted);
+    
+    if (formatted.length === 10) {
+      const parsed = parseDateString(formatted);
+      if (parsed) {
+        setNewBirthDate(parsed);
+      }
+    } else {
+      setNewBirthDate(undefined);
+    }
+  };
+
+  const handleCalendarSelect = (date: Date | undefined) => {
+    setNewBirthDate(date);
+    setDateInput(date ? formatDateToInput(date) : '');
+  };
 
   useEffect(() => {
     fetchProfiles();
@@ -162,38 +183,45 @@ export function ProfileSelector({ onProfileSelected }: ProfileSelectorProps) {
               </div>
               <div className="space-y-2">
                 <Label>Geburtsdatum</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !newBirthDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {newBirthDate ? format(newBirthDate, "dd. MMMM yyyy", { locale: de }) : "Geburtsdatum wählen"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={newBirthDate}
-                      onSelect={setNewBirthDate}
-                      disabled={(date) =>
-                        date > new Date() || date < new Date("1900-01-01")
-                      }
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
-                      captionLayout="dropdown-buttons"
-                      fromYear={1920}
-                      toYear={new Date().getFullYear()}
-                    />
-                  </PopoverContent>
-                </Popover>
-                {calculatedAge && calculatedMaxHR && (
+                <div className="flex gap-2">
+                  <Input
+                    value={dateInput}
+                    onChange={(e) => handleDateInputChange(e.target.value)}
+                    placeholder="TT/MM/JJJJ"
+                    className="flex-1"
+                    maxLength={10}
+                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="icon" className="shrink-0">
+                        <CalendarIcon className="h-4 w-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="end">
+                      <Calendar
+                        mode="single"
+                        selected={newBirthDate}
+                        onSelect={handleCalendarSelect}
+                        disabled={(date) =>
+                          date > new Date() || date < new Date("1900-01-01")
+                        }
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                        captionLayout="dropdown-buttons"
+                        fromYear={1920}
+                        toYear={new Date().getFullYear()}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                {newBirthDate && calculatedAge && calculatedMaxHR && (
                   <p className="text-sm text-muted-foreground">
-                    Alter: {calculatedAge} Jahre | Berechnete HFmax: {calculatedMaxHR} bpm {calculatedAge > 40 ? '(Tanaka)' : '(Standard)'}
+                    {format(newBirthDate, "dd. MMMM yyyy", { locale: de })} • Alter: {calculatedAge} Jahre • HFmax (Tanaka): {calculatedMaxHR} bpm
+                  </p>
+                )}
+                {!newBirthDate && (
+                  <p className="text-sm text-muted-foreground">
+                    Format: TT/MM/JJJJ (z.B. 15/03/1990)
                   </p>
                 )}
               </div>

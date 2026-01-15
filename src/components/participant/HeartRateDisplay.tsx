@@ -6,7 +6,7 @@ import { useWakeLock } from '@/hooks/useWakeLock';
 import { supabase } from '@/integrations/supabase/client';
 import { calculateZone, calculateHRPercentage, getZoneInfo, getZoneBgClass } from '@/lib/heartRateUtils';
 import { enableNoSleep, disableNoSleep, isIOS, isSafari } from '@/lib/noSleep';
-import { Bluetooth, BluetoothOff, Heart, ArrowLeft, Smartphone, AlertTriangle } from 'lucide-react';
+import { Bluetooth, BluetoothOff, Heart, ArrowLeft, Smartphone, AlertTriangle, RefreshCw, Loader2 } from 'lucide-react';
 
 interface Profile {
   id: string;
@@ -22,18 +22,38 @@ interface HeartRateDisplayProps {
 }
 
 export function HeartRateDisplay({ profile, onBack }: HeartRateDisplayProps) {
-  const { isConnected, isConnecting, bpm, error, deviceName, connect, disconnect } = useBluetoothHR();
+  const { 
+    isConnected, 
+    isConnecting, 
+    isReconnecting, 
+    bpm, 
+    error, 
+    deviceName, 
+    reconnectAttempts, 
+    connectionLost,
+    connect, 
+    disconnect, 
+    reconnect 
+  } = useBluetoothHR();
   const { isSupported: wakeLockSupported, isActive: wakeLockActive, request: requestWakeLock } = useWakeLock();
   const lastSentRef = useRef<number>(0);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const [showStartButton, setShowStartButton] = useState(true);
   const [browserWarning, setBrowserWarning] = useState<string | null>(null);
+  const [lastDeviceName, setLastDeviceName] = useState<string | null>(null);
 
   // Use custom max HR if set, otherwise calculated
   const effectiveMaxHr = profile.custom_max_hr || profile.max_hr;
   const zone = bpm > 0 ? calculateZone(bpm, effectiveMaxHr) : 0;
   const hrPercentage = bpm > 0 ? calculateHRPercentage(bpm, effectiveMaxHr) : 0;
   const zoneInfo = zone > 0 ? getZoneInfo(zone) : null;
+
+  // Track last device name for reconnect UI
+  useEffect(() => {
+    if (deviceName) {
+      setLastDeviceName(deviceName);
+    }
+  }, [deviceName]);
 
   // Check browser compatibility on mount
   useEffect(() => {
@@ -112,7 +132,6 @@ export function HeartRateDisplay({ profile, onBack }: HeartRateDisplayProps) {
     }
     await connect();
   };
-
   return (
     <div className={`min-h-screen flex flex-col transition-all duration-500 ${zone > 0 ? getZoneBgClass(zone) : 'bg-background'}`}>
       {/* Header */}
@@ -171,6 +190,51 @@ export function HeartRateDisplay({ profile, onBack }: HeartRateDisplayProps) {
               )}
             </div>
           </div>
+        ) : isReconnecting || connectionLost ? (
+          <Card className="p-8 text-center max-w-sm mx-auto glass">
+            <div className="space-y-4">
+              <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center ${isReconnecting ? 'bg-yellow-500/20' : 'bg-destructive/20'}`}>
+                {isReconnecting ? (
+                  <Loader2 className="w-8 h-8 text-yellow-500 animate-spin" />
+                ) : (
+                  <BluetoothOff className="w-8 h-8 text-destructive" />
+                )}
+              </div>
+              <h2 className="text-xl font-semibold">
+                {isReconnecting ? 'Verbindung wird wiederhergestellt...' : 'Verbindung verloren'}
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                {isReconnecting 
+                  ? `Verbinde erneut mit ${lastDeviceName || 'Gerät'}... (Versuch ${reconnectAttempts}/3)`
+                  : `Die Verbindung zu ${lastDeviceName || 'deinem Gerät'} wurde unterbrochen.`
+                }
+              </p>
+              {isReconnecting && (
+                <div className="flex justify-center gap-1">
+                  {[1, 2, 3].map((dot) => (
+                    <div 
+                      key={dot}
+                      className={`w-2 h-2 rounded-full ${dot <= reconnectAttempts ? 'bg-yellow-500' : 'bg-muted'}`}
+                    />
+                  ))}
+                </div>
+              )}
+              {error && !isReconnecting && (
+                <p className="text-destructive text-sm">{error}</p>
+              )}
+              {!isReconnecting && (
+                <div className="space-y-2">
+                  <Button className="w-full gap-2" onClick={reconnect}>
+                    <RefreshCw className="w-4 h-4" />
+                    Erneut verbinden
+                  </Button>
+                  <Button variant="outline" className="w-full" onClick={onBack}>
+                    Training beenden
+                  </Button>
+                </div>
+              )}
+            </div>
+          </Card>
         ) : (
           <Card className="p-8 text-center max-w-sm mx-auto glass">
             {browserWarning ? (

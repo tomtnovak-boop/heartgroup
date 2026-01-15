@@ -17,6 +17,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { calculateMaxHR, calculateAgeFromBirthDate } from '@/lib/heartRateUtils';
+import { formatDateInput, parseDateString, formatDateToInput } from '@/lib/dateUtils';
 import { Loader2, CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -49,6 +50,9 @@ export function ProfileEditDialog({
   const [birthDate, setBirthDate] = useState<Date | undefined>(
     profile.birth_date ? new Date(profile.birth_date) : undefined
   );
+  const [dateInput, setDateInput] = useState(
+    profile.birth_date ? formatDateToInput(new Date(profile.birth_date)) : ''
+  );
   const [customMaxHr, setCustomMaxHr] = useState(profile.custom_max_hr?.toString() || '');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -57,10 +61,31 @@ export function ProfileEditDialog({
   useEffect(() => {
     setName(profile.name);
     setNickname(profile.nickname || '');
-    setBirthDate(profile.birth_date ? new Date(profile.birth_date) : undefined);
+    const date = profile.birth_date ? new Date(profile.birth_date) : undefined;
+    setBirthDate(date);
+    setDateInput(date ? formatDateToInput(date) : '');
     setCustomMaxHr(profile.custom_max_hr?.toString() || '');
     setNicknameError('');
   }, [profile]);
+
+  const handleDateInputChange = (value: string) => {
+    const formatted = formatDateInput(value);
+    setDateInput(formatted);
+    
+    if (formatted.length === 10) {
+      const parsed = parseDateString(formatted);
+      if (parsed) {
+        setBirthDate(parsed);
+      }
+    } else {
+      setBirthDate(undefined);
+    }
+  };
+
+  const handleCalendarSelect = (date: Date | undefined) => {
+    setBirthDate(date);
+    setDateInput(date ? formatDateToInput(date) : '');
+  };
 
   const calculatedAge = birthDate ? calculateAgeFromBirthDate(birthDate) : profile.age;
   const calculatedMaxHr = calculateMaxHR(calculatedAge);
@@ -200,37 +225,42 @@ export function ProfileEditDialog({
           </div>
           <div className="grid gap-2">
             <Label>Geburtsdatum</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !birthDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {birthDate ? format(birthDate, "dd. MMMM yyyy", { locale: de }) : "Geburtsdatum wählen"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={birthDate}
-                  onSelect={setBirthDate}
-                  disabled={(date) =>
-                    date > new Date() || date < new Date("1900-01-01")
-                  }
-                  initialFocus
-                  className={cn("p-3 pointer-events-auto")}
-                  captionLayout="dropdown-buttons"
-                  fromYear={1920}
-                  toYear={new Date().getFullYear()}
-                />
-              </PopoverContent>
-            </Popover>
+            <div className="flex gap-2">
+              <Input
+                value={dateInput}
+                onChange={(e) => handleDateInputChange(e.target.value)}
+                placeholder="TT/MM/JJJJ"
+                className="flex-1"
+                maxLength={10}
+              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="icon" className="shrink-0">
+                    <CalendarIcon className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Calendar
+                    mode="single"
+                    selected={birthDate}
+                    onSelect={handleCalendarSelect}
+                    disabled={(date) =>
+                      date > new Date() || date < new Date("1900-01-01")
+                    }
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                    captionLayout="dropdown-buttons"
+                    fromYear={1920}
+                    toYear={new Date().getFullYear()}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
             <p className="text-xs text-muted-foreground">
-              Aktuelles Alter: {calculatedAge} Jahre
+              {birthDate 
+                ? `${format(birthDate, "dd. MMMM yyyy", { locale: de })} • Alter: ${calculatedAge} Jahre`
+                : 'Format: TT/MM/JJJJ (z.B. 15/03/1990)'
+              }
             </p>
           </div>
           <div className="grid gap-2 p-3 bg-muted/50 rounded-lg">
