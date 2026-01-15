@@ -52,6 +52,7 @@ export type Database = {
       profiles: {
         Row: {
           age: number
+          birth_date: string | null
           created_at: string
           custom_max_hr: number | null
           id: string
@@ -62,6 +63,7 @@ export type Database = {
         }
         Insert: {
           age?: number
+          birth_date?: string | null
           created_at?: string
           custom_max_hr?: number | null
           id?: string
@@ -72,6 +74,7 @@ export type Database = {
         }
         Update: {
           age?: number
+          birth_date?: string | null
           created_at?: string
           custom_max_hr?: number | null
           id?: string

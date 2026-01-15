@@ -1,5 +1,29 @@
 // Heart Rate Zone Calculation Utilities
 
+/**
+ * Calculate age from birth date
+ */
+export function calculateAgeFromBirthDate(birthDate: Date): number {
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+}
+
+/**
+ * Get effective age from birth date or manual age
+ */
+export function getEffectiveAge(birthDate: Date | string | null, manualAge: number | null): number {
+  if (birthDate) {
+    const date = typeof birthDate === 'string' ? new Date(birthDate) : birthDate;
+    return calculateAgeFromBirthDate(date);
+  }
+  return manualAge || 30;
+}
+
 export interface HeartRateZone {
   zone: number;
   name: string;

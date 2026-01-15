@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
+import { format } from 'date-fns';
+import { de } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Dialog,
   DialogContent,
@@ -12,13 +16,16 @@ import {
 } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { calculateMaxHR, calculateAgeFromBirthDate } from '@/lib/heartRateUtils';
+import { Loader2, CalendarIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface CustomerProfile {
   id: string;
   name: string;
   age: number;
   max_hr: number;
+  birth_date?: string | null;
   custom_max_hr?: number | null;
   user_id?: string | null;
 }
@@ -37,7 +44,7 @@ export function CustomerEditDialog({
   onCustomerUpdated 
 }: CustomerEditDialogProps) {
   const [name, setName] = useState('');
-  const [age, setAge] = useState('');
+  const [birthDate, setBirthDate] = useState<Date | undefined>();
   const [customMaxHr, setCustomMaxHr] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -45,22 +52,31 @@ export function CustomerEditDialog({
   useEffect(() => {
     if (customer) {
       setName(customer.name);
-      setAge(customer.age.toString());
+      setBirthDate(customer.birth_date ? new Date(customer.birth_date) : undefined);
       setCustomMaxHr(customer.custom_max_hr?.toString() || '');
     }
   }, [customer]);
+
+  const calculatedAge = birthDate ? calculateAgeFromBirthDate(birthDate) : customer?.age || 30;
+  const calculatedMaxHr = calculateMaxHR(calculatedAge);
 
   const handleSave = async () => {
     if (!customer) return;
 
     // Validate inputs
-    const parsedAge = parseInt(age, 10);
     if (!name.trim()) {
       toast({ title: 'Name ist erforderlich', variant: 'destructive' });
       return;
     }
-    if (isNaN(parsedAge) || parsedAge < 10 || parsedAge > 120) {
-      toast({ title: 'Alter muss zwischen 10 und 120 sein', variant: 'destructive' });
+
+    if (!birthDate) {
+      toast({ title: 'Geburtsdatum ist erforderlich', variant: 'destructive' });
+      return;
+    }
+
+    const age = calculateAgeFromBirthDate(birthDate);
+    if (age < 10 || age > 120) {
+      toast({ title: 'Das berechnete Alter muss zwischen 10 und 120 sein', variant: 'destructive' });
       return;
     }
 
@@ -72,17 +88,15 @@ export function CustomerEditDialog({
 
     setIsLoading(true);
 
-    // Calculate max_hr based on age using appropriate formula
-    const calculatedMaxHr = parsedAge > 40 
-      ? Math.round(208 - 0.7 * parsedAge) 
-      : 220 - parsedAge;
+    const maxHr = calculateMaxHR(age);
 
     const { error } = await supabase
       .from('profiles')
       .update({
         name: name.trim(),
-        age: parsedAge,
-        max_hr: calculatedMaxHr,
+        birth_date: format(birthDate, 'yyyy-MM-dd'),
+        age: age,
+        max_hr: maxHr,
         custom_max_hr: parsedCustomMaxHr,
       })
       .eq('id', customer.id);
@@ -126,15 +140,39 @@ export function CustomerEditDialog({
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="customer-age">Alter</Label>
-            <Input
-              id="customer-age"
-              type="number"
-              value={age}
-              onChange={(e) => setAge(e.target.value)}
-              min={10}
-              max={120}
-            />
+            <Label>Geburtsdatum</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !birthDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {birthDate ? format(birthDate, "dd. MMMM yyyy", { locale: de }) : "Geburtsdatum wählen"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={birthDate}
+                  onSelect={setBirthDate}
+                  disabled={(date) =>
+                    date > new Date() || date < new Date("1900-01-01")
+                  }
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                  captionLayout="dropdown-buttons"
+                  fromYear={1920}
+                  toYear={new Date().getFullYear()}
+                />
+              </PopoverContent>
+            </Popover>
+            <p className="text-xs text-muted-foreground">
+              Aktuelles Alter: {calculatedAge} Jahre | Berechnete HFmax: {calculatedMaxHr} bpm
+            </p>
           </div>
           <div className="grid gap-2">
             <Label htmlFor="customer-max-hr">Individuelle HFmax (optional)</Label>
@@ -147,9 +185,6 @@ export function CustomerEditDialog({
               min={100}
               max={250}
             />
-            <p className="text-xs text-muted-foreground">
-              Berechnete HFmax: {age ? (parseInt(age) > 40 ? Math.round(208 - 0.7 * parseInt(age)) : 220 - parseInt(age)) : '-'} bpm
-            </p>
           </div>
         </div>
         <DialogFooter>
