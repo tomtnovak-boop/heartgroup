@@ -16,7 +16,7 @@ interface Profile {
   max_hr: number;
   custom_max_hr?: number | null;
   weight?: number | null;
-  gender?: 'male' | 'female' | null;
+  gender?: string | null;
 }
 
 interface HeartRateDisplayProps {
@@ -93,6 +93,7 @@ export function HeartRateDisplay({ profile, onBack }: HeartRateDisplayProps) {
   useEffect(() => {
     if (!isConnected || bpm <= 0 || !workoutId) return;
     if (!profile.weight || !profile.gender) return;
+    if (profile.gender !== 'male' && profile.gender !== 'female') return;
 
     const now = Date.now();
     const elapsedMinutes = (now - lastCalorieUpdateRef.current) / 60000;
