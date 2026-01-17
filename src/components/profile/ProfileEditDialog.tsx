@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -29,6 +30,8 @@ interface Profile {
   max_hr: number;
   birth_date?: string | null;
   custom_max_hr?: number | null;
+  weight?: number | null;
+  gender?: string | null;
 }
 
 interface ProfileEditDialogProps {
@@ -54,6 +57,8 @@ export function ProfileEditDialog({
     profile.birth_date ? formatDateToInput(new Date(profile.birth_date)) : ''
   );
   const [customMaxHr, setCustomMaxHr] = useState(profile.custom_max_hr?.toString() || '');
+  const [weight, setWeight] = useState(profile.weight?.toString() || '');
+  const [gender, setGender] = useState<string>(profile.gender || '');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -65,6 +70,8 @@ export function ProfileEditDialog({
     setBirthDate(date);
     setDateInput(date ? formatDateToInput(date) : '');
     setCustomMaxHr(profile.custom_max_hr?.toString() || '');
+    setWeight(profile.weight?.toString() || '');
+    setGender(profile.gender || '');
     setNicknameError('');
   }, [profile]);
 
@@ -153,6 +160,8 @@ export function ProfileEditDialog({
 
     const maxHr = calculateMaxHR(age);
 
+    const parsedWeight = weight ? parseInt(weight, 10) : null;
+
     const { data, error } = await supabase
       .from('profiles')
       .update({
@@ -162,6 +171,8 @@ export function ProfileEditDialog({
         age: age,
         max_hr: maxHr,
         custom_max_hr: parsedCustomMaxHr,
+        weight: parsedWeight,
+        gender: gender || null,
       })
       .eq('id', profile.id)
       .select()
@@ -289,6 +300,35 @@ export function ProfileEditDialog({
               }
             </p>
           </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label>Geschlecht</Label>
+              <Select value={gender} onValueChange={setGender}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Auswählen" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">Männlich</SelectItem>
+                  <SelectItem value="female">Weiblich</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="weight">Gewicht (kg)</Label>
+              <Input
+                id="weight"
+                type="number"
+                value={weight}
+                onChange={(e) => setWeight(e.target.value)}
+                placeholder="z.B. 75"
+                min={30}
+                max={300}
+              />
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Geschlecht und Gewicht werden für die Kalorienberechnung benötigt.
+          </p>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>

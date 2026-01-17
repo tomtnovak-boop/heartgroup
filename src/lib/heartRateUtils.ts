@@ -86,3 +86,32 @@ export function getZoneColor(zone: number): string {
 export function getZoneBgClass(zone: number): string {
   return getZoneInfo(zone).bgClass;
 }
+
+/**
+ * Calculate calories burned per minute using Keytel formula
+ * Different formulas for men and women
+ * @param hr - Current heart rate (bpm)
+ * @param weight - Weight in kg
+ * @param age - Age in years
+ * @param gender - 'male' or 'female'
+ * @returns Calories burned per minute (can be negative at very low HR, so we floor at 0)
+ */
+export function calculateCaloriesPerMinute(
+  hr: number, 
+  weight: number, 
+  age: number, 
+  gender: 'male' | 'female'
+): number {
+  let caloriesPerMinute: number;
+  
+  if (gender === 'male') {
+    // Men: (-55.0969 + 0.6309×HR + 0.1988×weight + 0.2017×age) / 4.184
+    caloriesPerMinute = (-55.0969 + (0.6309 * hr) + (0.1988 * weight) + (0.2017 * age)) / 4.184;
+  } else {
+    // Women: (-20.4022 + 0.4472×HR - 0.1263×weight + 0.074×age) / 4.184
+    caloriesPerMinute = (-20.4022 + (0.4472 * hr) - (0.1263 * weight) + (0.074 * age)) / 4.184;
+  }
+  
+  // Don't return negative calories
+  return Math.max(0, caloriesPerMinute);
+}

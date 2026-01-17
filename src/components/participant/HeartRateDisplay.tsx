@@ -4,9 +4,10 @@ import { Card } from '@/components/ui/card';
 import { useBluetoothHR } from '@/hooks/useBluetoothHR';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { supabase } from '@/integrations/supabase/client';
-import { calculateZone, calculateHRPercentage, getZoneInfo, getZoneBgClass } from '@/lib/heartRateUtils';
+import { calculateZone, calculateHRPercentage, getZoneInfo, getZoneBgClass, calculateCaloriesPerMinute } from '@/lib/heartRateUtils';
 import { enableNoSleep, disableNoSleep, isIOS, isSafari } from '@/lib/noSleep';
-import { Bluetooth, BluetoothOff, Heart, ArrowLeft, Smartphone, AlertTriangle, RefreshCw, Loader2 } from 'lucide-react';
+import { WorkoutSummary } from './WorkoutSummary';
+import { Bluetooth, BluetoothOff, Heart, ArrowLeft, Smartphone, AlertTriangle, RefreshCw, Loader2, Flame, Square } from 'lucide-react';
 
 interface Profile {
   id: string;
@@ -14,11 +15,22 @@ interface Profile {
   age: number;
   max_hr: number;
   custom_max_hr?: number | null;
+  weight?: number | null;
+  gender?: 'male' | 'female' | null;
 }
 
 interface HeartRateDisplayProps {
   profile: Profile;
   onBack: () => void;
+}
+
+interface HRHistoryPoint {
+  time: number;
+  bpm: number;
+}
+
+interface ZoneTimes {
+  [key: number]: number;
 }
 
 export function HeartRateDisplay({ profile, onBack }: HeartRateDisplayProps) {
@@ -41,6 +53,16 @@ export function HeartRateDisplay({ profile, onBack }: HeartRateDisplayProps) {
   const [showStartButton, setShowStartButton] = useState(true);
   const [browserWarning, setBrowserWarning] = useState<string | null>(null);
   const [lastDeviceName, setLastDeviceName] = useState<string | null>(null);
+
+  // Workout tracking state
+  const [workoutId, setWorkoutId] = useState<string | null>(null);
+  const [workoutStartTime, setWorkoutStartTime] = useState<number | null>(null);
+  const [hrHistory, setHrHistory] = useState<HRHistoryPoint[]>([]);
+  const [zoneTimes, setZoneTimes] = useState<ZoneTimes>({ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 });
+  const [totalCalories, setTotalCalories] = useState(0);
+  const lastCalorieUpdateRef = useRef<number>(Date.now());
+  const [showSummary, setShowSummary] = useState(false);
+  const [workoutSummaryData, setWorkoutSummaryData] = useState<any>(null);
 
   // Use custom max HR if set, otherwise calculated
   const effectiveMaxHr = profile.custom_max_hr || profile.max_hr;
@@ -67,6 +89,42 @@ export function HeartRateDisplay({ profile, onBack }: HeartRateDisplayProps) {
     }
   }, []);
 
+  // Calorie calculation effect - runs every time BPM updates
+  useEffect(() => {
+    if (!isConnected || bpm <= 0 || !workoutId) return;
+    if (!profile.weight || !profile.gender) return;
+
+    const now = Date.now();
+    const elapsedMinutes = (now - lastCalorieUpdateRef.current) / 60000;
+    lastCalorieUpdateRef.current = now;
+
+    const caloriesPerMinute = calculateCaloriesPerMinute(
+      bpm,
+      profile.weight,
+      profile.age,
+      profile.gender
+    );
+    
+    setTotalCalories(prev => prev + (caloriesPerMinute * elapsedMinutes));
+  }, [bpm, isConnected, profile, workoutId]);
+
+  // Update zone times and HR history when BPM changes
+  useEffect(() => {
+    if (!isConnected || bpm <= 0 || !workoutId) return;
+
+    // Add to HR history
+    const now = Date.now();
+    setHrHistory(prev => [...prev, { time: now, bpm }]);
+
+    // Update zone time (we're updating every ~2 seconds based on the sendHeartRateData interval)
+    if (zone > 0) {
+      setZoneTimes(prev => ({
+        ...prev,
+        [zone]: prev[zone] + 2
+      }));
+    }
+  }, [bpm, isConnected, zone, workoutId]);
+
   const sendHeartRateData = useCallback(async () => {
     if (bpm <= 0) return;
 
@@ -75,17 +133,29 @@ export function HeartRateDisplay({ profile, onBack }: HeartRateDisplayProps) {
     lastSentRef.current = now;
 
     try {
+      // Send to live_hr for real-time dashboard
       await supabase.from('live_hr').insert({
         profile_id: profile.id,
         bpm,
         zone,
         hr_percentage: hrPercentage,
       });
+
+      // Also save to workout_hr_data if we have an active workout
+      if (workoutId) {
+        await supabase.from('workout_hr_data').insert({
+          workout_id: workoutId,
+          bpm,
+          zone,
+          hr_percentage: hrPercentage,
+        });
+      }
+
       setLastSyncTime(new Date());
     } catch (error) {
       console.error('Error sending heart rate data:', error);
     }
-  }, [bpm, zone, hrPercentage, profile.id]);
+  }, [bpm, zone, hrPercentage, profile.id, workoutId]);
 
   useEffect(() => {
     if (isConnected && bpm > 0) {
@@ -130,8 +200,111 @@ export function HeartRateDisplay({ profile, onBack }: HeartRateDisplayProps) {
     if (isIOS() || !wakeLockSupported) {
       enableNoSleep();
     }
+
+    // Create workout entry
+    const { data: workoutData, error: workoutError } = await supabase
+      .from('workouts')
+      .insert({
+        profile_id: profile.id,
+        started_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (workoutError) {
+      console.error('Error creating workout:', workoutError);
+    } else {
+      setWorkoutId(workoutData.id);
+      setWorkoutStartTime(Date.now());
+      lastCalorieUpdateRef.current = Date.now();
+    }
+
+    // Reset tracking state
+    setHrHistory([]);
+    setZoneTimes({ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 });
+    setTotalCalories(0);
+
     await connect();
   };
+
+  const handleStopTraining = async () => {
+    // Disconnect Bluetooth
+    disconnect();
+
+    if (!workoutId || !workoutStartTime) {
+      onBack();
+      return;
+    }
+
+    const now = Date.now();
+    const durationSeconds = Math.round((now - workoutStartTime) / 1000);
+    
+    // Calculate averages
+    const avgBpm = hrHistory.length > 0 
+      ? Math.round(hrHistory.reduce((sum, p) => sum + p.bpm, 0) / hrHistory.length)
+      : 0;
+    const maxBpm = hrHistory.length > 0 
+      ? Math.max(...hrHistory.map(p => p.bpm))
+      : 0;
+
+    // Update workout with final data
+    const { error: updateError } = await supabase
+      .from('workouts')
+      .update({
+        ended_at: new Date().toISOString(),
+        duration_seconds: durationSeconds,
+        avg_bpm: avgBpm,
+        max_bpm: maxBpm,
+        zone_1_seconds: zoneTimes[1],
+        zone_2_seconds: zoneTimes[2],
+        zone_3_seconds: zoneTimes[3],
+        zone_4_seconds: zoneTimes[4],
+        zone_5_seconds: zoneTimes[5],
+        total_calories: totalCalories,
+      })
+      .eq('id', workoutId);
+
+    if (updateError) {
+      console.error('Error updating workout:', updateError);
+    }
+
+    // Prepare summary data
+    setWorkoutSummaryData({
+      duration_seconds: durationSeconds,
+      avg_bpm: avgBpm,
+      max_bpm: maxBpm,
+      total_calories: totalCalories,
+      zone_1_seconds: zoneTimes[1],
+      zone_2_seconds: zoneTimes[2],
+      zone_3_seconds: zoneTimes[3],
+      zone_4_seconds: zoneTimes[4],
+      zone_5_seconds: zoneTimes[5],
+    });
+
+    setShowSummary(true);
+  };
+
+  const handleSummaryClose = () => {
+    setShowSummary(false);
+    setWorkoutId(null);
+    setWorkoutStartTime(null);
+    setHrHistory([]);
+    setZoneTimes({ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 });
+    setTotalCalories(0);
+    onBack();
+  };
+
+  // Show workout summary
+  if (showSummary && workoutSummaryData) {
+    return (
+      <WorkoutSummary
+        workout={workoutSummaryData}
+        hrHistory={hrHistory}
+        onClose={handleSummaryClose}
+      />
+    );
+  }
+
   return (
     <div className={`min-h-screen flex flex-col transition-all duration-500 ${zone > 0 ? getZoneBgClass(zone) : 'bg-background'}`}>
       {/* Header */}
@@ -173,6 +346,24 @@ export function HeartRateDisplay({ profile, onBack }: HeartRateDisplayProps) {
               <div className="inline-block px-6 py-3 rounded-full bg-white/20 backdrop-blur-sm">
                 <div className="text-lg font-semibold text-white">Zone {zone}</div>
                 <div className="text-sm text-white/80">{zoneInfo.name}</div>
+              </div>
+            )}
+
+            {/* Calories Display */}
+            {profile.weight && profile.gender && totalCalories > 0 && (
+              <div className="mt-6 flex items-center justify-center gap-2">
+                <Flame className="w-7 h-7 text-orange-400" />
+                <span className="text-3xl font-bold text-white neon-text">
+                  {Math.round(totalCalories)} <span className="text-lg font-normal">kcal</span>
+                </span>
+              </div>
+            )}
+
+            {/* Missing profile data warning */}
+            {(!profile.weight || !profile.gender) && (
+              <div className="mt-4 text-sm text-yellow-400/80 text-center flex items-center justify-center gap-2">
+                <AlertTriangle className="w-4 h-4" />
+                Für Kalorien bitte Gewicht & Geschlecht im Profil ergänzen
               </div>
             )}
 
@@ -228,7 +419,7 @@ export function HeartRateDisplay({ profile, onBack }: HeartRateDisplayProps) {
                     <RefreshCw className="w-4 h-4" />
                     Erneut verbinden
                   </Button>
-                  <Button variant="outline" className="w-full" onClick={onBack}>
+                  <Button variant="outline" className="w-full" onClick={handleStopTraining}>
                     Training beenden
                   </Button>
                 </div>
@@ -305,17 +496,17 @@ export function HeartRateDisplay({ profile, onBack }: HeartRateDisplayProps) {
 
       {/* Footer */}
       {isConnected && (
-        <div className="p-4 bg-background/80 backdrop-blur-sm">
+        <div className="p-4 bg-background/80 backdrop-blur-sm space-y-2">
           <Button 
-            variant="outline" 
+            variant="destructive" 
             className="w-full gap-2"
-            onClick={disconnect}
+            onClick={handleStopTraining}
           >
-            <BluetoothOff className="w-4 h-4" />
-            Verbindung trennen
+            <Square className="w-4 h-4" fill="currentColor" />
+            Training stoppen
           </Button>
           {lastSyncTime && (
-            <p className="text-center text-xs text-muted-foreground mt-2">
+            <p className="text-center text-xs text-muted-foreground">
               Letzte Sync: {lastSyncTime.toLocaleTimeString()}
             </p>
           )}

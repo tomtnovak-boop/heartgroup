@@ -55,36 +55,42 @@ export type Database = {
           birth_date: string | null
           created_at: string
           custom_max_hr: number | null
+          gender: string | null
           id: string
           max_hr: number | null
           name: string
           nickname: string | null
           updated_at: string
           user_id: string | null
+          weight: number | null
         }
         Insert: {
           age?: number
           birth_date?: string | null
           created_at?: string
           custom_max_hr?: number | null
+          gender?: string | null
           id?: string
           max_hr?: number | null
           name: string
           nickname?: string | null
           updated_at?: string
           user_id?: string | null
+          weight?: number | null
         }
         Update: {
           age?: number
           birth_date?: string | null
           created_at?: string
           custom_max_hr?: number | null
+          gender?: string | null
           id?: string
           max_hr?: number | null
           name?: string
           nickname?: string | null
           updated_at?: string
           user_id?: string | null
+          weight?: number | null
         }
         Relationships: []
       }
@@ -109,6 +115,41 @@ export type Database = {
         }
         Relationships: []
       }
+      workout_hr_data: {
+        Row: {
+          bpm: number
+          hr_percentage: number
+          id: string
+          recorded_at: string
+          workout_id: string
+          zone: number
+        }
+        Insert: {
+          bpm: number
+          hr_percentage: number
+          id?: string
+          recorded_at?: string
+          workout_id: string
+          zone: number
+        }
+        Update: {
+          bpm?: number
+          hr_percentage?: number
+          id?: string
+          recorded_at?: string
+          workout_id?: string
+          zone?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_hr_data_workout_id_fkey"
+            columns: ["workout_id"]
+            isOneToOne: false
+            referencedRelation: "workouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workouts: {
         Row: {
           avg_bpm: number | null
@@ -120,6 +161,12 @@ export type Database = {
           max_bpm: number | null
           profile_id: string
           started_at: string
+          total_calories: number | null
+          zone_1_seconds: number | null
+          zone_2_seconds: number | null
+          zone_3_seconds: number | null
+          zone_4_seconds: number | null
+          zone_5_seconds: number | null
         }
         Insert: {
           avg_bpm?: number | null
@@ -131,6 +178,12 @@ export type Database = {
           max_bpm?: number | null
           profile_id: string
           started_at?: string
+          total_calories?: number | null
+          zone_1_seconds?: number | null
+          zone_2_seconds?: number | null
+          zone_3_seconds?: number | null
+          zone_4_seconds?: number | null
+          zone_5_seconds?: number | null
         }
         Update: {
           avg_bpm?: number | null
@@ -142,6 +195,12 @@ export type Database = {
           max_bpm?: number | null
           profile_id?: string
           started_at?: string
+          total_calories?: number | null
+          zone_1_seconds?: number | null
+          zone_2_seconds?: number | null
+          zone_3_seconds?: number | null
+          zone_4_seconds?: number | null
+          zone_5_seconds?: number | null
         }
         Relationships: [
           {
