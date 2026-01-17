@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { HeartRateDisplay } from '@/components/participant/HeartRateDisplay';
 import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
+import { WorkoutHistory } from '@/components/participant/WorkoutHistory';
 import { useViewMode } from '@/hooks/useViewMode';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Heart, Settings } from 'lucide-react';
+import { Loader2, Heart, Settings, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Profile {
@@ -15,6 +16,8 @@ interface Profile {
   age: number;
   max_hr: number;
   custom_max_hr?: number | null;
+  weight?: number | null;
+  gender?: string | null;
 }
 
 export default function Participant() {
@@ -22,6 +25,7 @@ export default function Participant() {
   const [isLoading, setIsLoading] = useState(true);
   const [isTrainingActive, setIsTrainingActive] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const { viewMode, changeView } = useViewMode('participant');
   const navigate = useNavigate();
   const { user, isCoach } = useAuthContext();
@@ -101,6 +105,15 @@ export default function Participant() {
     );
   }
 
+  if (showHistory && profile) {
+    return (
+      <WorkoutHistory
+        profileId={profile.id}
+        onClose={() => setShowHistory(false)}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <AppHeader 
@@ -119,15 +132,24 @@ export default function Participant() {
             <p className="text-muted-foreground">
               Deine maximale Herzfrequenz: {profile.custom_max_hr || profile.max_hr} bpm
             </p>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setIsEditDialogOpen(true)}
-              className="mt-2"
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              Profil bearbeiten
-            </Button>
+            <div className="flex gap-2 justify-center mt-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setIsEditDialogOpen(true)}
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Profil
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowHistory(true)}
+              >
+                <History className="w-4 h-4 mr-2" />
+                Trainings
+              </Button>
+            </div>
           </div>
 
           {/* Start Training Button */}
