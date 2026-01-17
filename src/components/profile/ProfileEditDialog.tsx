@@ -196,14 +196,14 @@ export function ProfileEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Profil bearbeiten</DialogTitle>
           <DialogDescription>
             Aktualisiere deine persönlichen Daten für die Herzfrequenz-Berechnung.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-4 py-4 overflow-y-auto flex-1">
           <div className="grid gap-2">
             <Label htmlFor="name">Name</Label>
             <Input
@@ -330,7 +330,7 @@ export function ProfileEditDialog({
             Geschlecht und Gewicht werden für die Kalorienberechnung benötigt.
           </p>
         </div>
-        <DialogFooter>
+        <DialogFooter className="flex-shrink-0">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Abbrechen
           </Button>
