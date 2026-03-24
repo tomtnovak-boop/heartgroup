@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
-import { ZoneColumn } from './ZoneColumn';
+import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
+import { ZoneColumn, FIXED_TILE_SIZE, FIXED_GAP, ZONE_HEADER_HEIGHT } from './ZoneColumn';
+import { HexTile } from './HexTile';
 import { CustomerList } from '@/components/admin/CustomerList';
 import { CoachList } from '@/components/admin/CoachList';
 import { HRHistoryStrip } from './HRHistoryStrip';
@@ -16,14 +17,59 @@ interface CoachDashboardProps {
 }
 
 export function CoachDashboard({ participants, isLoading, activeTab, selectedProfileId, averageBPM = 0, isSessionActive = false }: CoachDashboardProps) {
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [columnOffsets, setColumnOffsets] = useState<{ left: number; width: number }[]>([]);
+
   const zoneGroups = useMemo(() => {
     const groups: Record<number, LiveHRData[]> = { 1: [], 2: [], 3: [], 4: [], 5: [] };
     participants.forEach((p) => {
       const z = Math.min(Math.max(p.zone, 1), 5);
       groups[z].push(p);
     });
+    // Sort each group by hr_percentage descending
+    Object.values(groups).forEach(g => g.sort((a, b) => b.hr_percentage - a.hr_percentage));
     return groups;
   }, [participants]);
+
+  const measureColumns = useCallback(() => {
+    if (!gridRef.current) return;
+    const gridRect = gridRef.current.getBoundingClientRect();
+    const cols = gridRef.current.querySelectorAll('[data-zone-col]');
+    const offsets = Array.from(cols).map(el => {
+      const r = el.getBoundingClientRect();
+      return { left: r.left - gridRect.left, width: r.width };
+    });
+    setColumnOffsets(offsets);
+  }, []);
+
+  useEffect(() => {
+    measureColumns();
+    window.addEventListener('resize', measureColumns);
+    return () => window.removeEventListener('resize', measureColumns);
+  }, [measureColumns]);
+
+  // Re-measure when participants change (zone counts affect layout)
+  useEffect(() => {
+    measureColumns();
+  }, [participants, measureColumns]);
+
+  const getTilePosition = useCallback((zone: number, rankInZone: number) => {
+    const col = columnOffsets[zone - 1];
+    if (!col) return { left: 0, top: 0 };
+
+    const tilesPerRow = 2;
+    const tileHeight = FIXED_TILE_SIZE * 1.15;
+    const row = Math.floor(rankInZone / tilesPerRow);
+    const colInGroup = rankInZone % tilesPerRow;
+
+    const totalTileWidth = 2 * FIXED_TILE_SIZE + FIXED_GAP;
+    const startX = col.left + (col.width - totalTileWidth) / 2;
+
+    const left = startX + colInGroup * (FIXED_TILE_SIZE + FIXED_GAP);
+    const top = ZONE_HEADER_HEIGHT + row * (tileHeight + FIXED_GAP);
+
+    return { left, top };
+  }, [columnOffsets]);
 
   if (isLoading) {
     return (
@@ -73,10 +119,35 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
         <div key={i} className="absolute pointer-events-none" style={{ left: g.left, top: '45%', transform: 'translate(-50%, -50%)', width: '450px', height: '500px', borderRadius: '50%', background: g.color, opacity: 0.18, filter: 'blur(300px)' }} />
       ))}
 
-      <div className="relative flex-1 grid grid-cols-5 gap-2 min-h-0 overflow-hidden z-10">
+      <div ref={gridRef} className="relative flex-1 grid grid-cols-5 gap-2 min-h-0 overflow-hidden z-10">
         {[1, 2, 3, 4, 5].map((zone) => (
           <ZoneColumn key={zone} zone={zone} participants={zoneGroups[zone]} selectedProfileId={selectedProfileId} />
         ))}
+
+        {/* Animated tile overlay */}
+        {columnOffsets.length === 5 && participants.map((p) => {
+          const z = Math.min(Math.max(p.zone, 1), 5);
+          const rankInZone = zoneGroups[z].findIndex(x => x.profile_id === p.profile_id);
+          const pos = getTilePosition(z, Math.max(rankInZone, 0));
+          return (
+            <div
+              key={p.profile_id}
+              style={{
+                position: 'absolute',
+                left: pos.left,
+                top: pos.top,
+                transition: 'left 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), top 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                zIndex: 20,
+              }}
+            >
+              <HexTile
+                data={p}
+                isSelected={p.profile_id === selectedProfileId}
+                tileSize={FIXED_TILE_SIZE}
+              />
+            </div>
+          );
+        })}
       </div>
 
       <HRHistoryStrip averageBPM={averageBPM} isSessionActive={isSessionActive} />
