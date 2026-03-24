@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { HeartRateDisplay } from '@/components/participant/HeartRateDisplay';
 import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
 import { WorkoutHistory } from '@/components/participant/WorkoutHistory';
