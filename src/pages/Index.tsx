@@ -47,7 +47,7 @@ export default function Index() {
   // Full-screen Coach Dashboard when in coach view (only for coaches)
   if (viewMode === 'coach' && isCoach) {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="h-dvh bg-background flex flex-col overflow-hidden">
         <AppHeader
           currentView={viewMode}
           onViewChange={changeView}
