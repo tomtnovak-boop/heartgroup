@@ -24,10 +24,13 @@ import { cn } from '@/lib/utils';
 interface CustomerProfile {
   id: string;
   name: string;
+  nickname?: string | null;
   age: number;
   max_hr: number;
   birth_date?: string | null;
   custom_max_hr?: number | null;
+  weight?: number | null;
+  height?: number | null;
   user_id?: string | null;
 }
 
@@ -45,19 +48,25 @@ export function CustomerEditDialog({
   onCustomerUpdated 
 }: CustomerEditDialogProps) {
   const [name, setName] = useState('');
+  const [nickname, setNickname] = useState('');
   const [birthDate, setBirthDate] = useState<Date | undefined>();
   const [dateInput, setDateInput] = useState('');
   const [customMaxHr, setCustomMaxHr] = useState('');
+  const [weight, setWeight] = useState('');
+  const [height, setHeight] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     if (customer) {
       setName(customer.name);
+      setNickname(customer.nickname || '');
       const date = customer.birth_date ? new Date(customer.birth_date) : undefined;
       setBirthDate(date);
       setDateInput(date ? formatDateToInput(date) : '');
       setCustomMaxHr(customer.custom_max_hr?.toString() || '');
+      setWeight(customer.weight?.toString() || '');
+      setHeight(customer.height?.toString() || '');
     }
   }, [customer]);
 
@@ -113,14 +122,20 @@ export function CustomerEditDialog({
 
     const maxHr = calculateMaxHR(age);
 
+    const parsedWeight = weight ? parseInt(weight, 10) : null;
+    const parsedHeight = height ? parseInt(height, 10) : null;
+
     const { error } = await supabase
       .from('profiles')
       .update({
         name: name.trim(),
+        nickname: nickname.trim() || null,
         birth_date: format(birthDate, 'yyyy-MM-dd'),
         age: age,
         max_hr: maxHr,
         custom_max_hr: parsedCustomMaxHr,
+        weight: parsedWeight,
+        height: parsedHeight,
       })
       .eq('id', customer.id);
 
@@ -163,6 +178,16 @@ export function CustomerEditDialog({
             />
           </div>
           <div className="grid gap-2">
+            <Label htmlFor="customer-nickname">Nickname</Label>
+            <Input
+              id="customer-nickname"
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              placeholder="Optional"
+              maxLength={30}
+            />
+          </div>
+          <div className="grid gap-2">
             <Label>Geburtsdatum</Label>
             <div className="flex gap-2">
               <Input
@@ -201,6 +226,32 @@ export function CustomerEditDialog({
                 : 'Format: TT/MM/JJJJ (z.B. 15/03/1990)'
               }
             </p>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="customer-weight">Gewicht (kg)</Label>
+              <Input
+                id="customer-weight"
+                type="number"
+                value={weight}
+                onChange={(e) => setWeight(e.target.value)}
+                placeholder="z.B. 75"
+                min={30}
+                max={300}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="customer-height">Grösse (cm)</Label>
+              <Input
+                id="customer-height"
+                type="number"
+                value={height}
+                onChange={(e) => setHeight(e.target.value)}
+                placeholder="z.B. 175"
+                min={100}
+                max={250}
+              />
+            </div>
           </div>
           <div className="grid gap-2">
             <Label htmlFor="customer-max-hr">Individuelle HFmax (optional)</Label>

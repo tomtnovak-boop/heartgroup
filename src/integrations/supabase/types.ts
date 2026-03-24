@@ -56,6 +56,7 @@ export type Database = {
           created_at: string
           custom_max_hr: number | null
           gender: string | null
+          height: number | null
           id: string
           max_hr: number | null
           name: string
@@ -70,6 +71,7 @@ export type Database = {
           created_at?: string
           custom_max_hr?: number | null
           gender?: string | null
+          height?: number | null
           id?: string
           max_hr?: number | null
           name: string
@@ -84,6 +86,7 @@ export type Database = {
           created_at?: string
           custom_max_hr?: number | null
           gender?: string | null
+          height?: number | null
           id?: string
           max_hr?: number | null
           name?: string

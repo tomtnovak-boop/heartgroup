@@ -29,6 +29,8 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
   const [birthDate, setBirthDate] = useState<Date | undefined>();
   const [dateInput, setDateInput] = useState('');
   const [customMaxHr, setCustomMaxHr] = useState('');
+  const [weight, setWeight] = useState('');
+  const [height, setHeight] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuthContext();
   const { toast } = useToast();
@@ -145,6 +147,8 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     // Create profile
     const maxHr = calculateMaxHR(age);
     const customMaxHrNum = customMaxHr ? parseInt(customMaxHr) : null;
+    const parsedWeight = weight ? parseInt(weight, 10) : null;
+    const parsedHeight = height ? parseInt(height, 10) : null;
 
     const { error: profileError } = await supabase
       .from('profiles')
@@ -156,6 +160,8 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
         birth_date: format(birthDate, 'yyyy-MM-dd'),
         max_hr: maxHr,
         custom_max_hr: customMaxHrNum,
+        weight: parsedWeight,
+        height: parsedHeight,
       });
 
     if (profileError) {
@@ -304,6 +310,33 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                 Format: TT/MM/JJJJ (z.B. 15/03/1990)
               </p>
             )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="weight">Gewicht (kg)</Label>
+              <Input
+                id="weight"
+                type="number"
+                placeholder="z.B. 75"
+                value={weight}
+                onChange={(e) => setWeight(e.target.value)}
+                min={30}
+                max={300}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="height">Körpergrösse (cm)</Label>
+              <Input
+                id="height"
+                type="number"
+                placeholder="z.B. 175"
+                value={height}
+                onChange={(e) => setHeight(e.target.value)}
+                min={100}
+                max={250}
+              />
+            </div>
           </div>
 
           <div className="space-y-2">

@@ -16,9 +16,12 @@ import { Edit, Search, Users, Loader2 } from 'lucide-react';
 interface CustomerProfile {
   id: string;
   name: string;
+  nickname?: string | null;
   age: number;
   max_hr: number;
   custom_max_hr?: number | null;
+  weight?: number | null;
+  height?: number | null;
   user_id?: string | null;
 }
 
@@ -99,7 +102,10 @@ export function CustomerList() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
+                <TableHead>Nickname</TableHead>
                 <TableHead className="text-center">Alter</TableHead>
+                <TableHead className="text-center">Gewicht</TableHead>
+                <TableHead className="text-center">Grösse</TableHead>
                 <TableHead className="text-center">HFmax</TableHead>
                 <TableHead className="text-right">Aktionen</TableHead>
               </TableRow>
@@ -108,7 +114,10 @@ export function CustomerList() {
               {filteredCustomers.map((customer) => (
                 <TableRow key={customer.id}>
                   <TableCell className="font-medium">{customer.name}</TableCell>
+                  <TableCell className="text-muted-foreground">{customer.nickname || '–'}</TableCell>
                   <TableCell className="text-center">{customer.age} Jahre</TableCell>
+                  <TableCell className="text-center">{customer.weight ? `${customer.weight} kg` : '–'}</TableCell>
+                  <TableCell className="text-center">{customer.height ? `${customer.height} cm` : '–'}</TableCell>
                   <TableCell className="text-center">
                     {customer.custom_max_hr || customer.max_hr} bpm
                     {customer.custom_max_hr && (

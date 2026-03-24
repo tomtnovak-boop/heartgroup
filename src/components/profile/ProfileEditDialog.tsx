@@ -31,6 +31,7 @@ interface Profile {
   birth_date?: string | null;
   custom_max_hr?: number | null;
   weight?: number | null;
+  height?: number | null;
   gender?: string | null;
 }
 
@@ -58,6 +59,7 @@ export function ProfileEditDialog({
   );
   const [customMaxHr, setCustomMaxHr] = useState(profile.custom_max_hr?.toString() || '');
   const [weight, setWeight] = useState(profile.weight?.toString() || '');
+  const [height, setHeight] = useState(profile.height?.toString() || '');
   const [gender, setGender] = useState<string>(profile.gender || '');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -71,6 +73,7 @@ export function ProfileEditDialog({
     setDateInput(date ? formatDateToInput(date) : '');
     setCustomMaxHr(profile.custom_max_hr?.toString() || '');
     setWeight(profile.weight?.toString() || '');
+    setHeight(profile.height?.toString() || '');
     setGender(profile.gender || '');
     setNicknameError('');
   }, [profile]);
@@ -161,6 +164,7 @@ export function ProfileEditDialog({
     const maxHr = calculateMaxHR(age);
 
     const parsedWeight = weight ? parseInt(weight, 10) : null;
+    const parsedHeight = height ? parseInt(height, 10) : null;
 
     const { data, error } = await supabase
       .from('profiles')
@@ -172,6 +176,7 @@ export function ProfileEditDialog({
         max_hr: maxHr,
         custom_max_hr: parsedCustomMaxHr,
         weight: parsedWeight,
+        height: parsedHeight,
         gender: gender || null,
       })
       .eq('id', profile.id)
@@ -300,7 +305,7 @@ export function ProfileEditDialog({
               }
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="grid gap-2">
               <Label>Geschlecht</Label>
               <Select value={gender} onValueChange={setGender}>
@@ -325,9 +330,21 @@ export function ProfileEditDialog({
                 max={300}
               />
             </div>
+            <div className="grid gap-2">
+              <Label htmlFor="height">Grösse (cm)</Label>
+              <Input
+                id="height"
+                type="number"
+                value={height}
+                onChange={(e) => setHeight(e.target.value)}
+                placeholder="z.B. 175"
+                min={100}
+                max={250}
+              />
+            </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            Geschlecht und Gewicht werden für die Kalorienberechnung benötigt.
+            Geschlecht, Gewicht und Grösse werden für die Kalorienberechnung benötigt.
           </p>
         </div>
         <DialogFooter className="flex-shrink-0">
