@@ -87,6 +87,16 @@ export function LoginForm({ onSwitchToRegister, onSwitchToForgotPassword }: Logi
             </div>
           </div>
 
+          <div className="text-right">
+            <button
+              type="button"
+              onClick={onSwitchToForgotPassword}
+              className="text-xs text-muted-foreground hover:text-primary hover:underline"
+            >
+              Passwort vergessen?
+            </button>
+          </div>
+
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? (
               <>

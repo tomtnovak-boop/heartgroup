@@ -36,10 +36,17 @@ export default function Auth() {
 
       {/* Main content */}
       <main className="flex-1 flex items-center justify-center p-6">
-        {isLogin ? (
-          <LoginForm onSwitchToRegister={() => setIsLogin(false)} />
-        ) : (
-          <RegisterForm onSwitchToLogin={() => setIsLogin(true)} />
+        {view === 'login' && (
+          <LoginForm
+            onSwitchToRegister={() => setView('register')}
+            onSwitchToForgotPassword={() => setView('forgot')}
+          />
+        )}
+        {view === 'register' && (
+          <RegisterForm onSwitchToLogin={() => setView('login')} />
+        )}
+        {view === 'forgot' && (
+          <ForgotPasswordForm onSwitchToLogin={() => setView('login')} />
         )}
       </main>
 
