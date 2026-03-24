@@ -109,6 +109,7 @@ export function LoginForm({ onSwitchToRegister, onSwitchToForgotPassword }: Logi
           </Button>
         </form>
 
+        {/* Registration currently closed
         <div className="mt-6 text-center">
           <p className="text-sm text-muted-foreground">
             Don't have an account?{' '}
@@ -121,6 +122,7 @@ export function LoginForm({ onSwitchToRegister, onSwitchToForgotPassword }: Logi
             </button>
           </p>
         </div>
+        */}
       </CardContent>
     </Card>
   );
