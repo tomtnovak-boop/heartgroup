@@ -37,7 +37,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="h-dvh bg-background flex flex-col overflow-hidden">
+    <div className="h-dvh flex flex-col overflow-hidden" style={{ background: '#0a0a0a' }}>
       <AppHeader
         currentView={viewMode}
         onViewChange={handleViewChange}
