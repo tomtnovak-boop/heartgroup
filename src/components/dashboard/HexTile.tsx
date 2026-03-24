@@ -32,7 +32,7 @@ export function HexTile({ data, isHero = false, tileSize = 72 }: HexTileProps) {
       style={{
         width: baseSize,
         height: baseSize * 1.15,
-        filter: `drop-shadow(0 0 ${isHero ? 10 : 5}px ${color}88)`,
+        filter: `drop-shadow(0 0 ${isHero ? 8 : 5}px ${color}88)`,
       }}
     >
       {/* Outer glow border hex */}
@@ -41,7 +41,7 @@ export function HexTile({ data, isHero = false, tileSize = 72 }: HexTileProps) {
         style={{
           clipPath: hexClip,
           background: color,
-          opacity: 0.3,
+          opacity: isHero ? 0.6 : 0.3,
         }}
       />
 
