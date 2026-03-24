@@ -643,12 +643,16 @@ export default function Participant() {
                         const avg = totalW > 0 ? Math.round(totalWeighted / totalW) : 0;
                         const low = withBpm.length > 0 ? Math.min(...withBpm.map(x => x.avg_bpm!)) : 0;
                         const high = withBpm.length > 0 ? Math.max(...withBpm.map(x => x.avg_bpm!)) : 0;
+                        const peakBpm = w.reduce((max, x) => Math.max(max, x.max_bpm || 0), 0);
+                        const peakEntry = w.find(x => x.max_bpm === peakBpm);
+                        const peakDate = peakEntry ? format(new Date(peakEntry.started_at), 'MMM d') : '';
+                        const bestCal = Math.round(Math.max(...w.map(x => x.total_calories || 0), 0));
 
                         return (
                           <>
                             {/* HR card */}
                             <Card className="p-3 border-pink-500/30 mt-3">
-                              <div className="grid grid-cols-3 gap-2 text-center">
+                              <div className="grid grid-cols-4 gap-2 text-center">
                                 <div>
                                   <ArrowDown className="w-3.5 h-3.5 mx-auto mb-0.5 text-cyan-400" />
                                   <div className="text-lg font-bold text-cyan-400">{low || '--'}</div>
@@ -657,12 +661,18 @@ export default function Participant() {
                                 <div>
                                   <Heart className="w-3.5 h-3.5 mx-auto mb-0.5 text-purple-400" fill="currentColor" />
                                   <div className="text-xl font-bold text-purple-400">{avg || '--'}</div>
-                                  <div className="text-[9px] text-muted-foreground">bpm</div>
+                                  <div className="text-[9px] text-muted-foreground">Average</div>
                                 </div>
                                 <div>
-                                  <ArrowUp className="w-3.5 h-3.5 mx-auto mb-0.5 text-red-400" />
-                                  <div className="text-lg font-bold text-red-400">{high || '--'}</div>
-                                  <div className="text-[9px] text-muted-foreground">Highest</div>
+                                  <ArrowUp className="w-3.5 h-3.5 mx-auto mb-0.5 text-orange-400" />
+                                  <div className="text-lg font-bold text-orange-400">{high || '--'}</div>
+                                  <div className="text-[9px] text-muted-foreground">Highest avg</div>
+                                </div>
+                                <div>
+                                  <Zap className="w-3.5 h-3.5 mx-auto mb-0.5 text-red-500" />
+                                  <div className="text-lg font-bold text-red-500">{peakBpm || '--'}</div>
+                                  <div className="text-[9px] text-muted-foreground">Max</div>
+                                  {peakDate && <div className="text-[8px] text-muted-foreground">{peakDate}</div>}
                                 </div>
                               </div>
                             </Card>
