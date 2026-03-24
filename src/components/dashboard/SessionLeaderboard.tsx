@@ -187,7 +187,7 @@ function ParticipantResult({
             <div className="text-[32px] font-black text-white leading-none mb-1">
               #{avgRank || '—'}
             </div>
-            <div className="text-[10px] text-white/40 mb-2">of {total} participants</div>
+            <div className="text-[10px] text-white mb-2">of {total} participants</div>
             <div className="text-[13px] font-semibold" style={{ color: '#c084fc' }}>{myAvg} bpm avg</div>
           </div>
 
