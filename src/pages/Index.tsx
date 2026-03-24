@@ -13,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export default function Index() {
   const { viewMode, changeView } = useViewMode('participant');
-  const { isAuthenticated, isCoach } = useAuthContext();
+  const { user, isAuthenticated, isCoach } = useAuthContext();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('live');
   const [myProfileId, setMyProfileId] = useState<string | undefined>();
