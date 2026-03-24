@@ -242,8 +242,7 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
                   fontSize: 'clamp(16px, 2.8vh, 36px)',
                   fontVariantNumeric: 'tabular-nums',
                   color: row.isLive && row.zone ? ZONE_COLORS[row.zone] : 'rgba(255,255,255,0.2)',
-                  textShadow: row.isLive ? getBpmGlow(row.zone) : 'none',
-                  transition: 'color 1s ease, text-shadow 1s ease',
+                  transition: 'color 1s ease',
                 }}
               >
                 {row.isLive && row.bpm !== null ? row.bpm : '--'}
