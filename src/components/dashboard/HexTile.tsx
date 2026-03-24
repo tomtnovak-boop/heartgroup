@@ -22,9 +22,8 @@ export function HexTile({ data, isHero = false, tileSize = 72 }: HexTileProps) {
   const baseSize = tileSize;
   const hexClip = 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)';
 
-  const bpmFontSize = baseSize * 0.28;
-  const nameFontSize = baseSize * 0.11;
-  const pctFontSize = baseSize * 0.11;
+  const bpmFontSize = baseSize * 0.22;
+  const nameFontSize = baseSize * 0.18;
 
   // Zone threshold - upper boundary of current zone
   const zoneInfo = HEART_RATE_ZONES[data.zone - 1];
