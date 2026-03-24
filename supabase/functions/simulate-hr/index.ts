@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
   const { data: extraProfiles, error: extraErr } = await supabase
     .from("profiles")
     .select("id, max_hr")
-    .eq("id", "f70a8be1-5421-4940-b285-493a970cf88a");
+    .in("id", ["f70a8be1-5421-4940-b285-493a970cf88a", "f2a7c490-8ee1-4f0e-95e0-ed3e22648e27"]);
 
   const profilesError = testErr || extraErr;
   const profiles = [...(testProfiles || []), ...(extraProfiles || [])];
