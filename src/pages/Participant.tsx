@@ -15,9 +15,9 @@ import { calculateZone, calculateHRPercentage } from '@/lib/heartRateUtils';
 import {
   Heart, Loader2, Bluetooth, BluetoothOff, LogOut, Settings, User,
   TrendingUp, TrendingDown, Flame, Clock, Activity, ChevronRight, Zap,
-  BarChart3, Calendar, ArrowDown, ArrowUp,
+  BarChart3, Calendar, ArrowDown, ArrowUp, ChevronDown,
 } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, getISOWeek, eachWeekOfInterval } from 'date-fns';
+import { format, startOfMonth, endOfMonth, getISOWeek, eachWeekOfInterval, subMonths } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
 
 interface Profile {
