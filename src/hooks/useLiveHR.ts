@@ -20,7 +20,7 @@ export interface LiveHRData {
   };
 }
 
-export function useLiveHR() {
+export function useLiveHR(onNewData?: (data: { profile_id: string; bpm: number; zone: number; hr_percentage: number; timestamp: string }) => void) {
   const [participants, setParticipants] = useState<Map<string, LiveHRData>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
 
