@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +12,15 @@ import { useBluetoothHR } from '@/hooks/useBluetoothHR';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { enableNoSleep, isIOS } from '@/lib/noSleep';
 import { calculateZone, calculateHRPercentage } from '@/lib/heartRateUtils';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import {
   Heart, Loader2, Bluetooth, BluetoothOff, LogOut, Settings, User,
   TrendingUp, TrendingDown, Flame, Clock, Activity, ChevronRight, Zap,
@@ -57,8 +66,16 @@ export default function Participant() {
   const [allHistoricalWorkouts, setAllHistoricalWorkouts] = useState<Workout[]>([]);
   const [activeSession, setActiveSession] = useState(false);
   const [expandedMonth, setExpandedMonth] = useState<string>('');
+  
+  // Session join flow state
+  const [showJoinDialog, setShowJoinDialog] = useState(false);
+  const [currentWorkoutId, setCurrentWorkoutId] = useState<string | null>(null);
+  const [joinSkipped, setJoinSkipped] = useState(false);
+  const [coachSessionActive, setCoachSessionActive] = useState(false);
+  const joinDialogShownRef = useRef(false);
   const navigate = useNavigate();
   const { user, signOut, isCoach } = useAuthContext();
+  const { toast } = useToast();
 
   const {
     isConnected, isConnecting, bpm, connect, disconnect, deviceName,
@@ -133,16 +150,87 @@ export default function Participant() {
       });
   }, [profile]);
 
-  // Check for active session
+  // Check for coach-started active session (any open workout within last 3 hours)
   useEffect(() => {
     if (!profile) return;
-    supabase.from('workouts').select('id')
-      .eq('profile_id', profile.id)
-      .is('ended_at', null)
-      .then(({ data }) => setActiveSession((data || []).length > 0));
+    
+    const checkCoachSession = async () => {
+      const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
+      const { data } = await supabase
+        .from('workouts')
+        .select('id')
+        .is('ended_at', null)
+        .gte('started_at', threeHoursAgo)
+        .limit(1);
+      setCoachSessionActive((data || []).length > 0);
+    };
+
+    checkCoachSession();
+    // Poll every 15 seconds to detect when coach starts a session
+    const interval = setInterval(checkCoachSession, 15000);
+    return () => clearInterval(interval);
   }, [profile]);
 
-  // Send HR data when connected
+  // Check if participant already has an active workout
+  useEffect(() => {
+    if (!profile) return;
+    const checkOwnWorkout = async () => {
+      const { data } = await supabase
+        .from('workouts')
+        .select('id')
+        .eq('profile_id', profile.id)
+        .is('ended_at', null)
+        .limit(1);
+      if (data && data.length > 0) {
+        setCurrentWorkoutId(data[0].id);
+        setActiveSession(true);
+      }
+    };
+    checkOwnWorkout();
+  }, [profile]);
+
+  // Show join dialog when connected + coach session active + not already joined/skipped
+  useEffect(() => {
+    if (isConnected && coachSessionActive && !currentWorkoutId && !joinSkipped && !joinDialogShownRef.current) {
+      joinDialogShownRef.current = true;
+      setShowJoinDialog(true);
+    }
+  }, [isConnected, coachSessionActive, currentWorkoutId, joinSkipped]);
+
+  // Reset join state when disconnecting
+  useEffect(() => {
+    if (!isConnected) {
+      setJoinSkipped(false);
+      joinDialogShownRef.current = false;
+    }
+  }, [isConnected]);
+
+  // Handle joining a session
+  const handleJoinSession = useCallback(async () => {
+    if (!profile) return;
+    try {
+      const { data, error } = await supabase
+        .from('workouts')
+        .insert({ profile_id: profile.id, started_at: new Date().toISOString() })
+        .select('id')
+        .single();
+      if (error) throw error;
+      setCurrentWorkoutId(data.id);
+      setActiveSession(true);
+      setShowJoinDialog(false);
+      toast({ title: "You've joined the session!" });
+    } catch (err) {
+      console.error('Error joining session:', err);
+      toast({ title: 'Failed to join session', variant: 'destructive' });
+    }
+  }, [profile, toast]);
+
+  const handleSkipSession = useCallback(() => {
+    setJoinSkipped(true);
+    setShowJoinDialog(false);
+  }, []);
+
+  // Send HR data to live_hr when connected
   useEffect(() => {
     if (!isConnected || bpm <= 0 || !profile) return;
     const zone = calculateZone(bpm, effectiveMaxHr);
@@ -151,6 +239,16 @@ export default function Participant() {
       profile_id: profile.id, bpm, zone, hr_percentage: hrPct,
     }).then(() => {});
   }, [bpm, isConnected, profile, effectiveMaxHr]);
+
+  // Also record HR data to workout_hr_data when in an active workout
+  useEffect(() => {
+    if (!currentWorkoutId || bpm <= 0) return;
+    const zone = calculateZone(bpm, effectiveMaxHr);
+    const hrPct = calculateHRPercentage(bpm, effectiveMaxHr);
+    supabase.from('workout_hr_data').insert({
+      workout_id: currentWorkoutId, bpm, zone, hr_percentage: hrPct,
+    }).then(() => {});
+  }, [bpm, currentWorkoutId, effectiveMaxHr]);
 
   // Wake lock
   useEffect(() => {
@@ -325,9 +423,11 @@ export default function Participant() {
     );
   }
 
-  // Connection status
+  // Connection status — 4 states + "not recording" substate
   const connectionState = isConnecting ? 'connecting'
-    : isConnected && activeSession ? 'live'
+    : isConnected && currentWorkoutId ? 'live'
+    : isConnected && joinSkipped ? 'not-recording'
+    : isConnected && coachSessionActive ? 'waiting' // dialog will show
     : isConnected ? 'waiting'
     : 'disconnected';
 
@@ -399,6 +499,12 @@ export default function Participant() {
             Connected ✓ — Waiting for coach
           </div>
         )}
+        {connectionState === 'not-recording' && (
+          <div className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-full bg-emerald-500/15 text-emerald-400 font-medium text-sm">
+            <Bluetooth className="w-4 h-4" />
+            Connected ✓ — Not recording
+          </div>
+        )}
         {connectionState === 'live' && (
           <div className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-full bg-destructive/15 text-destructive font-medium text-sm animate-pulse">
             <span className="relative flex h-2.5 w-2.5">
@@ -409,6 +515,26 @@ export default function Participant() {
           </div>
         )}
       </div>
+
+      {/* Session Join Dialog */}
+      <Dialog open={showJoinDialog} onOpenChange={setShowJoinDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Session in progress</DialogTitle>
+            <DialogDescription>
+              Your coach has started a training session. Would you like to join and have your workout recorded?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-row gap-2 sm:gap-2">
+            <Button variant="outline" onClick={handleSkipSession} className="flex-1">
+              Skip
+            </Button>
+            <Button onClick={handleJoinSession} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
+              Join Session
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Tabs */}
       <Tabs defaultValue="overview" className="flex-1 flex flex-col px-4 pt-3">
