@@ -18,7 +18,6 @@ export default function Dashboard() {
     startSession,
     stopSession,
     recordHRData,
-    addLateJoiner,
   } = useWorkoutSession();
 
   const onNewHRData = useCallback((data: { profile_id: string; bpm: number; zone: number; hr_percentage: number; timestamp: string }) => {
