@@ -228,6 +228,13 @@ export function WorkoutHistory({ profileId, onClose }: WorkoutHistoryProps) {
                       {workout.total_calories ? <span className="flex items-center gap-1"><Flame className="w-3 h-3" />{Math.round(workout.total_calories)} kcal</span> : null}
                       {workout.avg_bpm ? <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{workout.avg_bpm} bpm</span> : null}
                     </div>
+                    {workout.rank_avg_bpm != null && workout.session_participant_count != null && (
+                      <div className="text-[11px] mt-0.5">
+                        <span className="text-purple-400">Avg #{workout.rank_avg_bpm}/{workout.session_participant_count}</span>
+                        <span className="text-muted-foreground"> · </span>
+                        <span className="text-red-400">Peak #{workout.rank_peak_bpm}/{workout.session_participant_count}</span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={(e) => { e.stopPropagation(); setDeleteTarget(workout); }}>
