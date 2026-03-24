@@ -74,7 +74,7 @@ export function CoachDashboard() {
                 zone={zone}
                 participants={zoneGroups[zone]}
                 heroProfileId={heroProfileId}
-                tileSize={tileSize}
+                />
               />
             ))}
           </div>
