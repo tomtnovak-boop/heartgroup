@@ -80,6 +80,11 @@ export default function Participant() {
   const joinDialogShownRef = useRef(false);
   const sessionWasActiveOnConnectRef = useRef(false);
 
+  // Lobby state
+  const [lobbyJoined, setLobbyJoined] = useState(false);
+  const [sessionCodeInput, setSessionCodeInput] = useState('');
+  const [sessionCodeError, setSessionCodeError] = useState('');
+
   // Leaderboard state
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [leaderboardData, setLeaderboardData] = useState<{ profile_id: string; name: string; avg_bpm: number; max_bpm: number; duration_seconds: number }[]>([]);
