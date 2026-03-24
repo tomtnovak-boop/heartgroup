@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { HeartRateDisplay } from '@/components/participant/HeartRateDisplay';
 import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
 import { WorkoutHistory } from '@/components/participant/WorkoutHistory';
+import { SessionLeaderboard } from '@/components/dashboard/SessionLeaderboard';
 import { useBluetoothHR } from '@/hooks/useBluetoothHR';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { enableNoSleep, isIOS } from '@/lib/noSleep';
@@ -73,6 +74,13 @@ export default function Participant() {
   const [joinSkipped, setJoinSkipped] = useState(false);
   const [coachSessionActive, setCoachSessionActive] = useState(false);
   const joinDialogShownRef = useRef(false);
+
+  // Leaderboard state
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [leaderboardData, setLeaderboardData] = useState<{ profile_id: string; name: string; avg_bpm: number; max_bpm: number; duration_seconds: number }[]>([]);
+  const [leaderboardDuration, setLeaderboardDuration] = useState(0);
+  const [leaderboardDate, setLeaderboardDate] = useState(new Date());
+  const prevCoachSessionActive = useRef(false);
   const navigate = useNavigate();
   const { user, signOut, isCoach } = useAuthContext();
   const { toast } = useToast();
@@ -204,6 +212,52 @@ export default function Participant() {
       joinDialogShownRef.current = false;
     }
   }, [isConnected]);
+
+  // Detect session end → show leaderboard after 5s
+  useEffect(() => {
+    if (prevCoachSessionActive.current && !coachSessionActive && currentWorkoutId) {
+      setCurrentWorkoutId(null);
+      setActiveSession(false);
+      
+      const timer = setTimeout(async () => {
+        try {
+          const thirtySecsAgo = new Date(Date.now() - 30000).toISOString();
+          const { data: workouts } = await supabase
+            .from('workouts')
+            .select('profile_id, avg_bpm, max_bpm, duration_seconds, started_at, ended_at')
+            .not('ended_at', 'is', null)
+            .gte('ended_at', thirtySecsAgo);
+
+          if (!workouts || workouts.length === 0) { prevCoachSessionActive.current = coachSessionActive; return; }
+
+          const profileIds = [...new Set(workouts.map(w => w.profile_id))];
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('id, name, nickname')
+            .in('id', profileIds);
+
+          const profileMap = new Map(profiles?.map(p => [p.id, p.nickname || p.name]) || []);
+
+          const entries = workouts.map(w => ({
+            profile_id: w.profile_id,
+            name: profileMap.get(w.profile_id) || 'Unknown',
+            avg_bpm: w.avg_bpm || 0,
+            max_bpm: w.max_bpm || 0,
+            duration_seconds: w.duration_seconds || 0,
+          }));
+
+          setLeaderboardData(entries);
+          setLeaderboardDuration(Math.max(...entries.map(e => e.duration_seconds), 0));
+          setLeaderboardDate(new Date());
+          setShowLeaderboard(true);
+        } catch (err) {
+          console.error('Error fetching leaderboard:', err);
+        }
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+    prevCoachSessionActive.current = coachSessionActive;
+  }, [coachSessionActive, currentWorkoutId]);
 
   // Handle joining a session
   const handleJoinSession = useCallback(async () => {
@@ -925,6 +979,17 @@ export default function Participant() {
           open={isEditDialogOpen}
           onOpenChange={setIsEditDialogOpen}
           onProfileUpdated={(p) => setProfile(p)}
+        />
+      )}
+
+      {showLeaderboard && leaderboardData.length > 0 && (
+        <SessionLeaderboard
+          entries={leaderboardData}
+          sessionDuration={leaderboardDuration}
+          sessionDate={leaderboardDate}
+          onClose={() => setShowLeaderboard(false)}
+          highlightProfileId={profile?.id}
+          variant="participant"
         />
       )}
     </div>
