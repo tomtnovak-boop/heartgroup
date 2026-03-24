@@ -499,6 +499,12 @@ export default function Participant() {
             Connected ✓ — Waiting for coach
           </div>
         )}
+        {connectionState === 'not-recording' && (
+          <div className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-full bg-emerald-500/15 text-emerald-400 font-medium text-sm">
+            <Bluetooth className="w-4 h-4" />
+            Connected ✓ — Not recording
+          </div>
+        )}
         {connectionState === 'live' && (
           <div className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-full bg-destructive/15 text-destructive font-medium text-sm animate-pulse">
             <span className="relative flex h-2.5 w-2.5">
@@ -509,6 +515,26 @@ export default function Participant() {
           </div>
         )}
       </div>
+
+      {/* Session Join Dialog */}
+      <Dialog open={showJoinDialog} onOpenChange={setShowJoinDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Session in progress</DialogTitle>
+            <DialogDescription>
+              Your coach has started a training session. Would you like to join and have your workout recorded?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-row gap-2 sm:gap-2">
+            <Button variant="outline" onClick={handleSkipSession} className="flex-1">
+              Skip
+            </Button>
+            <Button onClick={handleJoinSession} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
+              Join Session
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Tabs */}
       <Tabs defaultValue="overview" className="flex-1 flex flex-col px-4 pt-3">
