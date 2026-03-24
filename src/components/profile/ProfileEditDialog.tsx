@@ -59,6 +59,7 @@ export function ProfileEditDialog({
   );
   const [customMaxHr, setCustomMaxHr] = useState(profile.custom_max_hr?.toString() || '');
   const [weight, setWeight] = useState(profile.weight?.toString() || '');
+  const [height, setHeight] = useState(profile.height?.toString() || '');
   const [gender, setGender] = useState<string>(profile.gender || '');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
