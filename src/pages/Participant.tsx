@@ -574,6 +574,44 @@ export default function Participant() {
         )}
       </div>
 
+      {/* Live BPM Display (visible as soon as connected, before coach starts) */}
+      {isConnected && bpm > 0 && (() => {
+        const hrPct = calculateHRPercentage(bpm, effectiveMaxHr);
+        const zoneInfo = zone > 0 ? { name: zoneLabels[zone], color: zoneColorArr[zone] } : null;
+        return (
+          <div className="px-4 pt-3">
+            <div className="rounded-2xl p-4 flex items-center gap-4" style={{
+              background: zoneInfo ? `${zoneInfo.color}15` : 'hsl(var(--muted))',
+              border: `1px solid ${zoneInfo ? zoneInfo.color + '30' : 'hsl(var(--border))'}`,
+              transition: 'background 0.8s ease, border-color 0.8s ease',
+            }}>
+              <div className="relative">
+                <Heart
+                  className="w-12 h-12 animate-pulse"
+                  style={{ color: zoneInfo?.color || 'hsl(var(--primary))' }}
+                  fill="currentColor"
+                />
+                <span className="absolute inset-0 flex items-center justify-center text-xs font-bold" style={{ color: 'hsl(var(--background))' }}>
+                  {bpm}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-bold" style={{ color: zoneInfo?.color || 'hsl(var(--foreground))' }}>{bpm}</span>
+                  <span className="text-sm text-muted-foreground">bpm</span>
+                  <span className="text-sm text-muted-foreground ml-auto">{hrPct}% HRmax</span>
+                </div>
+                {zoneInfo && (
+                  <div className="text-sm font-medium mt-0.5" style={{ color: zoneInfo.color }}>
+                    Zone {zone} · {zoneInfo.name}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Session Join Dialog */}
       <Dialog open={showJoinDialog} onOpenChange={setShowJoinDialog}>
         <DialogContent className="sm:max-w-md">
