@@ -11,12 +11,12 @@ const ZONE_CONFIG: Record<number, { label: string; color: string }> = {
 
 type HexSize = 'lg' | 'md' | 'sm' | 'xs' | 'xxs';
 
-function getZoneLayout(count: number): { columns: 1 | 2; hexSize: HexSize } {
-  if (count <= 4) return { columns: 1, hexSize: 'lg' };
-  if (count <= 8) return { columns: 1, hexSize: 'md' };
-  if (count <= 14) return { columns: 2, hexSize: 'sm' };
-  if (count <= 21) return { columns: 2, hexSize: 'xs' };
-  return { columns: 2, hexSize: 'xxs' };
+function getZoneLayout(count: number): { hexSize: HexSize } {
+  if (count <= 4) return { hexSize: 'lg' };
+  if (count <= 8) return { hexSize: 'md' };
+  if (count <= 14) return { hexSize: 'sm' };
+  if (count <= 21) return { hexSize: 'xs' };
+  return { hexSize: 'xxs' };
 }
 
 const HEX_SIZES: Record<HexSize, number> = {
