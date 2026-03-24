@@ -431,7 +431,7 @@ export default function Participant() {
               <Heart className="w-3.5 h-3.5 text-pink-400" />
               <span className="text-[10px] text-muted-foreground">Heart Rate — This Month</span>
             </div>
-            <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="grid grid-cols-4 gap-2 text-center">
               <div>
                 <ArrowDown className="w-4 h-4 mx-auto mb-1 text-cyan-400" />
                 <div className="text-xl font-bold text-cyan-400">{monthStats.lowestSessionBpm || '--'}</div>
@@ -440,30 +440,27 @@ export default function Participant() {
               <div>
                 <Heart className="w-4 h-4 mx-auto mb-1 text-purple-400" fill="currentColor" />
                 <div className="text-2xl font-bold text-purple-400">{monthStats.avgBpm || '--'}</div>
-                <div className="text-[10px] text-muted-foreground">bpm</div>
+                <div className="text-[10px] text-muted-foreground">Average</div>
               </div>
               <div>
-                <ArrowUp className="w-4 h-4 mx-auto mb-1 text-red-400" />
-                <div className="text-xl font-bold text-red-400">{monthStats.highestSessionBpm || '--'}</div>
-                <div className="text-[10px] text-muted-foreground">Highest</div>
+                <ArrowUp className="w-4 h-4 mx-auto mb-1 text-orange-400" />
+                <div className="text-xl font-bold text-orange-400">{monthStats.highestSessionBpm || '--'}</div>
+                <div className="text-[10px] text-muted-foreground">Highest avg</div>
+              </div>
+              <div>
+                <Zap className="w-4 h-4 mx-auto mb-1 text-red-500" />
+                <div className="text-xl font-bold text-red-500">{monthStats.maxBpm || '--'}</div>
+                <div className="text-[10px] text-muted-foreground">Max</div>
+                {monthStats.maxBpmDate && (
+                  <div className="text-[9px] text-muted-foreground">{monthStats.maxBpmDate}</div>
+                )}
               </div>
             </div>
-            <div className="text-[9px] text-muted-foreground text-center mt-2">Based on session averages</div>
+            <div className="text-[9px] text-muted-foreground text-center mt-2">Based on session averages · Max is peak BPM</div>
           </Card>
 
           {/* Remaining metric cards */}
-          <div className="grid grid-cols-3 gap-2">
-            <Card className="p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <Activity className="w-4 h-4 text-destructive" />
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Max HR</span>
-              </div>
-              <div className="text-xl font-bold">{monthStats.maxBpm || '--'} <span className="text-xs font-normal text-muted-foreground">bpm</span></div>
-              {monthStats.maxBpmDate && (
-                <div className="text-[10px] text-muted-foreground mt-0.5">{monthStats.maxBpmDate}</div>
-              )}
-            </Card>
-
+          <div className="grid grid-cols-2 gap-2">
             <Card className="p-3">
               <div className="flex items-center gap-2 mb-1">
                 <Clock className="w-4 h-4 text-emerald-400" />
@@ -478,6 +475,9 @@ export default function Participant() {
                 <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Calories</span>
               </div>
               <div className="text-xl font-bold">{monthStats.totalCalories || '--'} <span className="text-xs font-normal text-muted-foreground">kcal</span></div>
+              {monthStats.maxSessionCal > 0 && (
+                <div className="text-[10px] text-muted-foreground mt-0.5">Best: {monthStats.maxSessionCal} kcal</div>
+              )}
             </Card>
           </div>
 
