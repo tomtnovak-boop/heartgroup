@@ -42,6 +42,10 @@ export default function Index() {
           onTabChange={setActiveTab}
           onRefresh={refresh}
           stats={{ participantCount: participants.length, averageBPM, averageZone }}
+          sessionActive={sessionActive}
+          sessionElapsed={sessionElapsed}
+          onStartSession={() => startSession(participants)}
+          onStopSession={stopSession}
         />
         <div className="flex-1">
           <CoachDashboard participants={participants} isLoading={isLoading} activeTab={activeTab} />
