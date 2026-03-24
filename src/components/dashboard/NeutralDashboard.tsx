@@ -176,19 +176,21 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
         <div style={{ width: 110 }} />
         {/* Zone labels aligned to bar */}
         <div style={{ flex: 1, display: 'flex' }}>
-          {[1, 2, 3, 4, 5].map(z => (
-            <div key={z} style={{
-              width: '20%',
+          {ZONE_SEGMENTS.map(seg => (
+            <div key={seg.zone} style={{
+              width: seg.width,
               textAlign: 'center',
               fontSize: 'clamp(8px, 1vh, 11px)',
               fontWeight: 600,
               letterSpacing: '0.08em',
               textTransform: 'uppercase' as const,
-              color: ZONE_COLORS[z],
+              color: ZONE_COLORS[seg.zone],
               opacity: 0.7,
               paddingBottom: '4px',
+              overflow: 'hidden',
+              whiteSpace: 'nowrap',
             }}>
-              {ZONE_LABELS[z - 1]}
+              {seg.label}
             </div>
           ))}
         </div>
