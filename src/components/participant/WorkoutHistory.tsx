@@ -1,11 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
-import { ArrowLeft, Clock, Flame, Heart, Activity, ChevronRight, Loader2 } from 'lucide-react';
+import { ArrowLeft, Clock, Flame, Heart, Activity, ChevronRight, Loader2, Trash2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface Workout {
   id: string;
@@ -35,33 +46,89 @@ interface WorkoutHistoryProps {
   onClose: () => void;
 }
 
+function isIncomplete(w: Workout): boolean {
+  return w.ended_at === null || (w.duration_seconds === 0 && w.avg_bpm === 0);
+}
+
 export function WorkoutHistory({ profileId, onClose }: WorkoutHistoryProps) {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
   const [hrData, setHrData] = useState<HRDataPoint[]>([]);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Workout | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showCleanupDialog, setShowCleanupDialog] = useState(false);
+  const { toast } = useToast();
+
+  const fetchWorkouts = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('workouts')
+      .select('*')
+      .eq('profile_id', profileId)
+      .order('started_at', { ascending: false })
+      .limit(50);
+
+    if (error) {
+      console.error('Error fetching workouts:', error);
+    } else {
+      setWorkouts(data || []);
+    }
+    setIsLoading(false);
+  }, [profileId]);
 
   useEffect(() => {
-    const fetchWorkouts = async () => {
-      const { data, error } = await supabase
-        .from('workouts')
-        .select('*')
-        .eq('profile_id', profileId)
-        .not('ended_at', 'is', null)
-        .order('started_at', { ascending: false })
-        .limit(50);
-
-      if (error) {
-        console.error('Error fetching workouts:', error);
-      } else {
-        setWorkouts(data || []);
-      }
-      setIsLoading(false);
-    };
-
     fetchWorkouts();
-  }, [profileId]);
+  }, [fetchWorkouts]);
+
+  const deleteWorkoutById = async (workoutId: string) => {
+    // Delete HR data first (foreign key)
+    const { error: hrError } = await supabase
+      .from('workout_hr_data')
+      .delete()
+      .eq('workout_id', workoutId);
+    if (hrError) throw hrError;
+
+    const { error: wError } = await supabase
+      .from('workouts')
+      .delete()
+      .eq('id', workoutId);
+    if (wError) throw wError;
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      await deleteWorkoutById(deleteTarget.id);
+      toast({ title: 'Training wurde gelöscht' });
+      setDeleteTarget(null);
+      fetchWorkouts();
+    } catch (err: any) {
+      console.error('Delete error:', err);
+      toast({ title: 'Fehler beim Löschen', description: err.message, variant: 'destructive' });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCleanupConfirm = async () => {
+    setIsDeleting(true);
+    try {
+      const incomplete = workouts.filter(isIncomplete);
+      for (const w of incomplete) {
+        await deleteWorkoutById(w.id);
+      }
+      toast({ title: `${incomplete.length} unvollständige Einträge gelöscht` });
+      setShowCleanupDialog(false);
+      fetchWorkouts();
+    } catch (err: any) {
+      console.error('Cleanup error:', err);
+      toast({ title: 'Fehler beim Aufräumen', description: err.message, variant: 'destructive' });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const fetchWorkoutDetails = async (workout: Workout) => {
     setSelectedWorkout(workout);
@@ -96,6 +163,9 @@ export function WorkoutHistory({ profileId, onClose }: WorkoutHistoryProps) {
     'hsl(0 100% 55%)',
   ];
 
+  const incompleteCount = workouts.filter(isIncomplete).length;
+
+  // ── Detail view ──
   if (selectedWorkout) {
     const zoneData = [
       { zone: 'Z1', seconds: selectedWorkout.zone_1_seconds || 0, color: zoneColors[0] },
@@ -105,7 +175,6 @@ export function WorkoutHistory({ profileId, onClose }: WorkoutHistoryProps) {
       { zone: 'Z5', seconds: selectedWorkout.zone_5_seconds || 0, color: zoneColors[4] },
     ];
 
-    // Sample HR data for chart
     const sampleInterval = Math.max(1, Math.floor(hrData.length / 60));
     const chartData = hrData
       .filter((_, index) => index % sampleInterval === 0)
@@ -116,7 +185,6 @@ export function WorkoutHistory({ profileId, onClose }: WorkoutHistoryProps) {
 
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        {/* Header */}
         <div className="flex items-center gap-3 p-4 bg-card border-b border-border">
           <Button variant="ghost" size="icon" onClick={() => setSelectedWorkout(null)}>
             <ArrowLeft className="w-5 h-5" />
@@ -138,7 +206,6 @@ export function WorkoutHistory({ profileId, onClose }: WorkoutHistoryProps) {
             </div>
           ) : (
             <>
-              {/* Stats Grid */}
               <div className="grid grid-cols-2 gap-3">
                 <Card className="p-4 text-center">
                   <Clock className="w-5 h-5 mx-auto mb-1 text-primary" />
@@ -162,7 +229,6 @@ export function WorkoutHistory({ profileId, onClose }: WorkoutHistoryProps) {
                 </Card>
               </div>
 
-              {/* HR Curve */}
               {chartData.length > 1 && (
                 <Card className="p-4">
                   <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
@@ -187,7 +253,6 @@ export function WorkoutHistory({ profileId, onClose }: WorkoutHistoryProps) {
                 </Card>
               )}
 
-              {/* Zone Distribution */}
               <Card className="p-4">
                 <h3 className="text-sm font-semibold mb-3">Zeit in Zonen</h3>
                 <div className="h-24 mb-4">
@@ -229,9 +294,9 @@ export function WorkoutHistory({ profileId, onClose }: WorkoutHistoryProps) {
     );
   }
 
+  // ── List view ──
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
       <div className="flex items-center gap-3 p-4 bg-card border-b border-border">
         <Button variant="ghost" size="icon" onClick={onClose}>
           <ArrowLeft className="w-5 h-5" />
@@ -251,6 +316,17 @@ export function WorkoutHistory({ profileId, onClose }: WorkoutHistoryProps) {
           </div>
         ) : (
           <div className="space-y-2">
+            {incompleteCount > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full mb-2 text-destructive border-destructive/30 hover:bg-destructive/10"
+                onClick={() => setShowCleanupDialog(true)}
+              >
+                <Trash2 className="w-3.5 h-3.5 mr-2" />
+                {incompleteCount} unvollständige Einträge löschen
+              </Button>
+            )}
             {workouts.map((workout) => (
               <Card 
                 key={workout.id}
@@ -258,36 +334,100 @@ export function WorkoutHistory({ profileId, onClose }: WorkoutHistoryProps) {
                 onClick={() => fetchWorkoutDetails(workout)}
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="font-medium">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium flex items-center gap-2">
                       {format(new Date(workout.started_at), "EEEE, d. MMM yyyy", { locale: de })}
+                      {isIncomplete(workout) && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                          unvollständig
+                        </span>
+                      )}
                     </div>
                     <div className="text-sm text-muted-foreground flex items-center gap-3 mt-1">
                       <span className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         {formatDuration(workout.duration_seconds)}
                       </span>
-                      {workout.total_calories && (
+                      {workout.total_calories ? (
                         <span className="flex items-center gap-1">
                           <Flame className="w-3 h-3" />
                           {Math.round(workout.total_calories)} kcal
                         </span>
-                      )}
-                      {workout.avg_bpm && (
+                      ) : null}
+                      {workout.avg_bpm ? (
                         <span className="flex items-center gap-1">
                           <Heart className="w-3 h-3" />
                           {workout.avg_bpm} bpm
                         </span>
-                      )}
+                      ) : null}
                     </div>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteTarget(workout);
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                  </div>
                 </div>
               </Card>
             ))}
           </div>
         )}
       </div>
+
+      {/* Single workout delete dialog */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Training löschen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget && `Training vom ${format(new Date(deleteTarget.started_at), "d. MMMM yyyy, HH:mm", { locale: de })} Uhr wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Löschen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Cleanup incomplete workouts dialog */}
+      <AlertDialog open={showCleanupDialog} onOpenChange={setShowCleanupDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unvollständige Einträge löschen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {incompleteCount} unvollständige Trainings-Einträge werden gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCleanupConfirm}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Alle löschen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
