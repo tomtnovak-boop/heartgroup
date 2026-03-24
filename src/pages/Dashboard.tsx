@@ -55,12 +55,14 @@ export default function Dashboard() {
         onStartSession={handleStartSession}
         onStopSession={stopSession}
       />
-      <CoachDashboard
-        participants={participants}
-        isLoading={isLoading}
-        activeTab={activeTab}
-        averageBPM={averageBPM}
-      />
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <CoachDashboard
+          participants={participants}
+          isLoading={isLoading}
+          activeTab={activeTab}
+          averageBPM={averageBPM}
+        />
+      </div>
     </div>
   );
 }
