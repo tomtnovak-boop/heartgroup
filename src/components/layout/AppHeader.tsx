@@ -64,7 +64,7 @@ export function AppHeader({
       {/* Left: Logo + Home */}
       <div className="flex items-center gap-2 flex-shrink-0">
         {currentView === 'coach' && (
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate('/participant')} title="Home">
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(isAdmin ? '/' : '/participant')} title="Home">
             <Home className="w-3.5 h-3.5" />
           </Button>
         )}
