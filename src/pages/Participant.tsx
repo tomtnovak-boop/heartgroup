@@ -17,7 +17,7 @@ import {
   TrendingUp, TrendingDown, Flame, Clock, Activity, ChevronRight, Zap,
   BarChart3, Calendar,
 } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, startOfWeek, getISOWeek } from 'date-fns';
+import { format, startOfMonth, endOfMonth, getISOWeek, eachWeekOfInterval } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
 
 interface Profile {
@@ -185,15 +185,21 @@ export default function Participant() {
     const z5 = w.reduce((s, x) => s + (x.zone_5_seconds || 0), 0);
     const zTotal = z1 + z2 + z3 + z4 + z5 || 1;
 
-    // Weekly sessions
+    // Weekly sessions — always show all weeks of the month
     const weekMap = new Map<number, number>();
     w.forEach(x => {
       const wk = getISOWeek(new Date(x.started_at));
       weekMap.set(wk, (weekMap.get(wk) || 0) + 1);
     });
-    const weekData = Array.from(weekMap.entries())
-      .sort(([a], [b]) => a - b)
-      .map(([wk, count]) => ({ week: `CW${wk}`, count }));
+    const now = new Date();
+    const allWeekStarts = eachWeekOfInterval(
+      { start: startOfMonth(now), end: endOfMonth(now) },
+      { weekStartsOn: 1 }
+    );
+    const weekData = allWeekStarts.map(ws => {
+      const wk = getISOWeek(ws);
+      return { week: `W${wk}`, count: weekMap.get(wk) || 0 };
+    });
 
     // Streaks
     const weeklyStreak = (() => {
@@ -439,24 +445,33 @@ export default function Participant() {
           )}
 
           {/* Weekly sessions chart */}
-          {monthStats.weekData.length > 0 && (
-            <Card className="p-3">
-              <h3 className="text-xs font-semibold mb-2">Weekly Sessions</h3>
-              <div className="h-20">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={monthStats.weekData}>
-                    <XAxis dataKey="week" tick={{ fill: 'hsl(215 20% 55%)', fontSize: 10 }} axisLine={false} tickLine={false} />
-                    <YAxis hide allowDecimals={false} />
-                    <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                      {monthStats.weekData.map((_, i) => (
-                        <Cell key={i} fill="hsl(280 100% 65%)" />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </Card>
-          )}
+          <Card className="p-3">
+            <h3 className="text-xs font-semibold mb-2">Weekly Sessions</h3>
+            <div className="h-24">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthStats.weekData} barCategoryGap="20%">
+                  <XAxis dataKey="week" tick={{ fill: 'hsl(215 20% 55%)', fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis hide domain={[0, 5]} allowDecimals={false} />
+                  <Bar
+                    dataKey="count"
+                    radius={[4, 4, 0, 0]}
+                    minPointSize={3}
+                    label={({ x, y, width, value }: any) =>
+                      value > 0 ? (
+                        <text x={x + width / 2} y={y - 4} textAnchor="middle" fill="hsl(215 20% 65%)" fontSize={10}>
+                          {value}
+                        </text>
+                      ) : null
+                    }
+                  >
+                    {monthStats.weekData.map((entry, i) => (
+                      <Cell key={i} fill={entry.count > 0 ? 'hsl(280 100% 65%)' : 'hsl(215 20% 20%)'} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
 
           {/* Streak cards */}
           <div className="grid grid-cols-3 gap-2">
