@@ -63,15 +63,14 @@ export function HexTile({ data, isHero = false, tileSize = 72 }: HexTileProps) {
         filter: `drop-shadow(0 0 ${isHero ? 8 : 5}px ${color}88)`,
       }}
     >
-      {/* Outer glow border hex - pulses when near zone edge */}
-      <motion.div
+      {/* Outer glow border hex */}
+      <div
         className="absolute inset-0"
         style={{
           clipPath: hexClip,
           background: color,
+          opacity: outerOpacity,
         }}
-        animate={isNearZoneEdge ? { opacity: [0.3, 0.7, 0.3] } : { opacity: isHero ? 0.6 : 0.3 }}
-        transition={isNearZoneEdge ? { duration: 0.6, repeat: Infinity, ease: 'easeInOut' } : {}}
       />
 
       {/* Inner hex with liquid fill */}
@@ -79,7 +78,7 @@ export function HexTile({ data, isHero = false, tileSize = 72 }: HexTileProps) {
         className="absolute flex flex-col items-center justify-center"
         style={{
           clipPath: hexClip,
-          background: `linear-gradient(to top, ${color}40 ${fillPercent}%, rgba(15,15,15,0.95) ${fillPercent}%)`,
+          background: `linear-gradient(to top, ${color}${fillOpacityHex} ${fillPercent}%, rgba(15,15,15,0.95) ${fillPercent}%)`,
           top: 2,
           left: 2,
           right: 2,
@@ -112,22 +111,16 @@ export function HexTile({ data, isHero = false, tileSize = 72 }: HexTileProps) {
         </span>
 
         {/* BPM */}
-        <motion.span
+        <span
           className="font-black leading-none"
           style={{
             fontSize: Math.max(bpmFontSize, 14),
             color: '#fff',
             textShadow: `0 0 6px ${color}88, ${textShadow}`,
           }}
-          animate={{ scale: [1, 1.03, 1] }}
-          transition={{
-            duration: data.bpm > 0 ? 60 / data.bpm : 1,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
         >
           {data.bpm}
-        </motion.span>
+        </span>
 
         {/* HR Percentage */}
         <span
