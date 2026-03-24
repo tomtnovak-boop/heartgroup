@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
-import { getEffectiveMaxHR } from '@/lib/heartRateUtils';
+import { getEffectiveMaxHR, calculateZone, calculateHRPercentage } from '@/lib/heartRateUtils';
 
 export interface LiveHRData {
   id: string;
@@ -62,9 +62,12 @@ export function useLiveHR(onNewData?: (data: { profile_id: string; bpm: number; 
             const profile = profiles.find(p => p.id === profileId);
             if (profile) {
               const effectiveMaxHR = getEffectiveMaxHR(profile.age, profile.custom_max_hr);
+              const recalcZone = calculateZone(entry.bpm, effectiveMaxHR);
+              const recalcHRPct = calculateHRPercentage(entry.bpm, effectiveMaxHR);
               latestByProfile.set(profileId, {
                 ...entry,
-                hr_percentage: Number(entry.hr_percentage),
+                zone: recalcZone,
+                hr_percentage: recalcHRPct,
                 profile: {
                   id: profile.id,
                   name: profile.name,
@@ -119,14 +122,16 @@ export function useLiveHR(onNewData?: (data: { profile_id: string; bpm: number; 
 
           if (profile) {
             const effectiveMaxHR = getEffectiveMaxHR(profile.age, profile.custom_max_hr);
+            const recalcZone = calculateZone(newData.bpm, effectiveMaxHR);
+            const recalcHRPct = calculateHRPercentage(newData.bpm, effectiveMaxHR);
             setParticipants(prev => {
               const updated = new Map(prev);
               updated.set(newData.profile_id, {
                 id: newData.id,
                 profile_id: newData.profile_id,
                 bpm: newData.bpm,
-                zone: newData.zone,
-                hr_percentage: Number(newData.hr_percentage),
+                zone: recalcZone,
+                hr_percentage: recalcHRPct,
                 timestamp: newData.timestamp,
                 profile: {
                   id: profile.id,
@@ -144,8 +149,8 @@ export function useLiveHR(onNewData?: (data: { profile_id: string; bpm: number; 
             onNewData?.({
               profile_id: newData.profile_id,
               bpm: newData.bpm,
-              zone: newData.zone,
-              hr_percentage: Number(newData.hr_percentage),
+              zone: recalcZone,
+              hr_percentage: recalcHRPct,
               timestamp: newData.timestamp,
             });
           }

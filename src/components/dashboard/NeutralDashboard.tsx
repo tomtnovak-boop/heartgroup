@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { LiveHRData } from '@/hooks/useLiveHR';
+import { calculateZone, getEffectiveMaxHR } from '@/lib/heartRateUtils';
 
 interface NeutralDashboardProps {
   participants: LiveHRData[];
@@ -20,13 +21,6 @@ const SEGMENT_OPACITY: Record<number, number> = {
   1: 0.18, 2: 0.22, 3: 0.28, 4: 0.35, 5: 0.42,
 };
 
-function getBarZone(hrPercent: number): number {
-  if (hrPercent < 20) return 1;
-  if (hrPercent < 40) return 2;
-  if (hrPercent < 60) return 3;
-  if (hrPercent < 80) return 4;
-  return 5;
-}
 
 const LEFT_BORDER_COLORS: Record<number, string> = {
   1: 'hsl(220 15% 45% / 0.35)',
@@ -56,13 +50,16 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
     return sorted.map((profile, idx) => {
       const live = liveMap.get(profile.id);
       const firstName = profile.name.split(' ')[0];
+      const realZone = live && live.bpm > 0 && live.profile
+        ? calculateZone(live.bpm, getEffectiveMaxHR(live.profile.age, live.profile.custom_max_hr))
+        : null;
       return {
         number: idx + 1,
         profileId: profile.id,
         name: profile.nickname || firstName,
         bpm: live?.bpm ?? null,
         hrPercentage: live?.hr_percentage ?? null,
-        zone: live ? getBarZone(live.hr_percentage) : null,
+        zone: realZone,
         isLive: !!live,
       };
     });
