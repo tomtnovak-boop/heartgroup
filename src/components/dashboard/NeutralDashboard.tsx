@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo } from 'react'; // v4-fix
 import { LiveHRData } from '@/hooks/useLiveHR';
 import { Heart } from 'lucide-react';
 
