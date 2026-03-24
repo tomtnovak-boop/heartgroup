@@ -553,6 +553,53 @@ export default function Participant() {
             {monthLabel} — Detailed Stats
           </h2>
 
+          {/* Summary metric cards */}
+          <div className="grid grid-cols-2 gap-2">
+            <Card className="p-3 border-purple-500/30">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Activity className="w-3.5 h-3.5 text-purple-400" />
+                <span className="text-[10px] text-muted-foreground">Sessions</span>
+              </div>
+              <div className="text-2xl font-bold">{monthlyWorkouts.filter(w => w.ended_at).length}</div>
+            </Card>
+            <Card className="p-3 border-pink-500/30">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Heart className="w-3.5 h-3.5 text-pink-400" />
+                <span className="text-[10px] text-muted-foreground">Avg. Heart Rate</span>
+              </div>
+              <div className="text-2xl font-bold">{monthStats.avgBpm || '--'} <span className="text-sm font-normal text-muted-foreground">bpm</span></div>
+              {monthStats.prevAvgBpm > 0 && monthStats.avgBpm > 0 && (
+                <div className={`text-xs flex items-center gap-0.5 mt-1 ${monthStats.avgBpm > monthStats.prevAvgBpm ? 'text-destructive' : 'text-emerald-400'}`}>
+                  {monthStats.avgBpm > monthStats.prevAvgBpm ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                  {monthStats.avgBpm > monthStats.prevAvgBpm ? '+' : ''}{monthStats.avgBpm - monthStats.prevAvgBpm} bpm vs. {prevMonthName}
+                </div>
+              )}
+            </Card>
+            <Card className="p-3 border-emerald-500/30">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Clock className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-[10px] text-muted-foreground">Training Time</span>
+              </div>
+              <div className="text-2xl font-bold">{formatDuration(monthStats.totalSeconds)}</div>
+              {monthStats.prevTotalSeconds > 0 && monthStats.totalSeconds > 0 && (
+                <div className={`text-xs flex items-center gap-0.5 mt-1 ${monthStats.totalSeconds > monthStats.prevTotalSeconds ? 'text-emerald-400' : 'text-destructive'}`}>
+                  {monthStats.totalSeconds > monthStats.prevTotalSeconds ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                  {monthStats.totalSeconds > monthStats.prevTotalSeconds ? '+' : ''}{formatDuration(Math.abs(monthStats.totalSeconds - monthStats.prevTotalSeconds))} vs. {prevMonthName}
+                </div>
+              )}
+            </Card>
+            <Card className="p-3 border-orange-500/30">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Flame className="w-3.5 h-3.5 text-orange-400" />
+                <span className="text-[10px] text-muted-foreground">Calories</span>
+              </div>
+              <div className="text-2xl font-bold">{monthStats.totalCalories} <span className="text-sm font-normal text-muted-foreground">kcal</span></div>
+              {monthStats.maxSessionCal > 0 && (
+                <div className="text-xs text-muted-foreground mt-1">Best: {monthStats.maxSessionCal} kcal</div>
+              )}
+            </Card>
+          </div>
+
           {monthlyWorkouts.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Calendar className="w-12 h-12 mx-auto mb-3 opacity-40" />
