@@ -9,16 +9,22 @@ const ZONE_CONFIG: Record<number, { label: string; color: string }> = {
   5: { label: 'MAX EFFORT', color: '#ff0044' },
 };
 
+function getGridCols(count: number): number {
+  if (count <= 4) return 1;
+  if (count <= 8) return 2;
+  return 3;
+}
+
 interface ZoneColumnProps {
   zone: number;
   participants: LiveHRData[];
   heroProfileId?: string;
-  tileSize: number;
 }
 
-export function ZoneColumn({ zone, participants, heroProfileId, tileSize }: ZoneColumnProps) {
+export function ZoneColumn({ zone, participants, heroProfileId }: ZoneColumnProps) {
   const config = ZONE_CONFIG[zone];
   const sorted = [...participants].sort((a, b) => b.bpm - a.bpm);
+  const cols = getGridCols(sorted.length);
 
   return (
     <div className="flex flex-col items-center min-w-0 h-full">
@@ -43,10 +49,19 @@ export function ZoneColumn({ zone, participants, heroProfileId, tileSize }: Zone
         }}
       />
 
-      {/* Tiles — fill remaining space */}
-      <div className="flex flex-col items-center gap-0.5 flex-1 min-h-0 justify-start overflow-hidden">
+      {/* Tiles — multi-column grid */}
+      <div
+        className="flex-1 min-h-0 justify-start overflow-hidden"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${cols}, 1fr)`,
+          gap: '2px',
+          justifyItems: 'center',
+          alignContent: 'start',
+        }}
+      >
         {sorted.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="col-span-full flex items-center justify-center py-4">
             <span className="text-[10px] text-white/20 uppercase tracking-wider">—</span>
           </div>
         ) : (
@@ -55,7 +70,7 @@ export function ZoneColumn({ zone, participants, heroProfileId, tileSize }: Zone
               key={p.profile_id}
               data={p}
               isHero={p.profile_id === heroProfileId}
-              tileSize={tileSize}
+              tileSize={64}
             />
           ))
         )}

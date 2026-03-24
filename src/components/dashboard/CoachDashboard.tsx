@@ -7,14 +7,11 @@ import { Heart, RefreshCw, Users, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-// Header + stats + footer ≈ 160px
-const CHROME_HEIGHT = 160;
-
 export function CoachDashboard() {
   const { participants, averageBPM, averageZone, isLoading, refresh } = useLiveHR();
   const [activeTab, setActiveTab] = useState<string>('live');
 
-  const { zoneGroups, heroProfileId, maxPerZone, tileSize } = useMemo(() => {
+  const { zoneGroups, heroProfileId } = useMemo(() => {
     const groups: Record<number, typeof participants> = { 1: [], 2: [], 3: [], 4: [], 5: [] };
     let heroId: string | undefined;
     let heroMaxBpm = 0;
@@ -28,15 +25,7 @@ export function CoachDashboard() {
       }
     });
 
-    const maxCount = Math.max(1, ...Object.values(groups).map((g) => g.length));
-
-    // Calculate tile size to fit all in viewport
-    const availableHeight = (typeof window !== 'undefined' ? window.innerHeight : 800) - CHROME_HEIGHT;
-    // Each tile height = size * 1.15 + gap(2px)
-    const calculatedSize = Math.floor((availableHeight - maxCount * 2) / (maxCount * 1.15));
-    const size = Math.min(72, Math.max(40, calculatedSize));
-
-    return { zoneGroups: groups, heroProfileId: heroId, maxPerZone: maxCount, tileSize: size };
+    return { zoneGroups: groups, heroProfileId: heroId };
   }, [participants]);
 
   if (isLoading) {
