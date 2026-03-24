@@ -50,7 +50,9 @@ export function HexTile({ data, isHero = false, tileSize = 72 }: HexTileProps) {
         className="absolute flex flex-col items-center justify-center"
         style={{
           clipPath: hexClip,
-          background: `linear-gradient(180deg, rgba(20,20,20,0.95) 0%, rgba(10,10,10,0.98) 100%)`,
+          background: isHero
+            ? `linear-gradient(180deg, ${color}55 0%, ${color}30 100%)`
+            : `linear-gradient(180deg, rgba(20,20,20,0.95) 0%, rgba(10,10,10,0.98) 100%)`,
           top: 2,
           left: 2,
           right: 2,
