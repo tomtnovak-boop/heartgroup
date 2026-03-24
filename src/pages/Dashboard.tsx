@@ -61,6 +61,7 @@ export default function Dashboard() {
           isLoading={isLoading}
           activeTab={activeTab}
           averageBPM={averageBPM}
+          isSessionActive={sessionActive}
         />
       </div>
     </div>
