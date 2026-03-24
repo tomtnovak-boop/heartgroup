@@ -36,12 +36,13 @@ const LEFT_BORDER_COLORS: Record<number, string> = {
   5: 'hsl(0 100% 55% / 1)',
 };
 
+const ROW_BG_OPACITY: Record<number, number> = {
+  1: 0.04, 2: 0.07, 3: 0.10, 4: 0.15, 5: 0.22,
+};
+
 function getRowBg(zone: number | null): string {
   if (!zone) return 'transparent';
-  if (zone <= 2) return `${ZONE_COLORS[zone].replace(')', ' / 0.04)')}`;
-  if (zone === 3) return `${ZONE_COLORS[zone].replace(')', ' / 0.07)')}`;
-  if (zone === 4) return `${ZONE_COLORS[zone].replace(')', ' / 0.12)')}`;
-  return `${ZONE_COLORS[zone].replace(')', ' / 0.18)')}`;
+  return `color-mix(in srgb, ${ZONE_COLORS[zone]} ${ROW_BG_OPACITY[zone] * 100}%, transparent)`;
 }
 
 function getBarGlow(zone: number | null): string {
