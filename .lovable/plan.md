@@ -1,42 +1,34 @@
 
 
-## Plan: Körpergrösse für alle 20 Testprofile einfügen
+## Plan: Test-Login für Anna Müller erstellen
 
 ### Vorgehen
-Per INSERT-Tool (UPDATE) realistische Körpergrössen für alle 20 Testprofile setzen, basierend auf Geschlecht und proportional zum Gewicht.
 
-### Daten
+Da Anna Müller nur als Testprofil ohne Auth-Account existiert, muss ein Login-Account erstellt und mit ihrem bestehenden Profil verknüpft werden.
 
-| Name | Geschlecht | Gewicht | Grösse (cm) |
-|------|-----------|---------|-------------|
-| Anna Müller | F | 62 | 168 |
-| Ben Keller | M | 78 | 180 |
-| Clara Fischer | F | 65 | 170 |
-| David Brunner | M | 82 | 183 |
-| Eva Schneider | F | 58 | 164 |
-| Felix Wagner | M | 90 | 188 |
-| Gina Huber | F | 55 | 162 |
-| Hans Meier | M | 85 | 185 |
-| Irene Baumann | F | 68 | 172 |
-| Jan Steiner | M | 75 | 178 |
-| Lisa Braun | F | 60 | 166 |
-| Marco Roth | M | 76 | 179 |
-| Nina Schwarz | F | 63 | 169 |
-| Oliver Fuchs | M | 80 | 182 |
-| Paula Lang | F | 57 | 163 |
-| Ralf Zimmer | M | 88 | 186 |
-| Sara Klein | F | 54 | 160 |
-| Thomas Wolf | M | 83 | 184 |
-| Ulla Peters | F | 66 | 171 |
-| Viktor Hahn | M | 79 | 181 |
+**Schritt 1: E-Mail Auto-Confirm aktivieren**
+- Damit du dich ohne E-Mail-Bestätigung direkt anmelden kannst, wird Auto-Confirm temporär aktiviert
 
-### Umsetzung
-- Ein einzelnes UPDATE-Statement pro Profil via INSERT-Tool
-- Keine Code-Änderungen nötig — die Kalorienberechnung nutzt bereits `weight` aus dem Profil
+**Schritt 2: Du registrierst dich auf /auth mit diesen Daten:**
+- **E-Mail:** `anna@test.de`
+- **Passwort:** `Test1234!`
+- **Name:** Anna Müller
+- **Geburtsdatum:** 15.03.1998
+- **Gewicht:** 62 kg
+- **Grösse:** 168 cm
 
-### Hinweis zur Kalorienformel
-Die **Keytel-Formel** verwendet Herzfrequenz, Gewicht, Alter und Geschlecht. `height` wird aktuell nicht für die Berechnung verwendet, ist aber als Profildaten sinnvoll (z.B. für BMI oder zukünftige Erweiterungen).
+**Schritt 3: Profil-Verknüpfung (Datenbank)**
+- Nach der Registrierung wird ein zweites Anna-Profil erstellt — das alte Test-Profil (ohne `user_id`) wird gelöscht und die `user_id` des neuen Auth-Accounts auf das neue Profil gesetzt
+- Die Simulationsdaten (live_hr) werden auf das neue Profil umgemappt
 
-### Dateien
-- **Keine Code-Änderungen** — nur Datenbank-Update
+### Alternative (schneller)
+Stattdessen kann ich auch eine Backend-Funktion erstellen, die den Auth-User automatisch anlegt und direkt mit dem bestehenden Anna-Profil verknüpft — dann musst du dich nur einloggen.
+
+### Empfehlung
+Die manuelle Registrierung ist der einfachste Weg und testet gleichzeitig den Registrierungs-Flow.
+
+### Technische Schritte
+1. Auto-Confirm via `configure_auth` aktivieren
+2. Du registrierst dich manuell
+3. Ich verknüpfe die Daten per DB-Update
 
