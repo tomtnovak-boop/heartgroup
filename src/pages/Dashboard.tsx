@@ -82,6 +82,8 @@ export default function Dashboard() {
         stats={{
           participantCount: participants.length,
           averageBPM,
+          lowestBPM,
+          highestBPM,
           averageZone,
         }}
         sessionActive={sessionActive}

@@ -31,7 +31,7 @@ export default function Index() {
   if (viewMode === 'coach' && isCoach) {
     return (
       <div className="h-dvh bg-background flex flex-col overflow-hidden">
-        <AppHeader currentView={viewMode} onViewChange={changeView} showViewSwitcher={isCoach} activeTab={activeTab} onTabChange={setActiveTab} onRefresh={refresh} stats={{ participantCount: participants.length, averageBPM, averageZone }} sessionActive={sessionActive} sessionElapsed={sessionElapsed} onStartSession={() => startSession(participants)} onStopSession={stopSession} />
+        <AppHeader currentView={viewMode} onViewChange={changeView} showViewSwitcher={isCoach} activeTab={activeTab} onTabChange={setActiveTab} onRefresh={refresh} stats={{ participantCount: participants.length, averageBPM, lowestBPM: 0, highestBPM: 0, averageZone }} sessionActive={sessionActive} sessionElapsed={sessionElapsed} onStartSession={() => startSession(participants)} onStopSession={stopSession} />
         <div className="flex-1 min-h-0 overflow-hidden">
           <CoachDashboard participants={participants} isLoading={isLoading} activeTab={activeTab} selectedProfileId={myProfileId} averageBPM={averageBPM} isSessionActive={false} />
         </div>
