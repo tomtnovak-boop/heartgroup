@@ -10,6 +10,8 @@ export type ViewMode = 'participant' | 'coach';
 interface StatsData {
   participantCount: number;
   averageBPM: number;
+  lowestBPM: number;
+  highestBPM: number;
   averageZone: number;
 }
 
