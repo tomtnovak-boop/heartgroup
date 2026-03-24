@@ -84,7 +84,7 @@ function CoachLeaderboard({
           <Trophy className="w-4 h-4 text-yellow-400" />
           <h1 className="text-[17px] font-bold text-white">Session Complete</h1>
         </div>
-        <p className="text-[11px] text-white/50">
+        <p className="text-[11px] text-white">
           {format(sessionDate, 'MMM d, yyyy')} · {formatDur(sessionDuration)} · {entries.length} participant{entries.length !== 1 ? 's' : ''}
         </p>
       </div>
