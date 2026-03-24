@@ -213,6 +213,52 @@ export default function Participant() {
     }
   }, [isConnected]);
 
+  // Detect session end → show leaderboard after 5s
+  useEffect(() => {
+    if (prevCoachSessionActive.current && !coachSessionActive && currentWorkoutId) {
+      setCurrentWorkoutId(null);
+      setActiveSession(false);
+      
+      const timer = setTimeout(async () => {
+        try {
+          const thirtySecsAgo = new Date(Date.now() - 30000).toISOString();
+          const { data: workouts } = await supabase
+            .from('workouts')
+            .select('profile_id, avg_bpm, max_bpm, duration_seconds, started_at, ended_at')
+            .not('ended_at', 'is', null)
+            .gte('ended_at', thirtySecsAgo);
+
+          if (!workouts || workouts.length === 0) { prevCoachSessionActive.current = coachSessionActive; return; }
+
+          const profileIds = [...new Set(workouts.map(w => w.profile_id))];
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('id, name, nickname')
+            .in('id', profileIds);
+
+          const profileMap = new Map(profiles?.map(p => [p.id, p.nickname || p.name]) || []);
+
+          const entries = workouts.map(w => ({
+            profile_id: w.profile_id,
+            name: profileMap.get(w.profile_id) || 'Unknown',
+            avg_bpm: w.avg_bpm || 0,
+            max_bpm: w.max_bpm || 0,
+            duration_seconds: w.duration_seconds || 0,
+          }));
+
+          setLeaderboardData(entries);
+          setLeaderboardDuration(Math.max(...entries.map(e => e.duration_seconds), 0));
+          setLeaderboardDate(new Date());
+          setShowLeaderboard(true);
+        } catch (err) {
+          console.error('Error fetching leaderboard:', err);
+        }
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+    prevCoachSessionActive.current = coachSessionActive;
+  }, [coachSessionActive, currentWorkoutId]);
+
   // Handle joining a session
   const handleJoinSession = useCallback(async () => {
     if (!profile) return;
