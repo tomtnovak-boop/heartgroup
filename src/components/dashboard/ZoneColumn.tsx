@@ -48,7 +48,7 @@ export function ZoneColumn({ zone, participants, heroProfileId }: ZoneColumnProp
         className="flex-1 min-h-0 justify-start overflow-hidden"
         style={{
           display: 'grid',
-          gridTemplateColumns: `repeat(${cols}, 1fr)`,
+          gridTemplateColumns: 'repeat(2, 1fr)',
           gap: '2px',
           justifyItems: 'center',
           alignContent: 'start',
