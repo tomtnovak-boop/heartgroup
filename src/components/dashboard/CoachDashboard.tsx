@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
-import { ZoneColumn, FIXED_TILE_SIZE, FIXED_GAP, ZONE_HEADER_HEIGHT } from './ZoneColumn';
+import { ZoneColumn, FIXED_TILE_SIZE, FIXED_GAP, ZONE_HEADER_HEIGHT, TILE_TOTAL_HEIGHT } from './ZoneColumn';
 import { HexTile } from './HexTile';
 import { CustomerList } from '@/components/admin/CustomerList';
 import { CoachList } from '@/components/admin/CoachList';
