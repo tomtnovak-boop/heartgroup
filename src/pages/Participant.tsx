@@ -420,56 +420,59 @@ export default function Participant() {
             {monthLabel} — Monthly Report
           </h2>
 
-          {/* 2x2 metric cards */}
-          <div className="grid grid-cols-2 gap-3">
-            <Card className="p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <Heart className="w-4 h-4 text-purple-400" />
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Avg. Heart Rate</span>
+          {/* Heart Rate card - full width */}
+          <Card className="p-4 border-pink-500/30">
+            <div className="flex items-center gap-1.5 mb-3">
+              <Heart className="w-3.5 h-3.5 text-pink-400" />
+              <span className="text-[10px] text-muted-foreground">Heart Rate — This Month</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div>
+                <ArrowDown className="w-4 h-4 mx-auto mb-1 text-cyan-400" />
+                <div className="text-xl font-bold text-cyan-400">{monthStats.lowestSessionBpm || '--'}</div>
+                <div className="text-[10px] text-muted-foreground">Lowest</div>
               </div>
-              <div className="text-2xl font-bold">{monthStats.avgBpm || '--'} <span className="text-sm font-normal text-muted-foreground">bpm</span></div>
-              {monthStats.prevAvgBpm > 0 && monthStats.avgBpm > 0 && (
-                <div className={`text-xs flex items-center gap-0.5 mt-1 ${monthStats.avgBpm > monthStats.prevAvgBpm ? 'text-destructive' : 'text-emerald-400'}`}>
-                  {monthStats.avgBpm > monthStats.prevAvgBpm ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                  {monthStats.avgBpm > monthStats.prevAvgBpm ? '+' : ''}{monthStats.avgBpm - monthStats.prevAvgBpm} bpm vs. {prevMonthName}
-                </div>
-              )}
-            </Card>
+              <div>
+                <Heart className="w-4 h-4 mx-auto mb-1 text-purple-400" fill="currentColor" />
+                <div className="text-2xl font-bold text-purple-400">{monthStats.avgBpm || '--'}</div>
+                <div className="text-[10px] text-muted-foreground">bpm</div>
+              </div>
+              <div>
+                <ArrowUp className="w-4 h-4 mx-auto mb-1 text-red-400" />
+                <div className="text-xl font-bold text-red-400">{monthStats.highestSessionBpm || '--'}</div>
+                <div className="text-[10px] text-muted-foreground">Highest</div>
+              </div>
+            </div>
+            <div className="text-[9px] text-muted-foreground text-center mt-2">Based on session averages</div>
+          </Card>
 
+          {/* Remaining metric cards */}
+          <div className="grid grid-cols-3 gap-2">
             <Card className="p-3">
               <div className="flex items-center gap-2 mb-1">
                 <Activity className="w-4 h-4 text-destructive" />
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Max. Heart Rate</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Max HR</span>
               </div>
-              <div className="text-2xl font-bold">{monthStats.maxBpm || '--'} <span className="text-sm font-normal text-muted-foreground">bpm</span></div>
+              <div className="text-xl font-bold">{monthStats.maxBpm || '--'} <span className="text-xs font-normal text-muted-foreground">bpm</span></div>
               {monthStats.maxBpmDate && (
-                <div className="text-xs text-muted-foreground mt-1">{monthStats.maxBpmDate}</div>
+                <div className="text-[10px] text-muted-foreground mt-0.5">{monthStats.maxBpmDate}</div>
               )}
             </Card>
 
             <Card className="p-3">
               <div className="flex items-center gap-2 mb-1">
                 <Clock className="w-4 h-4 text-emerald-400" />
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Training Time</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Time</span>
               </div>
-              <div className="text-2xl font-bold">{formatDuration(monthStats.totalSeconds)}</div>
-              {monthStats.prevTotalSeconds > 0 && monthStats.totalSeconds > 0 && (
-                <div className={`text-xs flex items-center gap-0.5 mt-1 ${monthStats.totalSeconds > monthStats.prevTotalSeconds ? 'text-emerald-400' : 'text-destructive'}`}>
-                  {monthStats.totalSeconds > monthStats.prevTotalSeconds ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                  {monthStats.totalSeconds > monthStats.prevTotalSeconds ? '+' : ''}{formatDuration(Math.abs(monthStats.totalSeconds - monthStats.prevTotalSeconds))} vs. {prevMonthName}
-                </div>
-              )}
+              <div className="text-xl font-bold">{formatDuration(monthStats.totalSeconds)}</div>
             </Card>
 
             <Card className="p-3">
               <div className="flex items-center gap-2 mb-1">
                 <Flame className="w-4 h-4 text-orange-400" />
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Total Calories</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Calories</span>
               </div>
-              <div className="text-2xl font-bold">{monthStats.totalCalories || '--'} <span className="text-sm font-normal text-muted-foreground">kcal</span></div>
-              {monthStats.maxSessionCal > 0 && (
-                <div className="text-xs text-muted-foreground mt-1">Best: {monthStats.maxSessionCal} kcal</div>
-              )}
+              <div className="text-xl font-bold">{monthStats.totalCalories || '--'} <span className="text-xs font-normal text-muted-foreground">kcal</span></div>
             </Card>
           </div>
 
