@@ -149,8 +149,9 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
                 width: 28,
                 textAlign: 'right',
                 fontSize: 'clamp(10px, 1.2vh, 14px)',
-                fontFamily: 'monospace',
-                color: 'rgba(255,255,255,0.25)',
+                fontWeight: 700,
+                color: 'white',
+                opacity: 0.5,
               }}>
                 {String(row.number).padStart(2, '0')}
               </div>
