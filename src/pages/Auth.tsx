@@ -7,7 +7,7 @@ import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
+  const [view, setView] = useState<'login' | 'register' | 'forgot'>('login');
   const { isAuthenticated, isLoading } = useAuthContext();
   const navigate = useNavigate();
 
