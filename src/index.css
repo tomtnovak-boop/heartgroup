@@ -170,6 +170,18 @@
   animation: heartbeat 1s ease-in-out infinite;
 }
 
+/* Neutral Dashboard Animations */
+@keyframes sliderPulse {
+  0%   { transform: translate(-50%, -50%) scale(1); }
+  50%  { transform: translate(-50%, -50%) scale(1.12); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes bgPulse {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 1; }
+}
+
 .animate-float {
   animation: float 3s ease-in-out infinite;
 }
