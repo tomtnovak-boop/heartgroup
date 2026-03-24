@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { HeartRateDisplay } from '@/components/participant/HeartRateDisplay';
 import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
 import { WorkoutHistory } from '@/components/participant/WorkoutHistory';
+import { SessionLeaderboard } from '@/components/dashboard/SessionLeaderboard';
 import { useBluetoothHR } from '@/hooks/useBluetoothHR';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { enableNoSleep, isIOS } from '@/lib/noSleep';
