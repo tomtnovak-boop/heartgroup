@@ -279,7 +279,7 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
                   <div
                     style={{
                       position: 'absolute',
-                      left: `${Math.min(Math.max(row.hrPercentage, 2), 98)}%`,
+                      left: `${Math.min(Math.max(hrPercentToBarPosition(row.hrPercentage), 2), 98)}%`,
                       top: '50%',
                       transform: 'translate(-50%, -50%)',
                       width: 'clamp(26px, 3vw, 38px)',
