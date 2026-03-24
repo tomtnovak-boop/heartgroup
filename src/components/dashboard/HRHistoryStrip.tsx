@@ -49,22 +49,20 @@ export function HRHistoryStrip({ averageBPM, isSessionActive }: HRHistoryStripPr
     prevActiveRef.current = isSessionActive;
   }, [isSessionActive]);
 
-  // Collect data points on a 1-second interval
+  // Collect data points always when BPM > 0
   useEffect(() => {
-    if (!isSessionActive) return;
-    frozenRef.current = false;
-
     const interval = setInterval(() => {
       if (frozenRef.current) return;
       const bpm = bpmRef.current;
       if (bpm <= 0) return;
+      console.log('HRHistoryStrip collecting:', { bpm, isSessionActive: !frozenRef.current });
       const buf = bufferRef.current;
       buf.push({ time: Date.now(), bpm });
       if (buf.length > MAX_POINTS) buf.shift();
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isSessionActive]);
+  }, []);
 
   // RAF render loop — direct DOM manipulation, no React state
   const render = useCallback(() => {
