@@ -79,7 +79,34 @@ export function useBluetoothHR() {
     isManualDisconnectRef.current = false;
     setState(prev => ({ ...prev, isConnecting: true, error: null, connectionLost: false }));
     try {
-      const device = await navigator.bluetooth.requestDevice({ filters: [{ services: ['heart_rate'] }], optionalServices: ['heart_rate'] });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const device = await (navigator.bluetooth as any).requestDevice({
+        filters: [
+          { services: ['heart_rate'] },
+          { namePrefix: 'Garmin' }, { namePrefix: 'Fenix' }, { namePrefix: 'Forerunner' },
+          { namePrefix: 'Vivoactive' }, { namePrefix: 'Vivosmart' }, { namePrefix: 'Venu' },
+          { namePrefix: 'Instinct' }, { namePrefix: 'Epix' }, { namePrefix: 'HRM-' }, { namePrefix: 'HRM ' },
+          { namePrefix: 'Apple Watch' },
+          { namePrefix: 'Polar' }, { namePrefix: 'H7' }, { namePrefix: 'H9' }, { namePrefix: 'H10' },
+          { namePrefix: 'OH1' }, { namePrefix: 'Verity' },
+          { namePrefix: 'Wahoo' }, { namePrefix: 'TICKR' }, { namePrefix: 'Blue HR' },
+          { namePrefix: 'Suunto' }, { namePrefix: 'Smart Belt' },
+          { namePrefix: 'Samsung' }, { namePrefix: 'Galaxy Watch' }, { namePrefix: 'Galaxy Fit' },
+          { namePrefix: 'Fitbit' }, { namePrefix: 'Charge' }, { namePrefix: 'Versa' }, { namePrefix: 'Sense' },
+          { namePrefix: 'Mi Band' }, { namePrefix: 'Mi Smart' }, { namePrefix: 'Amazfit' }, { namePrefix: 'Zepp' },
+          { namePrefix: 'HUAWEI' }, { namePrefix: 'Huawei' }, { namePrefix: 'Honor Band' },
+          { namePrefix: 'COROS' },
+          { namePrefix: 'Withings' }, { namePrefix: 'ScanWatch' },
+          { namePrefix: 'CooSpo' }, { namePrefix: 'COOSPO' }, { namePrefix: 'MIO' }, { namePrefix: 'Mio' },
+          { namePrefix: 'Scosche' }, { namePrefix: 'RHYTHM' }, { namePrefix: 'Rhythm' },
+          { namePrefix: 'Magene' }, { namePrefix: 'MAGENE' }, { namePrefix: 'CL831' },
+          { namePrefix: 'BerryKing' }, { namePrefix: 'Decathlon' }, { namePrefix: 'Geonaute' }, { namePrefix: 'Kalenji' },
+          { namePrefix: '4iiii' }, { namePrefix: 'Wahoo Fitness' },
+          { namePrefix: 'Heart Rate' }, { namePrefix: 'HearRate' }, { namePrefix: 'HeartRate' },
+          { namePrefix: 'HR Monitor' }, { namePrefix: 'BLE HR' }, { namePrefix: 'Smart HR' },
+        ],
+        optionalServices: ['heart_rate', '0000180d-0000-1000-8000-00805f9b34fb'],
+      }) as BluetoothDevice;
       deviceRef.current = device;
       device.addEventListener('gattserverdisconnected', handleDisconnect);
       const success = await connectToDevice(device);
