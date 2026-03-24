@@ -1,35 +1,36 @@
 
 
-## Plan: Reduzierter Glow + Alle Kacheln immer sichtbar
+## Plan: Mehrspaltige Kacheln pro Zone (2–3 Spalten)
 
-### Probleme (Screenshot-Analyse)
-1. **Zone 1 hat 9 Teilnehmer** — die untersten Kacheln (Ulla Pet., 60 BPM) werden abgeschnitten
-2. **Glow-Effekt ist intensiv** — die pulsierenden `drop-shadow`-Animationen lenken ab, besonders bei häufigem Draufschauen
-3. **Hero-Tile in Zone 5 ist sehr dominant** (2.5x) — nimmt viel Platz weg
+### Idee
+Statt einer einzelnen vertikalen Reihe pro Zone werden die Hex-Kacheln in einem **Wrap-Grid** (2–3 nebeneinander) angeordnet. Dadurch:
+- Feste Kachelgröße (z.B. 64px) — kein dynamisches Schrumpfen mehr
+- Mehr Teilnehmer passen in den sichtbaren Bereich
+- Sortierung bleibt: höchster BPM oben-links → niedrigster unten-rechts
 
-### Vorschlag
+### Logik für Spaltenanzahl
+- Automatisch basierend auf Teilnehmeranzahl pro Zone:
+  - 1–4 Teilnehmer → 1 Spalte (wie bisher)
+  - 5–8 Teilnehmer → 2 Spalten
+  - 9+ Teilnehmer → 3 Spalten
 
-**1. Glow reduzieren — subtiler, ruhiger**
-- `HexTile.tsx`: Pulsierender Glow-Effekt entfernen (keine Framer Motion `filter`-Animation mehr)
-- Stattdessen: Statischer, dezenter `drop-shadow` (z.B. `0 0 6px color` statt `0 0 20px`)
-- BPM-Zahl behält einen leichten `text-shadow` für Lesbarkeit
-- Hero-Tile: Nur ein etwas stärkerer statischer Glow, kein Pulsieren
+### Änderungen
 
-**2. Dynamische Kachelgröße — alle passen rein**
-- `HexTile.tsx` + `ZoneColumn.tsx`: Kachelgröße dynamisch berechnen basierend auf der **maximalen Anzahl** Teilnehmer in einer Spalte
-- Formel: Verfügbare Höhe (Viewport minus Header/Stats/Footer) geteilt durch die max. Anzahl pro Spalte
-- Basis-Hex-Größe: `min(72px, verfügbareHöhe / maxProSpalte - gap)`
-- Hero-Tile: Nur 1.8x statt 2.5x (passt besser rein)
+**1. `ZoneColumn.tsx`**
+- Tiles-Container: `flex flex-col` → `flex flex-wrap` mit dynamischer Breite
+- CSS Grid alternativ: `grid grid-cols-2` / `grid-cols-3` je nach Teilnehmerzahl
+- Hex-Versatz für ungerade Reihen beibehalten (Honigwaben-Effekt optional)
 
-**3. Layout-Anpassung**
-- `ZoneColumn.tsx`: `overflow-hidden` entfernen, stattdessen `flex-shrink` auf Kacheln
-- Container bekommt eine feste Höhe (`calc(100vh - headerHöhe)`) und die Kacheln passen sich an
-- `gap` zwischen Kacheln wird proportional kleiner bei mehr Teilnehmern
+**2. `CoachDashboard.tsx`**
+- Dynamische `tileSize`-Berechnung entfernen
+- Feste Kachelgröße setzen (z.B. 64px)
+- `maxPerZone`-Logik wird nicht mehr benötigt
 
-### Dateien
-- **Ändern:** `HexTile.tsx` (Glow reduzieren, dynamische Größe), `ZoneColumn.tsx` (max-count Prop durchreichen), `CoachDashboard.tsx` (max-count berechnen und übergeben)
+**3. `HexTile.tsx`**
+- Keine Änderungen nötig — nimmt weiterhin `tileSize` als Prop
 
 ### Ergebnis
-- Ruhigeres, augenfreundliches Design — kein Pulsieren, nur dezente Farbakzente
-- Alle 20 Teilnehmer sind immer sichtbar, egal wie sie verteilt sind
+- Kacheln bleiben immer gleich groß und gut lesbar
+- Bei 9 Teilnehmern in Zone 1: 3×3 Grid statt einer langen Spalte
+- Alle Teilnehmer sichtbar ohne Scrolling
 
