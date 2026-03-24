@@ -1,32 +1,27 @@
 
-## Plan: Count-Leiste wirklich am unteren sichtbaren Bildschirmrand
 
-### Ursache
-Aktuell ist die Seite mit `min-h-screen` aufgebaut. Dadurch kann der Dashboard-Bereich effektiv höher als der sichtbare Bereich werden (Header + Inhalt), und die schwarze Fläche wirkt wie 100% Viewport-Höhe statt „Resthöhe“. Die Count-Leiste sitzt dann nicht stabil am sichtbaren Bottom.
+## Plan: Fix CoachDashboard background rendering
 
-### Umsetzung
+### Problem
+In `Dashboard.tsx`, the `CoachDashboard` component is rendered as a direct child of the `flex flex-col` container **without** the `flex-1 min-h-0 overflow-hidden` wrapper that exists in `Index.tsx`. This means the component's `h-full` has no constrained parent height, so the background and layout may collapse or not fill the viewport correctly.
 
-1. **Viewport-Höhe hart fixieren (`Dashboard.tsx`)**
-   - Wrapper von `min-h-screen` auf `h-screen` (oder `h-dvh`) umstellen.
-   - `overflow-hidden` setzen, damit keine zusätzliche Seitenhöhe entsteht.
-   - Ergebnis: App passt exakt in den sichtbaren Bildschirm.
+Additionally, when the coach dashboard renders via `Index.tsx`, the wrapper div is correct — so the issue likely only manifests on the `/dashboard` route.
 
-2. **Dashboard auf Resthöhe begrenzen (`CoachDashboard.tsx`)**
-   - Root-Container auf `h-full min-h-0 flex flex-col` setzen (statt nur `flex-1`-Verhalten).
-   - Oberes Zonen-Grid bleibt `flex-1 min-h-0`.
-   - Untere Count-Leiste bleibt `flex-shrink-0` und sitzt damit immer am unteren Rand des sichtbaren Bereichs.
+### Changes
 
-3. **Scroll nur dort erlauben, wo nötig**
-   - Für den `customers`-Tab gezielt `overflow-y-auto` auf dem Content-Container aktivieren, damit nur die Liste scrollt (nicht die gesamte Seite).
+**`src/pages/Dashboard.tsx`** (1 line change):
+- Wrap `<CoachDashboard>` in a `<div className="flex-1 min-h-0 overflow-hidden">` — matching exactly how `Index.tsx` renders it (line 64-65).
 
-4. **Abstand/Polsterung feinjustieren**
-   - `pb/pt` der Count-Leiste minimal halten, damit sie wirklich „ganz unten“ sitzt (ohne optische Lücke).
+```tsx
+// Before (line 58):
+<CoachDashboard participants={...} ... />
 
-### Betroffene Dateien
-- `src/pages/Dashboard.tsx`
-- `src/components/dashboard/CoachDashboard.tsx`
+// After:
+<div className="flex-1 min-h-0 overflow-hidden">
+  <CoachDashboard participants={...} ... />
+</div>
+```
 
-### Erwartetes Ergebnis
-- Keine überhohe schwarze Fläche mehr.
-- Die Zonen-Anzahl bleibt stabil am unteren sichtbaren Bildschirmrand.
-- Kein globales Vertikal-Scrollen der Dashboard-Seite.
+### Files
+- **Change:** `src/pages/Dashboard.tsx` (wrap CoachDashboard in flex-1 div)
+
