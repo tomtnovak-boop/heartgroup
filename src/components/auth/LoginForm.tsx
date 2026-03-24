@@ -10,6 +10,7 @@ import { Loader2, Mail, Lock } from 'lucide-react';
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
+  onSwitchToForgotPassword: () => void;
 }
 
 export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
