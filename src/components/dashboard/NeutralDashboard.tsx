@@ -30,7 +30,13 @@ const LEFT_BORDER_COLORS: Record<number, string> = {
   5: 'hsl(0 100% 55% / 1)',
 };
 
-const ZONE_LABELS = ['Z1 Recovery', 'Z2 Fat Burn', 'Z3 Aerobic', 'Z4 Anaerobic', 'Z5 Max'];
+const ZONE_SEGMENTS = [
+  { zone: 1, width: '60%', label: 'Z1 Recovery' },
+  { zone: 2, width: '10%', label: 'Z2' },
+  { zone: 3, width: '10%', label: 'Z3' },
+  { zone: 4, width: '10%', label: 'Z4' },
+  { zone: 5, width: '10%', label: 'Z5' },
+];
 
 const ZONE_GLOWS = [
   { left: '10%', color: '#00bcd4' },
