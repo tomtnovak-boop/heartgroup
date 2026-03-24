@@ -102,7 +102,10 @@ export function CustomerList() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
+                <TableHead>Nickname</TableHead>
                 <TableHead className="text-center">Alter</TableHead>
+                <TableHead className="text-center">Gewicht</TableHead>
+                <TableHead className="text-center">Grösse</TableHead>
                 <TableHead className="text-center">HFmax</TableHead>
                 <TableHead className="text-right">Aktionen</TableHead>
               </TableRow>
