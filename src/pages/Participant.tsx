@@ -85,7 +85,7 @@ export default function Participant() {
   const [leaderboardDate, setLeaderboardDate] = useState(new Date());
   const prevCoachSessionActive = useRef(false);
   const navigate = useNavigate();
-  const { user, signOut, isCoach } = useAuthContext();
+  const { user, signOut, isCoach, isAdmin } = useAuthContext();
   const { toast } = useToast();
 
   const {
