@@ -50,15 +50,21 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
     return sorted.map((profile, idx) => {
       const live = liveMap.get(profile.id);
       const firstName = profile.name.split(' ')[0];
-      const realZone = live && live.bpm > 0 && live.profile
-        ? calculateZone(live.bpm, getEffectiveMaxHR(live.profile.age, live.profile.custom_max_hr))
+      const effectiveMaxHR = live?.profile
+        ? getEffectiveMaxHR(live.profile.age, live.profile.custom_max_hr)
+        : 170;
+      const realZone = live && live.bpm > 0
+        ? calculateZone(live.bpm, effectiveMaxHR)
+        : null;
+      const realHRPercent = live && live.bpm > 0
+        ? Math.min(100, Math.round((live.bpm / effectiveMaxHR) * 100))
         : null;
       return {
         number: idx + 1,
         profileId: profile.id,
         name: profile.nickname || firstName,
         bpm: live?.bpm ?? null,
-        hrPercentage: live?.hr_percentage ?? null,
+        hrPercentage: realHRPercent,
         zone: realZone,
         isLive: !!live,
       };
