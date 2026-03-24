@@ -66,6 +66,13 @@ export default function Participant() {
   const [allHistoricalWorkouts, setAllHistoricalWorkouts] = useState<Workout[]>([]);
   const [activeSession, setActiveSession] = useState(false);
   const [expandedMonth, setExpandedMonth] = useState<string>('');
+  
+  // Session join flow state
+  const [showJoinDialog, setShowJoinDialog] = useState(false);
+  const [currentWorkoutId, setCurrentWorkoutId] = useState<string | null>(null);
+  const [joinSkipped, setJoinSkipped] = useState(false);
+  const [coachSessionActive, setCoachSessionActive] = useState(false);
+  const joinDialogShownRef = useRef(false);
   const navigate = useNavigate();
   const { user, signOut, isCoach } = useAuthContext();
 
