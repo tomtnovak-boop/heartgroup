@@ -1,24 +1,29 @@
 
 
-## Plan: Pulsieren entfernen + progressive Farbintensität
+## Plan: Füllung basierend auf Zone-Position statt absoluter HR%
 
-### Änderungen in `HexTile.tsx`
+### Problem
+Aktuell wird `fillPercent` = `data.hr_percentage` (absolut, 0–100%) verwendet. Das bedeutet: jemand in Zone 2 bei 65% HR hat die Hex-Kachel nur zu 65% gefüllt — obwohl er sich in der Mitte seiner Zone befindet.
 
-**1. Pulsieren entfernen**
-- BPM `motion.span` (Zeile 105–120): `animate={{ scale: [1, 1.03, 1] }}` entfernen → normales `<span>`
-- Äusserer Hex-Rand (Zeile 57–65): Pulsierendes `animate` bei `isNearZoneEdge` entfernen → statische Opacity
+### Lösung
+Die Füllung soll die **relative Position innerhalb der aktuellen Zone** darstellen:
+- Zone 3 (70–80%): Bei 70% HR → 0% gefüllt, bei 75% → 50% gefüllt, bei 80% → 100% gefüllt
+- Formel: `fillPercent = zoneProgress * 100` (wobei `zoneProgress` bereits berechnet wird)
 
-**2. Progressive Farbintensität im Fill**
-- Statt fester Opacity (`${color}40`) wird die Opacity dynamisch berechnet basierend auf der Position innerhalb der aktuellen Zone
-- Formel: `zoneProgress = (hr_percentage - zoneMinPercent) / (zoneMaxPercent - zoneMinPercent)` → 0.0 bis 1.0
-- Opacity-Mapping: `zoneProgress` von 0→1 wird auf 10%→100% Opacity gemappt
-- Hex-Opacity-Wert: `Math.round(0.10 + zoneProgress * 0.90) * 255` → als Hex-String für den Gradient
-- Ergebnis: Am unteren Rand der Zone ist die Farbe kaum sichtbar, kurz vor dem Zonenwechsel ist sie voll gesättigt
+### Änderung: `HexTile.tsx`
 
-**3. Äusserer Rand**
-- Statische Opacity, die ebenfalls mit `zoneProgress` skaliert: `0.15 + zoneProgress * 0.45` (also 15%–60%)
-- Hero-Tile: leicht höher (`0.3 + zoneProgress * 0.4`)
+Zeile mit `fillPercent`-Berechnung ändern:
+
+```
+// Alt:
+const fillPercent = Math.max(0, Math.min(100, data.hr_percentage));
+
+// Neu:
+const fillPercent = Math.max(0, Math.min(100, zoneProgress * 100));
+```
+
+`zoneProgress` ist bereits vorhanden und berechnet genau diese relative Position (0.0 am unteren Rand der Zone, 1.0 am oberen).
 
 ### Dateien
-- **Ändern:** `HexTile.tsx`
+- **Ändern:** `HexTile.tsx` — eine Zeile
 
