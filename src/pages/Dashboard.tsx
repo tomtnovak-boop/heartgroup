@@ -51,7 +51,7 @@ export default function Dashboard() {
           const thirtySecsAgo = new Date(Date.now() - 30000).toISOString();
           const { data: workouts } = await supabase
             .from('workouts')
-            .select('profile_id, avg_bpm, max_bpm, duration_seconds, started_at, ended_at')
+            .select('profile_id, avg_bpm, max_bpm, duration_seconds, total_calories, started_at, ended_at')
             .not('ended_at', 'is', null)
             .gte('ended_at', thirtySecsAgo);
 
