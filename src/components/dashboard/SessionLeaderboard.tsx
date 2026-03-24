@@ -105,7 +105,7 @@ function CoachLeaderboard({
           <ArrowLeft className="w-3.5 h-3.5" />
           Back to Dashboard
         </button>
-        <p className="text-center text-[10px] text-white/60 mt-1.5">
+        <p className="text-center text-[10px] text-white mt-1.5">
           Automatically closes in {Math.floor(Math.max(0, 300 - elapsed) / 60)}:{String(Math.max(0, 300 - elapsed) % 60).padStart(2, '0')}
         </p>
       </div>
@@ -131,13 +131,13 @@ function RankingColumn({ title, entries, maxValue, valueKey, gradientFrom, gradi
           return (
             <div key={entry.profile_id} className="flex items-center gap-1.5 rounded px-1.5 py-0.5"
               style={{ background: isTop3 ? 'rgba(255,255,255,0.04)' : 'transparent' }}>
-              <span className="text-[10px] font-bold text-white w-4 text-right flex-shrink-0" style={{ opacity }}>{rank}</span>
-              <span className="text-[11px] text-white truncate flex-shrink-0" style={{ opacity, minWidth: '40px', maxWidth: '70px' }}>{entry.name}</span>
+              <span className="text-[10px] font-bold text-white w-4 text-right flex-shrink-0">{rank}</span>
+              <span className="text-[11px] text-white truncate flex-shrink-0" style={{ minWidth: '40px', maxWidth: '70px' }}>{entry.name}</span>
               <div className="flex-1 h-2.5 rounded-full overflow-hidden mx-1" style={{ background: 'rgba(255,255,255,0.06)' }}>
                 <div className="h-full rounded-full transition-all duration-500"
                   style={{ width: `${barWidth}%`, background: `linear-gradient(90deg, ${gradientFrom}, ${gradientTo})`, opacity }} />
               </div>
-              <span className="text-[12px] font-bold text-white tabular-nums flex-shrink-0 w-8 text-right" style={{ opacity }}>{value}</span>
+              <span className="text-[12px] font-bold text-white tabular-nums flex-shrink-0 w-8 text-right">{value}</span>
             </div>
           );
         })}
@@ -235,7 +235,7 @@ function ParticipantResult({
           <ArrowLeft className="w-3.5 h-3.5" />
           Back to my Dashboard
         </button>
-        <p className="text-center text-[10px] text-white/60 mt-1.5">
+        <p className="text-center text-[10px] text-white mt-1.5">
           Automatically closes in {Math.floor(Math.max(0, 300 - elapsed) / 60)}:{String(Math.max(0, 300 - elapsed) % 60).padStart(2, '0')}
         </p>
       </div>
