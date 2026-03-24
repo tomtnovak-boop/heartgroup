@@ -74,6 +74,13 @@ export default function Participant() {
   const [joinSkipped, setJoinSkipped] = useState(false);
   const [coachSessionActive, setCoachSessionActive] = useState(false);
   const joinDialogShownRef = useRef(false);
+
+  // Leaderboard state
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [leaderboardData, setLeaderboardData] = useState<{ profile_id: string; name: string; avg_bpm: number; max_bpm: number; duration_seconds: number }[]>([]);
+  const [leaderboardDuration, setLeaderboardDuration] = useState(0);
+  const [leaderboardDate, setLeaderboardDate] = useState(new Date());
+  const prevCoachSessionActive = useRef(false);
   const navigate = useNavigate();
   const { user, signOut, isCoach } = useAuthContext();
   const { toast } = useToast();
