@@ -33,7 +33,7 @@ export function SessionLeaderboard({
 
   useEffect(() => {
     const timer = setInterval(() => setElapsed(p => p + 1), 1000);
-    const autoClose = setTimeout(onClose, 60000);
+    const autoClose = setTimeout(onClose, 300000);
     return () => { clearInterval(timer); clearTimeout(autoClose); };
   }, [onClose]);
 
