@@ -31,12 +31,20 @@ const LEFT_BORDER_COLORS: Record<number, string> = {
 };
 
 const ZONE_SEGMENTS = [
-  { zone: 1, width: '60%', label: 'Z1 Recovery' },
-  { zone: 2, width: '10%', label: 'Z2' },
-  { zone: 3, width: '10%', label: 'Z3' },
-  { zone: 4, width: '10%', label: 'Z4' },
-  { zone: 5, width: '10%', label: 'Z5' },
+  { zone: 1, width: '20%', label: 'Z1 Recovery' },
+  { zone: 2, width: '20%', label: 'Z2 Fat Burn' },
+  { zone: 3, width: '20%', label: 'Z3 Aerobic' },
+  { zone: 4, width: '20%', label: 'Z4 Anaerobic' },
+  { zone: 5, width: '20%', label: 'Z5 Max' },
 ];
+
+function hrPercentToBarPosition(hrPercent: number): number {
+  if (hrPercent <= 60) return (hrPercent / 60) * 20;
+  if (hrPercent <= 70) return 20 + ((hrPercent - 60) / 10) * 20;
+  if (hrPercent <= 80) return 40 + ((hrPercent - 70) / 10) * 20;
+  if (hrPercent <= 90) return 60 + ((hrPercent - 80) / 10) * 20;
+  return 80 + ((hrPercent - 90) / 10) * 20;
+}
 
 const ZONE_GLOWS = [
   { left: '10%', color: '#00bcd4' },
@@ -271,7 +279,7 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
                   <div
                     style={{
                       position: 'absolute',
-                      left: `${Math.min(Math.max(row.hrPercentage, 2), 98)}%`,
+                      left: `${Math.min(Math.max(hrPercentToBarPosition(row.hrPercentage), 2), 98)}%`,
                       top: '50%',
                       transform: 'translate(-50%, -50%)',
                       width: 'clamp(26px, 3vw, 38px)',
