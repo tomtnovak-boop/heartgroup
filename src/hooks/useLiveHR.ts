@@ -20,7 +20,7 @@ export interface LiveHRData {
   };
 }
 
-export function useLiveHR() {
+export function useLiveHR(onNewData?: (data: { profile_id: string; bpm: number; zone: number; hr_percentage: number; timestamp: string }) => void) {
   const [participants, setParticipants] = useState<Map<string, LiveHRData>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
 
@@ -138,6 +138,15 @@ export function useLiveHR() {
                 },
               });
               return updated;
+            });
+
+            // Notify session recorder
+            onNewData?.({
+              profile_id: newData.profile_id,
+              bpm: newData.bpm,
+              zone: newData.zone,
+              hr_percentage: Number(newData.hr_percentage),
+              timestamp: newData.timestamp,
             });
           }
         }
