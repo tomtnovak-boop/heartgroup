@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { ZoneColumn } from './ZoneColumn';
 import { CustomerList } from '@/components/admin/CustomerList';
+import { CoachList } from '@/components/admin/CoachList';
 import { Heart } from 'lucide-react';
 import { LiveHRData } from '@/hooks/useLiveHR';
 
