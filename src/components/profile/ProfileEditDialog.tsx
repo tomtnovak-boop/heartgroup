@@ -73,6 +73,7 @@ export function ProfileEditDialog({
     setDateInput(date ? formatDateToInput(date) : '');
     setCustomMaxHr(profile.custom_max_hr?.toString() || '');
     setWeight(profile.weight?.toString() || '');
+    setHeight(profile.height?.toString() || '');
     setGender(profile.gender || '');
     setNicknameError('');
   }, [profile]);
