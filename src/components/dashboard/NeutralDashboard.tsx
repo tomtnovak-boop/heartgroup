@@ -215,7 +215,7 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
                       height: 'clamp(16px, 2.2vh, 30px)',
                       borderRadius: '4px',
                       background: ZONE_COLORS[row.zone],
-                      boxShadow: getSliderGlow(row.zone),
+                      // no box-shadow on slider
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
