@@ -36,14 +36,13 @@ const LEFT_BORDER_COLORS: Record<number, string> = {
   5: 'hsl(0 100% 55% / 1)',
 };
 
-const ROW_BG_OPACITY: Record<number, number> = {
-  1: 0.04, 2: 0.07, 3: 0.10, 4: 0.15, 5: 0.22,
+const ROW_TINT: Record<number, string> = {
+  1: 'rgba(100, 116, 139, 0.08)',
+  2: 'rgba(0,   200, 255, 0.09)',
+  3: 'rgba(50,  200, 80,  0.11)',
+  4: 'rgba(255, 180, 0,   0.15)',
+  5: 'rgba(255, 40,  40,  0.22)',
 };
-
-function getRowBg(zone: number | null): string {
-  if (!zone) return 'transparent';
-  return `color-mix(in srgb, ${ZONE_COLORS[zone]} ${ROW_BG_OPACITY[zone] * 100}%, transparent)`;
-}
 
 function getBarGlow(zone: number | null): string {
   if (zone === 4) return '0 0 12px rgba(255, 165, 0, 0.35)';
@@ -151,7 +150,7 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
                 paddingLeft: row.isLive && row.zone ? '9px' : '12px',
                 paddingRight: '12px',
                 borderBottom: '1px solid rgba(255,255,255,0.04)',
-                backgroundColor: getRowBg(row.zone),
+                background: row.isLive && row.zone ? ROW_TINT[row.zone] : 'transparent',
                 borderLeft: row.isLive && row.zone ? `3px solid ${LEFT_BORDER_COLORS[row.zone]}` : '3px solid transparent',
                 opacity: row.isLive ? 1 : 0.35,
                 overflow: 'hidden',
