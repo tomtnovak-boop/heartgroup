@@ -122,14 +122,16 @@ export function useLiveHR(onNewData?: (data: { profile_id: string; bpm: number; 
 
           if (profile) {
             const effectiveMaxHR = getEffectiveMaxHR(profile.age, profile.custom_max_hr);
+            const recalcZone = calculateZone(newData.bpm, effectiveMaxHR);
+            const recalcHRPct = calculateHRPercentage(newData.bpm, effectiveMaxHR);
             setParticipants(prev => {
               const updated = new Map(prev);
               updated.set(newData.profile_id, {
                 id: newData.id,
                 profile_id: newData.profile_id,
                 bpm: newData.bpm,
-                zone: newData.zone,
-                hr_percentage: Number(newData.hr_percentage),
+                zone: recalcZone,
+                hr_percentage: recalcHRPct,
                 timestamp: newData.timestamp,
                 profile: {
                   id: profile.id,
@@ -147,8 +149,8 @@ export function useLiveHR(onNewData?: (data: { profile_id: string; bpm: number; 
             onNewData?.({
               profile_id: newData.profile_id,
               bpm: newData.bpm,
-              zone: newData.zone,
-              hr_percentage: Number(newData.hr_percentage),
+              zone: recalcZone,
+              hr_percentage: recalcHRPct,
               timestamp: newData.timestamp,
             });
           }
