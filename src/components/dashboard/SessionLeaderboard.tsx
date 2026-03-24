@@ -84,7 +84,7 @@ function CoachLeaderboard({
           <Trophy className="w-4 h-4 text-yellow-400" />
           <h1 className="text-[17px] font-bold text-white">Session Complete</h1>
         </div>
-        <p className="text-[11px] text-white/50">
+        <p className="text-[11px] text-white">
           {format(sessionDate, 'MMM d, yyyy')} · {formatDur(sessionDuration)} · {entries.length} participant{entries.length !== 1 ? 's' : ''}
         </p>
       </div>
@@ -99,13 +99,13 @@ function CoachLeaderboard({
       <div className="flex-shrink-0 px-4 pb-4 pt-2">
         <button
           onClick={onClose}
-          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium text-white/70 hover:text-white transition-colors"
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium text-white hover:text-white transition-colors"
           style={{ background: 'rgba(255,255,255,0.06)' }}
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Back to Dashboard
         </button>
-        <p className="text-center text-[10px] text-white/25 mt-1.5">
+        <p className="text-center text-[10px] text-white/60 mt-1.5">
           Automatically closes in {Math.floor(Math.max(0, 300 - elapsed) / 60)}:{String(Math.max(0, 300 - elapsed) % 60).padStart(2, '0')}
         </p>
       </div>
@@ -119,7 +119,7 @@ function RankingColumn({ title, entries, maxValue, valueKey, gradientFrom, gradi
 }) {
   return (
     <div className="flex-1 flex flex-col min-h-0">
-      <div className="text-[10px] font-bold uppercase tracking-wider text-white/40 px-1 pb-1.5">{title}</div>
+      <div className="text-[10px] font-bold uppercase tracking-wider text-white px-1 pb-1.5">{title}</div>
       <div className="flex-1 min-h-0 flex flex-col justify-between">
         {entries.map((entry, idx) => {
           const rank = idx + 1;
@@ -131,13 +131,13 @@ function RankingColumn({ title, entries, maxValue, valueKey, gradientFrom, gradi
           return (
             <div key={entry.profile_id} className="flex items-center gap-1.5 rounded px-1.5 py-0.5"
               style={{ background: isTop3 ? 'rgba(255,255,255,0.04)' : 'transparent' }}>
-              <span className="text-[10px] font-bold text-white/40 w-4 text-right flex-shrink-0" style={{ opacity }}>{rank}</span>
-              <span className="text-[11px] text-white/80 truncate flex-shrink-0" style={{ opacity, minWidth: '40px', maxWidth: '70px' }}>{entry.name}</span>
+              <span className="text-[10px] font-bold text-white w-4 text-right flex-shrink-0" style={{ opacity }}>{rank}</span>
+              <span className="text-[11px] text-white truncate flex-shrink-0" style={{ opacity, minWidth: '40px', maxWidth: '70px' }}>{entry.name}</span>
               <div className="flex-1 h-2.5 rounded-full overflow-hidden mx-1" style={{ background: 'rgba(255,255,255,0.06)' }}>
                 <div className="h-full rounded-full transition-all duration-500"
                   style={{ width: `${barWidth}%`, background: `linear-gradient(90deg, ${gradientFrom}, ${gradientTo})`, opacity }} />
               </div>
-              <span className="text-[12px] font-bold text-white/90 tabular-nums flex-shrink-0 w-8 text-right" style={{ opacity }}>{value}</span>
+              <span className="text-[12px] font-bold text-white tabular-nums flex-shrink-0 w-8 text-right" style={{ opacity }}>{value}</span>
             </div>
           );
         })}
@@ -175,7 +175,7 @@ function ParticipantResult({
         {/* Header */}
         <Trophy className="w-8 h-8 text-yellow-400 mb-2" />
         <h1 className="text-[20px] font-bold text-white mb-1">Great work!</h1>
-        <p className="text-[11px] text-white/50 mb-6">
+        <p className="text-[11px] text-white mb-6">
           {format(sessionDate, 'MMM d, yyyy')} · {formatDur(sessionDuration)}
         </p>
 
@@ -183,27 +183,27 @@ function ParticipantResult({
         <div className="flex gap-3 w-full max-w-xs mb-6">
           {/* Avg BPM rank */}
           <div className="flex-1 rounded-xl p-4 text-center" style={{ background: 'rgba(168,85,247,0.12)', border: '1px solid rgba(168,85,247,0.2)' }}>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-2">Avg BPM</div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-white mb-2">Avg BPM</div>
             <div className="text-[32px] font-black text-white leading-none mb-1">
               #{avgRank || '—'}
             </div>
-            <div className="text-[10px] text-white/40 mb-2">of {total} participants</div>
+            <div className="text-[10px] text-white mb-2">of {total} participants</div>
             <div className="text-[13px] font-semibold" style={{ color: '#c084fc' }}>{myAvg} bpm avg</div>
           </div>
 
           {/* Peak BPM rank */}
           <div className="flex-1 rounded-xl p-4 text-center" style={{ background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.2)' }}>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-2">Peak BPM</div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-white mb-2">Peak BPM</div>
             <div className="text-[32px] font-black text-white leading-none mb-1">
               #{peakRank || '—'}
             </div>
-            <div className="text-[10px] text-white/40 mb-2">of {total} participants</div>
+            <div className="text-[10px] text-white mb-2">of {total} participants</div>
             <div className="text-[13px] font-semibold" style={{ color: '#f87171' }}>{myPeak} bpm peak</div>
           </div>
         </div>
 
         {/* Personal stats row */}
-        <div className="flex items-center gap-4 text-white/60 text-[11px]">
+        <div className="flex items-center gap-4 text-white text-[11px]">
           <div className="flex items-center gap-1">
             <Clock className="w-3 h-3" />
             <span>{formatDur(myDuration)}</span>
@@ -229,13 +229,13 @@ function ParticipantResult({
       <div className="flex-shrink-0 px-4 pb-4 pt-2" onClick={e => e.stopPropagation()}>
         <button
           onClick={onClose}
-          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium text-white/70 hover:text-white transition-colors"
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium text-white hover:text-white transition-colors"
           style={{ background: 'rgba(255,255,255,0.06)' }}
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Back to my Dashboard
         </button>
-        <p className="text-center text-[10px] text-white/25 mt-1.5">
+        <p className="text-center text-[10px] text-white/60 mt-1.5">
           Automatically closes in {Math.floor(Math.max(0, 300 - elapsed) / 60)}:{String(Math.max(0, 300 - elapsed) % 60).padStart(2, '0')}
         </p>
       </div>
