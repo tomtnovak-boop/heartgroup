@@ -30,7 +30,13 @@ const LEFT_BORDER_COLORS: Record<number, string> = {
   5: 'hsl(0 100% 55% / 1)',
 };
 
-const ZONE_LABELS = ['Z1 Recovery', 'Z2 Fat Burn', 'Z3 Aerobic', 'Z4 Anaerobic', 'Z5 Max'];
+const ZONE_SEGMENTS = [
+  { zone: 1, width: '60%', label: 'Z1 Recovery' },
+  { zone: 2, width: '10%', label: 'Z2' },
+  { zone: 3, width: '10%', label: 'Z3' },
+  { zone: 4, width: '10%', label: 'Z4' },
+  { zone: 5, width: '10%', label: 'Z5' },
+];
 
 const ZONE_GLOWS = [
   { left: '10%', color: '#00bcd4' },
@@ -170,19 +176,21 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
         <div style={{ width: 110 }} />
         {/* Zone labels aligned to bar */}
         <div style={{ flex: 1, display: 'flex' }}>
-          {[1, 2, 3, 4, 5].map(z => (
-            <div key={z} style={{
-              width: '20%',
+          {ZONE_SEGMENTS.map(seg => (
+            <div key={seg.zone} style={{
+              width: seg.width,
               textAlign: 'center',
               fontSize: 'clamp(8px, 1vh, 11px)',
               fontWeight: 600,
               letterSpacing: '0.08em',
               textTransform: 'uppercase' as const,
-              color: ZONE_COLORS[z],
+              color: ZONE_COLORS[seg.zone],
               opacity: 0.7,
               paddingBottom: '4px',
+              overflow: 'hidden',
+              whiteSpace: 'nowrap',
             }}>
-              {ZONE_LABELS[z - 1]}
+              {seg.label}
             </div>
           ))}
         </div>
@@ -246,14 +254,15 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
                 borderRadius: '6px',
                 overflow: 'hidden',
               }}>
-                {[1, 2, 3, 4, 5].map((z) => (
+                {ZONE_SEGMENTS.map(seg => (
                   <div
-                    key={z}
+                    key={seg.zone}
                     style={{
-                      width: '20%',
+                      width: seg.width,
                       height: '100%',
-                      background: ZONE_COLORS[z],
-                      opacity: SEGMENT_OPACITY[z],
+                      background: ZONE_COLORS[seg.zone],
+                      opacity: SEGMENT_OPACITY[seg.zone],
+                      flexShrink: 0,
                     }}
                   />
                 ))}
