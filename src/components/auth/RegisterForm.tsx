@@ -29,6 +29,8 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
   const [birthDate, setBirthDate] = useState<Date | undefined>();
   const [dateInput, setDateInput] = useState('');
   const [customMaxHr, setCustomMaxHr] = useState('');
+  const [weight, setWeight] = useState('');
+  const [height, setHeight] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuthContext();
   const { toast } = useToast();
