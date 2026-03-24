@@ -44,7 +44,7 @@ interface ZoneColumnProps {
 export function ZoneColumn({ zone, participants, selectedProfileId }: ZoneColumnProps) {
   const config = ZONE_CONFIG[zone];
   const sorted = [...participants].sort((a, b) => b.hr_percentage - a.hr_percentage);
-  const { columns, hexSize } = getZoneLayout(sorted.length);
+  const { hexSize } = getZoneLayout(sorted.length);
   const tileSize = HEX_SIZES[hexSize];
   const gap = GAP_SIZES[hexSize];
   const needsScroll = sorted.length > 21;
