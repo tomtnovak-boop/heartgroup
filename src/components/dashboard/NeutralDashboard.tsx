@@ -28,6 +28,14 @@ function getBarZone(hrPercent: number): number {
   return 5;
 }
 
+const LEFT_BORDER_COLORS: Record<number, string> = {
+  1: 'hsl(220 15% 45% / 0.35)',
+  2: 'hsl(200 100% 50% / 0.45)',
+  3: 'hsl(145 80% 45% / 0.55)',
+  4: 'hsl(45 100% 50% / 0.75)',
+  5: 'hsl(0 100% 55% / 1)',
+};
+
 function getRowBg(zone: number | null): string {
   if (!zone) return 'transparent';
   if (zone <= 2) return `${ZONE_COLORS[zone].replace(')', ' / 0.04)')}`;
@@ -39,18 +47,6 @@ function getRowBg(zone: number | null): string {
 function getBarGlow(zone: number | null): string {
   if (zone === 4) return '0 0 12px rgba(255, 165, 0, 0.35)';
   if (zone === 5) return '0 0 20px rgba(255, 50, 50, 0.5), 0 0 40px rgba(255, 50, 50, 0.2)';
-  return 'none';
-}
-
-function getSliderGlow(zone: number | null): string {
-  if (zone === 4) return '0 0 8px rgba(255, 165, 0, 0.8), 0 0 16px rgba(255, 165, 0, 0.4)';
-  if (zone === 5) return '0 0 10px rgba(255, 50, 50, 1), 0 0 24px rgba(255, 50, 50, 0.6), 0 0 40px rgba(255, 50, 50, 0.3)';
-  return 'none';
-}
-
-function getBpmGlow(zone: number | null): string {
-  if (zone === 4) return '0 0 10px rgba(255, 165, 0, 0.8)';
-  if (zone === 5) return '0 0 12px rgba(255, 50, 50, 1), 0 0 24px rgba(255, 50, 50, 0.5)';
   return 'none';
 }
 
@@ -151,11 +147,11 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
-                paddingLeft: row.zone === 5 ? '9px' : row.zone === 4 ? '9px' : '12px',
+                paddingLeft: row.isLive && row.zone ? '9px' : '12px',
                 paddingRight: '12px',
                 borderBottom: '1px solid rgba(255,255,255,0.04)',
                 backgroundColor: getRowBg(row.zone),
-                borderLeft: row.zone === 5 ? `3px solid ${ZONE_COLORS[5]}` : row.zone === 4 ? `3px solid ${ZONE_COLORS[4]}80` : '3px solid transparent',
+                borderLeft: row.isLive && row.zone ? `3px solid ${LEFT_BORDER_COLORS[row.zone]}` : '3px solid transparent',
                 opacity: row.isLive ? 1 : 0.35,
                 overflow: 'hidden',
                 transition: 'background-color 1s ease, border-left 1s ease',
@@ -219,7 +215,7 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
                       height: 'clamp(16px, 2.2vh, 30px)',
                       borderRadius: '4px',
                       background: ZONE_COLORS[row.zone],
-                      boxShadow: getSliderGlow(row.zone),
+                      // no box-shadow on slider
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -246,8 +242,7 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
                   fontSize: 'clamp(16px, 2.8vh, 36px)',
                   fontVariantNumeric: 'tabular-nums',
                   color: row.isLive && row.zone ? ZONE_COLORS[row.zone] : 'rgba(255,255,255,0.2)',
-                  textShadow: row.isLive ? getBpmGlow(row.zone) : 'none',
-                  transition: 'color 1s ease, text-shadow 1s ease',
+                  transition: 'color 1s ease',
                 }}
               >
                 {row.isLive && row.bpm !== null ? row.bpm : '--'}
