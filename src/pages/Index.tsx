@@ -6,19 +6,31 @@ import { AppHeader } from '@/components/layout/AppHeader';
 import { useViewMode } from '@/hooks/useViewMode';
 import { CoachDashboard } from '@/components/dashboard/CoachDashboard';
 import { useAuthContext } from '@/components/auth/AuthProvider';
+import { useState } from 'react';
+import { useLiveHR } from '@/hooks/useLiveHR';
 
 export default function Index() {
   const { viewMode, changeView } = useViewMode('participant');
   const { isAuthenticated, isCoach } = useAuthContext();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('live');
+  const { participants, averageBPM, averageZone, isLoading, refresh } = useLiveHR();
 
   // Full-screen Coach Dashboard when in coach view (only for coaches)
   if (viewMode === 'coach' && isCoach) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <AppHeader currentView={viewMode} onViewChange={changeView} showViewSwitcher={isCoach} />
+        <AppHeader
+          currentView={viewMode}
+          onViewChange={changeView}
+          showViewSwitcher={isCoach}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onRefresh={refresh}
+          stats={{ participantCount: participants.length, averageBPM, averageZone }}
+        />
         <div className="flex-1">
-          <CoachDashboard />
+          <CoachDashboard participants={participants} isLoading={isLoading} activeTab={activeTab} />
         </div>
       </div>
     );
