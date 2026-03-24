@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { CustomerEditDialog } from './CustomerEditDialog';
-import { Edit, Search, Users, Loader2, Trash2 } from 'lucide-react';
+import { Edit, Search, Users, Loader2, Trash2, Wrench } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface CustomerProfile {
