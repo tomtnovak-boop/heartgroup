@@ -149,6 +149,23 @@ export function WorkoutHistory({ profileId, onClose }: WorkoutHistoryProps) {
                 <Card className="p-4 text-center"><Heart className="w-5 h-5 mx-auto mb-1 text-red-500" /><div className="text-xl font-bold">{selectedWorkout.avg_bpm || '--'}</div><div className="text-xs text-muted-foreground">⌀ BPM</div></Card>
                 <Card className="p-4 text-center"><Activity className="w-5 h-5 mx-auto mb-1 text-yellow-500" /><div className="text-xl font-bold">{selectedWorkout.max_bpm || '--'}</div><div className="text-xs text-muted-foreground">Max BPM</div></Card>
               </div>
+              {selectedWorkout.rank_avg_bpm != null && selectedWorkout.session_participant_count != null && (
+                <Card className="p-4">
+                  <h3 className="text-sm font-semibold mb-3">Your Ranking in This Session</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="text-center p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                      <div className="text-2xl font-bold text-purple-400">#{selectedWorkout.rank_avg_bpm}</div>
+                      <div className="text-xs text-muted-foreground">of {selectedWorkout.session_participant_count}</div>
+                      <div className="text-[11px] text-purple-400 mt-1">Avg BPM Rank</div>
+                    </div>
+                    <div className="text-center p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                      <div className="text-2xl font-bold text-red-400">#{selectedWorkout.rank_peak_bpm}</div>
+                      <div className="text-xs text-muted-foreground">of {selectedWorkout.session_participant_count}</div>
+                      <div className="text-[11px] text-red-400 mt-1">Peak BPM Rank</div>
+                    </div>
+                  </div>
+                </Card>
+              )}
               {chartData.length > 1 && (
                 <Card className="p-4">
                   <h3 className="text-sm font-semibold mb-3 flex items-center gap-2"><Heart className="w-4 h-4 text-red-500" />Heart Rate Curve</h3>
