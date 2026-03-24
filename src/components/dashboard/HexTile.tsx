@@ -19,13 +19,12 @@ export function HexTile({ data, isHero = false, tileSize = 72 }: HexTileProps) {
   const color = ZONE_COLORS[data.zone] || ZONE_COLORS[1];
   const displayName = data.profile?.nickname || data.profile?.name || 'Unknown';
 
-  const baseSize = isHero ? Math.min(tileSize * 1.8, 130) : tileSize;
+  const baseSize = tileSize;
   const hexClip = 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)';
 
-  // Scale font sizes proportionally
-  const bpmFontSize = isHero ? baseSize * 0.28 : baseSize * 0.28;
-  const nameFontSize = isHero ? baseSize * 0.09 : baseSize * 0.11;
-  const pctFontSize = isHero ? baseSize * 0.09 : baseSize * 0.11;
+  const bpmFontSize = baseSize * 0.28;
+  const nameFontSize = baseSize * 0.11;
+  const pctFontSize = baseSize * 0.11;
 
   return (
     <div
