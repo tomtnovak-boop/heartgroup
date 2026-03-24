@@ -6,15 +6,29 @@ import { AppHeader } from '@/components/layout/AppHeader';
 import { useViewMode } from '@/hooks/useViewMode';
 import { CoachDashboard } from '@/components/dashboard/CoachDashboard';
 import { useAuthContext } from '@/components/auth/AuthProvider';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useLiveHR } from '@/hooks/useLiveHR';
+import { useWorkoutSession } from '@/hooks/useWorkoutSession';
 
 export default function Index() {
   const { viewMode, changeView } = useViewMode('participant');
   const { isAuthenticated, isCoach } = useAuthContext();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('live');
-  const { participants, averageBPM, averageZone, isLoading, refresh } = useLiveHR();
+
+  const {
+    isActive: sessionActive,
+    elapsedSeconds: sessionElapsed,
+    startSession,
+    stopSession,
+    recordHRData,
+  } = useWorkoutSession();
+
+  const onNewHRData = useCallback((data: { profile_id: string; bpm: number; zone: number; hr_percentage: number; timestamp: string }) => {
+    recordHRData(data);
+  }, [recordHRData]);
+
+  const { participants, averageBPM, averageZone, isLoading, refresh } = useLiveHR(onNewHRData);
 
   // Full-screen Coach Dashboard when in coach view (only for coaches)
   if (viewMode === 'coach' && isCoach) {
