@@ -110,6 +110,19 @@ export function AppHeader({
                 Kunden
               </span>
             </button>
+            <button
+              onClick={() => onTabChange('coaches')}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                activeTab === 'coaches'
+                  ? 'bg-foreground/10 text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <Shield className="w-3 h-3" />
+                Coaches
+              </span>
+            </button>
           </div>
 
           {/* Inline Stats Badges */}
