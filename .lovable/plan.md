@@ -1,29 +1,34 @@
 
 
-## Plan: Füllung basierend auf Zone-Position statt absoluter HR%
+## Plan: Gewicht & Körpergrösse bei Registrierung und Kundenverwaltung
 
 ### Problem
-Aktuell wird `fillPercent` = `data.hr_percentage` (absolut, 0–100%) verwendet. Das bedeutet: jemand in Zone 2 bei 65% HR hat die Hex-Kachel nur zu 65% gefüllt — obwohl er sich in der Mitte seiner Zone befindet.
+- **Gewicht** existiert in der DB (`profiles.weight`), wird aber bei der Registrierung nicht abgefragt
+- **Körpergrösse** existiert gar nicht in der Datenbank
+- Beide Werte werden für eine genaue Kalorienberechnung benötigt
 
-### Lösung
-Die Füllung soll die **relative Position innerhalb der aktuellen Zone** darstellen:
-- Zone 3 (70–80%): Bei 70% HR → 0% gefüllt, bei 75% → 50% gefüllt, bei 80% → 100% gefüllt
-- Formel: `fillPercent = zoneProgress * 100` (wobei `zoneProgress` bereits berechnet wird)
+### Änderungen
 
-### Änderung: `HexTile.tsx`
+**1. Datenbank-Migration**
+- Neue Spalte `height` (integer, nullable) zur `profiles`-Tabelle hinzufügen (Körpergrösse in cm)
 
-Zeile mit `fillPercent`-Berechnung ändern:
+**2. `RegisterForm.tsx` — Gewicht + Grösse abfragen**
+- Zwei neue Felder nach Geschlecht hinzufügen:
+  - Gewicht (kg): `type="number"`, Placeholder "z.B. 75"
+  - Körpergrösse (cm): `type="number"`, Placeholder "z.B. 175"
+- Beide optional, werden beim Profil-Erstellen mitgespeichert
 
-```
-// Alt:
-const fillPercent = Math.max(0, Math.min(100, data.hr_percentage));
+**3. `CustomerList.tsx` — Spalten ergänzen**
+- Neue Spalten "Gewicht" und "Grösse" in der Tabelle anzeigen
 
-// Neu:
-const fillPercent = Math.max(0, Math.min(100, zoneProgress * 100));
-```
+**4. `CustomerEditDialog.tsx` — Felder hinzufügen**
+- Gewicht- und Grösse-Eingabefelder im Bearbeitungs-Dialog
+- Nickname-Feld ebenfalls hinzufügen (aus dem zuvor genehmigten Plan)
 
-`zoneProgress` ist bereits vorhanden und berechnet genau diese relative Position (0.0 am unteren Rand der Zone, 1.0 am oberen).
+**5. `ProfileEditDialog.tsx` — Grösse-Feld ergänzen**
+- Neues Feld "Körpergrösse (cm)" neben dem bestehenden Gewicht-Feld
 
 ### Dateien
-- **Ändern:** `HexTile.tsx` — eine Zeile
+- **Migration:** `profiles` → neue Spalte `height`
+- **Ändern:** `RegisterForm.tsx`, `CustomerList.tsx`, `CustomerEditDialog.tsx`, `ProfileEditDialog.tsx`
 
