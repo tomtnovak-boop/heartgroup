@@ -765,6 +765,13 @@ export default function Participant() {
                             <span>⌀ {w.avg_bpm || '--'} bpm</span>
                             <span>{zoneLabels[dz]}</span>
                           </div>
+                          {w.rank_avg_bpm != null && w.session_participant_count != null && (
+                            <div className="text-[11px] mt-0.5 flex items-center gap-2">
+                              <span className="text-purple-400">Avg #{w.rank_avg_bpm}/{w.session_participant_count}</span>
+                              <span className="text-muted-foreground">·</span>
+                              <span className="text-red-400">Peak #{w.rank_peak_bpm}/{w.session_participant_count}</span>
+                            </div>
+                          )}
                         </div>
                         <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                       </div>
