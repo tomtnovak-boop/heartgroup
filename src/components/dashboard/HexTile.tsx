@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { LiveHRData } from '@/hooks/useLiveHR';
 import { HEART_RATE_ZONES } from '@/lib/heartRateUtils';
 
@@ -32,13 +31,24 @@ export function HexTile({ data, isHero = false, tileSize = 72 }: HexTileProps) {
 
   // Zone threshold - upper boundary of current zone
   const zoneInfo = HEART_RATE_ZONES[data.zone - 1];
+  const zoneMinPercent = zoneInfo?.minPercent ?? 0;
   const zoneMaxPercent = zoneInfo?.maxPercent ?? 100;
 
-  // Near zone edge detection (top 3% of current zone, not in zone 5)
-  const isNearZoneEdge = data.zone < 5 && data.hr_percentage >= (zoneMaxPercent - 3);
+  // Progressive intensity: 0.0 (bottom of zone) to 1.0 (top of zone)
+  const zoneRange = zoneMaxPercent - zoneMinPercent;
+  const zoneProgress = zoneRange > 0
+    ? Math.max(0, Math.min(1, (data.hr_percentage - zoneMinPercent) / zoneRange))
+    : 0.5;
 
-  // Threshold line position (mapped to hex inner area)
-  // The hex visual area runs from ~25% to ~75% vertically, so we map zone max to that range
+  // Fill opacity: 10% at bottom of zone, 100% at top
+  const fillOpacity = Math.round((0.10 + zoneProgress * 0.90) * 255);
+  const fillOpacityHex = fillOpacity.toString(16).padStart(2, '0');
+
+  // Outer ring opacity scales with zone progress
+  const outerOpacity = isHero
+    ? 0.3 + zoneProgress * 0.4
+    : 0.15 + zoneProgress * 0.45;
+
   const thresholdBottom = zoneMaxPercent;
   const showThreshold = data.zone < 5;
 
