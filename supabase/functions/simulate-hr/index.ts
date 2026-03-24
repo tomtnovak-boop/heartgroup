@@ -14,6 +14,10 @@ function getZone(hrPct: number): number {
   return 5;
 }
 
+function clamp(val: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, val));
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -23,7 +27,6 @@ Deno.serve(async (req) => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, serviceKey);
 
-  // Get all test profiles (user_id IS NULL)
   const { data: profiles, error: profilesError } = await supabase
     .from("profiles")
     .select("id, max_hr")
@@ -36,20 +39,26 @@ Deno.serve(async (req) => {
     );
   }
 
-  // Run for ~55 seconds, inserting every 2 seconds
+  // Initialize each profile with a random starting BPM
+  const currentBpm = new Map<string, number>();
+  for (const p of profiles) {
+    currentBpm.set(p.id, Math.floor(Math.random() * 91) + 90); // 90-180
+  }
+
   const iterations = 27;
   for (let i = 0; i < iterations; i++) {
     const rows = profiles.map((p) => {
-      const bpm = Math.floor(Math.random() * 91) + 90; // 90-180
+      const prevBpm = currentBpm.get(p.id)!;
+      // Vary by ±10% of current BPM
+      const maxDelta = Math.round(prevBpm * 0.1);
+      const delta = Math.floor(Math.random() * (maxDelta * 2 + 1)) - maxDelta;
+      const bpm = clamp(prevBpm + delta, 60, 200);
+      currentBpm.set(p.id, bpm);
+
       const maxHr = p.max_hr || 190;
       const hrPct = Math.round((bpm / maxHr) * 100);
       const zone = getZone(hrPct);
-      return {
-        profile_id: p.id,
-        bpm,
-        zone,
-        hr_percentage: hrPct,
-      };
+      return { profile_id: p.id, bpm, zone, hr_percentage: hrPct };
     });
 
     await supabase.from("live_hr").insert(rows);
