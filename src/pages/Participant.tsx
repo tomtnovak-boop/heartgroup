@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +12,15 @@ import { useBluetoothHR } from '@/hooks/useBluetoothHR';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { enableNoSleep, isIOS } from '@/lib/noSleep';
 import { calculateZone, calculateHRPercentage } from '@/lib/heartRateUtils';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import {
   Heart, Loader2, Bluetooth, BluetoothOff, LogOut, Settings, User,
   TrendingUp, TrendingDown, Flame, Clock, Activity, ChevronRight, Zap,
