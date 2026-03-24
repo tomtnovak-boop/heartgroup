@@ -40,6 +40,10 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
     );
   }
 
+  const ZONE_COLORS: Record<number, string> = {
+    1: '#4fc3f7', 2: '#66bb6a', 3: '#fdd835', 4: '#ff9800', 5: '#e53935',
+  };
+
   return (
     <div className="flex-1 flex flex-col px-4 pt-1 pb-1" style={{ background: '#0a0a0a' }}>
       <div className="flex-1 grid grid-cols-5 gap-2 min-h-0">
@@ -50,6 +54,22 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
             participants={zoneGroups[zone]}
             selectedProfileId={selectedProfileId}
           />
+        ))}
+      </div>
+      <div className="flex-shrink-0 grid grid-cols-5 gap-2 pt-1 pb-1">
+        {[1, 2, 3, 4, 5].map((zone) => (
+          <div key={zone} className="flex justify-center">
+            <div
+              className="text-[10px] font-bold rounded-full px-2 py-0.5"
+              style={{
+                color: ZONE_COLORS[zone],
+                background: `${ZONE_COLORS[zone]}12`,
+                border: `1px solid ${ZONE_COLORS[zone]}22`,
+              }}
+            >
+              {zoneGroups[zone].length}
+            </div>
+          </div>
         ))}
       </div>
     </div>
