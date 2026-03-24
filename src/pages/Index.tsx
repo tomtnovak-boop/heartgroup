@@ -16,7 +16,20 @@ export default function Index() {
   const { isAuthenticated, isCoach } = useAuthContext();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('live');
+  const [myProfileId, setMyProfileId] = useState<string | undefined>();
 
+  // Look up current user's profile_id for "self" marker
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+    supabase
+      .from('profiles')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setMyProfileId(data.id);
+      });
+  }, [isAuthenticated, user]);
   const {
     isActive: sessionActive,
     elapsedSeconds: sessionElapsed,
