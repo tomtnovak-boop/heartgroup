@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { LiveHRData } from '@/hooks/useLiveHR';
+import { HEART_RATE_ZONES } from '@/lib/heartRateUtils';
 
 const ZONE_COLORS: Record<number, string> = {
   1: '#00d4ff',
@@ -26,6 +27,23 @@ export function HexTile({ data, isHero = false, tileSize = 72 }: HexTileProps) {
   const nameFontSize = baseSize * 0.11;
   const pctFontSize = baseSize * 0.11;
 
+  // Fill percentage clamped 0-100
+  const fillPercent = Math.max(0, Math.min(100, data.hr_percentage));
+
+  // Zone threshold - upper boundary of current zone
+  const zoneInfo = HEART_RATE_ZONES[data.zone - 1];
+  const zoneMaxPercent = zoneInfo?.maxPercent ?? 100;
+
+  // Near zone edge detection (top 3% of current zone, not in zone 5)
+  const isNearZoneEdge = data.zone < 5 && data.hr_percentage >= (zoneMaxPercent - 3);
+
+  // Threshold line position (mapped to hex inner area)
+  // The hex visual area runs from ~25% to ~75% vertically, so we map zone max to that range
+  const thresholdBottom = zoneMaxPercent;
+  const showThreshold = data.zone < 5;
+
+  const textShadow = '0 1px 3px rgba(0,0,0,0.8)';
+
   return (
     <div
       className="relative flex items-center justify-center"
@@ -35,31 +53,41 @@ export function HexTile({ data, isHero = false, tileSize = 72 }: HexTileProps) {
         filter: `drop-shadow(0 0 ${isHero ? 8 : 5}px ${color}88)`,
       }}
     >
-      {/* Outer glow border hex */}
-      <div
+      {/* Outer glow border hex - pulses when near zone edge */}
+      <motion.div
         className="absolute inset-0"
         style={{
           clipPath: hexClip,
           background: color,
-          opacity: isHero ? 0.6 : 0.3,
         }}
+        animate={isNearZoneEdge ? { opacity: [0.3, 0.7, 0.3] } : { opacity: isHero ? 0.6 : 0.3 }}
+        transition={isNearZoneEdge ? { duration: 0.6, repeat: Infinity, ease: 'easeInOut' } : {}}
       />
 
-      {/* Inner hex */}
+      {/* Inner hex with liquid fill */}
       <div
         className="absolute flex flex-col items-center justify-center"
         style={{
           clipPath: hexClip,
-          background: isHero
-            ? `linear-gradient(180deg, ${color}55 0%, ${color}30 100%)`
-            : `linear-gradient(180deg, rgba(20,20,20,0.95) 0%, rgba(10,10,10,0.98) 100%)`,
+          background: `linear-gradient(to top, ${color}40 ${fillPercent}%, rgba(15,15,15,0.95) ${fillPercent}%)`,
           top: 2,
           left: 2,
           right: 2,
           bottom: 2,
-          boxShadow: `inset 0 0 ${isHero ? 15 : 8}px ${color}22`,
         }}
       >
+        {/* Zone threshold line */}
+        {showThreshold && (
+          <div
+            className="absolute left-0 right-0"
+            style={{
+              bottom: `${thresholdBottom}%`,
+              height: 1,
+              background: `${color}44`,
+            }}
+          />
+        )}
+
         {/* Name */}
         <span
           className="font-bold uppercase tracking-wider text-center px-1 truncate max-w-[90%]"
@@ -67,6 +95,7 @@ export function HexTile({ data, isHero = false, tileSize = 72 }: HexTileProps) {
             fontSize: Math.max(nameFontSize, 7),
             color: 'rgba(255,255,255,0.75)',
             lineHeight: 1.2,
+            textShadow,
           }}
         >
           {displayName}
@@ -78,7 +107,7 @@ export function HexTile({ data, isHero = false, tileSize = 72 }: HexTileProps) {
           style={{
             fontSize: Math.max(bpmFontSize, 14),
             color: '#fff',
-            textShadow: `0 0 6px ${color}88`,
+            textShadow: `0 0 6px ${color}88, ${textShadow}`,
           }}
           animate={{ scale: [1, 1.03, 1] }}
           transition={{
@@ -96,6 +125,7 @@ export function HexTile({ data, isHero = false, tileSize = 72 }: HexTileProps) {
           style={{
             fontSize: Math.max(pctFontSize, 7),
             color: 'rgba(255,255,255,0.55)',
+            textShadow,
           }}
         >
           {Math.round(data.hr_percentage)}%
