@@ -67,7 +67,9 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
     <div
       className="relative h-full flex flex-col px-4 pt-1 pb-0 min-h-0 overflow-hidden"
       style={{
-        background: 'radial-gradient(ellipse at 50% 45%, #0a0a1f 0%, #050510 45%, #000000 100%)',
+        background: '#0a0a0a',
+        backgroundImage: 'radial-gradient(ellipse at 50% 45%, #0a0a1f 0%, #050510 45%, #000000 100%)',
+        minHeight: '100vh',
       }}
     >
       {/* EKG ambient background */}

@@ -37,7 +37,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="h-dvh flex flex-col overflow-hidden" style={{ background: '#0a0a0a' }}>
+    <div className="h-dvh flex flex-col overflow-hidden" style={{ background: '#0a0a0a', minHeight: '100vh' }}>
       <AppHeader
         currentView={viewMode}
         onViewChange={handleViewChange}
@@ -55,7 +55,7 @@ export default function Dashboard() {
         onStartSession={handleStartSession}
         onStopSession={stopSession}
       />
-      <div className="flex-1 min-h-0 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden" style={{ background: '#0a0a0a' }}>
         <CoachDashboard
           participants={participants}
           isLoading={isLoading}
