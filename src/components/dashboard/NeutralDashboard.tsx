@@ -28,6 +28,14 @@ function getBarZone(hrPercent: number): number {
   return 5;
 }
 
+const LEFT_BORDER_COLORS: Record<number, string> = {
+  1: 'hsl(220 15% 45% / 0.35)',
+  2: 'hsl(200 100% 50% / 0.45)',
+  3: 'hsl(145 80% 45% / 0.55)',
+  4: 'hsl(45 100% 50% / 0.75)',
+  5: 'hsl(0 100% 55% / 1)',
+};
+
 function getRowBg(zone: number | null): string {
   if (!zone) return 'transparent';
   if (zone <= 2) return `${ZONE_COLORS[zone].replace(')', ' / 0.04)')}`;
@@ -39,18 +47,6 @@ function getRowBg(zone: number | null): string {
 function getBarGlow(zone: number | null): string {
   if (zone === 4) return '0 0 12px rgba(255, 165, 0, 0.35)';
   if (zone === 5) return '0 0 20px rgba(255, 50, 50, 0.5), 0 0 40px rgba(255, 50, 50, 0.2)';
-  return 'none';
-}
-
-function getSliderGlow(zone: number | null): string {
-  if (zone === 4) return '0 0 8px rgba(255, 165, 0, 0.8), 0 0 16px rgba(255, 165, 0, 0.4)';
-  if (zone === 5) return '0 0 10px rgba(255, 50, 50, 1), 0 0 24px rgba(255, 50, 50, 0.6), 0 0 40px rgba(255, 50, 50, 0.3)';
-  return 'none';
-}
-
-function getBpmGlow(zone: number | null): string {
-  if (zone === 4) return '0 0 10px rgba(255, 165, 0, 0.8)';
-  if (zone === 5) return '0 0 12px rgba(255, 50, 50, 1), 0 0 24px rgba(255, 50, 50, 0.5)';
   return 'none';
 }
 
