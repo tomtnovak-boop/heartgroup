@@ -114,7 +114,10 @@ export function CustomerList() {
               {filteredCustomers.map((customer) => (
                 <TableRow key={customer.id}>
                   <TableCell className="font-medium">{customer.name}</TableCell>
+                  <TableCell className="text-muted-foreground">{customer.nickname || '–'}</TableCell>
                   <TableCell className="text-center">{customer.age} Jahre</TableCell>
+                  <TableCell className="text-center">{customer.weight ? `${customer.weight} kg` : '–'}</TableCell>
+                  <TableCell className="text-center">{customer.height ? `${customer.height} cm` : '–'}</TableCell>
                   <TableCell className="text-center">
                     {customer.custom_max_hr || customer.max_hr} bpm
                     {customer.custom_max_hr && (

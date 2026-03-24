@@ -305,7 +305,7 @@ export function ProfileEditDialog({
               }
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="grid gap-2">
               <Label>Geschlecht</Label>
               <Select value={gender} onValueChange={setGender}>
@@ -330,9 +330,21 @@ export function ProfileEditDialog({
                 max={300}
               />
             </div>
+            <div className="grid gap-2">
+              <Label htmlFor="height">Grösse (cm)</Label>
+              <Input
+                id="height"
+                type="number"
+                value={height}
+                onChange={(e) => setHeight(e.target.value)}
+                placeholder="z.B. 175"
+                min={100}
+                max={250}
+              />
+            </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            Geschlecht und Gewicht werden für die Kalorienberechnung benötigt.
+            Geschlecht, Gewicht und Grösse werden für die Kalorienberechnung benötigt.
           </p>
         </div>
         <DialogFooter className="flex-shrink-0">

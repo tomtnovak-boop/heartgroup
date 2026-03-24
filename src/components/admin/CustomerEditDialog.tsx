@@ -227,6 +227,32 @@ export function CustomerEditDialog({
               }
             </p>
           </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="customer-weight">Gewicht (kg)</Label>
+              <Input
+                id="customer-weight"
+                type="number"
+                value={weight}
+                onChange={(e) => setWeight(e.target.value)}
+                placeholder="z.B. 75"
+                min={30}
+                max={300}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="customer-height">Grösse (cm)</Label>
+              <Input
+                id="customer-height"
+                type="number"
+                value={height}
+                onChange={(e) => setHeight(e.target.value)}
+                placeholder="z.B. 175"
+                min={100}
+                max={250}
+              />
+            </div>
+          </div>
           <div className="grid gap-2">
             <Label htmlFor="customer-max-hr">Individuelle HFmax (optional)</Label>
             <Input

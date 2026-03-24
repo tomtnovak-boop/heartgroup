@@ -312,6 +312,33 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
             )}
           </div>
 
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="weight">Gewicht (kg)</Label>
+              <Input
+                id="weight"
+                type="number"
+                placeholder="z.B. 75"
+                value={weight}
+                onChange={(e) => setWeight(e.target.value)}
+                min={30}
+                max={300}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="height">Körpergrösse (cm)</Label>
+              <Input
+                id="height"
+                type="number"
+                placeholder="z.B. 175"
+                value={height}
+                onChange={(e) => setHeight(e.target.value)}
+                min={100}
+                max={250}
+              />
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="customMaxHr">
               Individuelle HFmax (optional)
