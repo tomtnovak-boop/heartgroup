@@ -37,6 +37,8 @@ const LEFT_BORDER_COLORS: Record<number, string> = {
 };
 
 
+const ZONE_LABELS = ['Z1 Recovery', 'Z2 Fat Burn', 'Z3 Aerobic', 'Z4 Anaerobic', 'Z5 Max'];
+
 export function NeutralDashboard({ participants, allProfiles, isLoading, isSessionActive }: NeutralDashboardProps) {
   const rows = useMemo(() => {
     const sorted = [...allProfiles].sort(
@@ -81,10 +83,15 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
   }
 
   const rowCount = Math.max(rows.length, 1);
-  const rowHeight = `calc((100dvh - 56px - 40px) / ${rowCount})`;
+  const rowHeight = `calc((100dvh - 56px - 40px - 28px) / ${rowCount})`;
 
   return (
     <div style={{ height: 'calc(100dvh - 56px)', overflow: 'hidden', background: '#080808', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+
+      {/* Background depth layers */}
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,100,50,0.04) 0%, transparent 70%)' }} />
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse 60% 30% at 50% 100%, rgba(0,100,200,0.05) 0%, transparent 70%)' }} />
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse 100% 100% at 50% 50%, transparent 50%, rgba(0,0,0,0.5) 100%)' }} />
 
       {/* Session-active background pulse */}
       {isSessionActive && (
@@ -120,6 +127,45 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
         <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px' }}>
           {connectedRows.length} connected
         </span>
+      </div>
+
+      {/* Zone header row */}
+      <div style={{
+        height: '28px',
+        display: 'flex',
+        alignItems: 'flex-end',
+        gap: '12px',
+        paddingLeft: '12px',
+        paddingRight: '12px',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        flexShrink: 0,
+        position: 'relative',
+        zIndex: 1,
+      }}>
+        {/* Nr col spacer */}
+        <div style={{ width: 28 }} />
+        {/* Name col spacer */}
+        <div style={{ width: 110 }} />
+        {/* Zone labels aligned to bar */}
+        <div style={{ flex: 1, display: 'flex' }}>
+          {[1, 2, 3, 4, 5].map(z => (
+            <div key={z} style={{
+              width: '20%',
+              textAlign: 'center',
+              fontSize: 'clamp(8px, 1vh, 11px)',
+              fontWeight: 600,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase' as const,
+              color: ZONE_COLORS[z],
+              opacity: 0.7,
+              paddingBottom: '4px',
+            }}>
+              {ZONE_LABELS[z - 1]}
+            </div>
+          ))}
+        </div>
+        {/* BPM col spacer */}
+        <div style={{ width: 56 }} />
       </div>
 
       {/* Rows */}
