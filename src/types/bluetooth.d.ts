@@ -25,8 +25,14 @@ export interface BluetoothRemoteGATTCharacteristic {
   removeEventListener(type: 'characteristicvaluechanged', listener: (event: Event) => void): void;
 }
 
+interface BluetoothRequestDeviceFilter {
+  services?: string[];
+  namePrefix?: string;
+  name?: string;
+}
+
 interface Bluetooth {
-  requestDevice(options: { filters: Array<{ services: string[] }>; optionalServices?: string[] }): Promise<BluetoothDevice>;
+  requestDevice(options: { filters: BluetoothRequestDeviceFilter[]; optionalServices?: string[] }): Promise<BluetoothDevice>;
 }
 
 declare global {
