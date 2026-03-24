@@ -433,21 +433,30 @@ export default function Participant() {
             <Card className="p-3">
               <h3 className="text-xs font-semibold mb-2">Zone Distribution</h3>
               <div className="space-y-1.5">
-                {[
-                  { label: 'Z1', pct: monthStats.zonePercents.z1, color: zoneColors.z1 },
-                  { label: 'Z2', pct: monthStats.zonePercents.z2, color: zoneColors.z2 },
-                  { label: 'Z3', pct: monthStats.zonePercents.z3, color: zoneColors.z3 },
-                  { label: 'Z4', pct: monthStats.zonePercents.z4, color: zoneColors.z4 },
-                  { label: 'Z5', pct: monthStats.zonePercents.z5, color: zoneColors.z5 },
-                ].map(z => (
-                  <div key={z.label} className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold w-5 text-muted-foreground">{z.label}</span>
-                    <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full rounded-full transition-all" style={{ width: `${z.pct}%`, backgroundColor: z.color }} />
+                {([
+                  { label: 'Z1', key: 'z1' as const },
+                  { label: 'Z2', key: 'z2' as const },
+                  { label: 'Z3', key: 'z3' as const },
+                  { label: 'Z4', key: 'z4' as const },
+                  { label: 'Z5', key: 'z5' as const },
+                ] as const).map(z => {
+                  const pct = monthStats.zonePercents[z.key];
+                  const mins = monthStats.zoneMinutes[z.key];
+                  return (
+                    <div key={z.label} className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold w-5 text-muted-foreground">{z.label}</span>
+                      <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: zoneColors[z.key] }} />
+                      </div>
+                      <span className="text-[10px] font-medium w-20 text-right text-muted-foreground">
+                        {mins > 0 ? `${mins} min` : '—'} · {pct}%
+                      </span>
                     </div>
-                    <span className="text-[10px] font-medium w-8 text-right">{z.pct}%</span>
-                  </div>
-                ))}
+                  );
+                })}
+              </div>
+              <div className="mt-2 text-[10px] text-muted-foreground text-right">
+                Total: {Math.floor(monthStats.totalTrainingMinutes / 60) > 0 ? `${Math.floor(monthStats.totalTrainingMinutes / 60)} h ` : ''}{monthStats.totalTrainingMinutes % 60} min this month
               </div>
             </Card>
           )}
