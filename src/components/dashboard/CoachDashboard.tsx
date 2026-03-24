@@ -1,8 +1,8 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { ZoneColumn } from './ZoneColumn';
 import { CustomerList } from '@/components/admin/CustomerList';
 import { CoachList } from '@/components/admin/CoachList';
-import { EKGLine } from './EKGLine';
+import { HRHistoryStrip } from './HRHistoryStrip';
 import { Heart } from 'lucide-react';
 import { LiveHRData } from '@/hooks/useLiveHR';
 
@@ -12,9 +12,10 @@ interface CoachDashboardProps {
   activeTab: string;
   selectedProfileId?: string;
   averageBPM?: number;
+  isSessionActive?: boolean;
 }
 
-export function CoachDashboard({ participants, isLoading, activeTab, selectedProfileId, averageBPM = 0 }: CoachDashboardProps) {
+export function CoachDashboard({ participants, isLoading, activeTab, selectedProfileId, averageBPM = 0, isSessionActive = false }: CoachDashboardProps) {
   const zoneGroups = useMemo(() => {
     const groups: Record<number, LiveHRData[]> = { 1: [], 2: [], 3: [], 4: [], 5: [] };
     participants.forEach((p) => {
@@ -23,15 +24,6 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
     });
     return groups;
   }, [participants]);
-
-  useEffect(() => {
-    if (!averageBPM || averageBPM === 0) {
-      document.documentElement.style.setProperty('--beat-duration', '2.5s');
-      return;
-    }
-    const duration = ((60 / averageBPM) * 3).toFixed(3);
-    document.documentElement.style.setProperty('--beat-duration', `${duration}s`);
-  }, [averageBPM]);
 
   if (isLoading) {
     return (
@@ -77,7 +69,6 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
       className="relative h-full flex flex-col px-4 pt-1 pb-0 min-h-0 overflow-hidden"
       style={{ background: '#0a0a0a' }}
     >
-      <EKGLine />
       {/* Vignette overlay */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -117,7 +108,7 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
         />
       ))}
 
-      {/* Content */}
+      {/* Hexagon grid */}
       <div className="relative flex-1 grid grid-cols-5 gap-2 min-h-0 overflow-hidden z-10">
         {[1, 2, 3, 4, 5].map((zone) => (
           <ZoneColumn
@@ -128,7 +119,12 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
           />
         ))}
       </div>
-      <div className="absolute bottom-0 left-0 right-0 grid grid-cols-5 gap-2 px-4 py-1 z-10" style={{ background: 'linear-gradient(to top, #000000 60%, transparent)' }}>
+
+      {/* HR History Chart Strip */}
+      <HRHistoryStrip averageBPM={averageBPM} isSessionActive={isSessionActive} />
+
+      {/* Zone count badges */}
+      <div className="relative grid grid-cols-5 gap-2 py-1 z-10" style={{ background: 'linear-gradient(to top, #000000 60%, transparent)' }}>
         {[1, 2, 3, 4, 5].map((zone) => (
           <div key={zone} className="flex justify-center">
             <div
