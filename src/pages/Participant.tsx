@@ -75,6 +75,7 @@ export default function Participant() {
   const joinDialogShownRef = useRef(false);
   const navigate = useNavigate();
   const { user, signOut, isCoach } = useAuthContext();
+  const { toast } = useToast();
 
   const {
     isConnected, isConnecting, bpm, connect, disconnect, deviceName,
