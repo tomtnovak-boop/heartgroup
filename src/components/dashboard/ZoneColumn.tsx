@@ -37,7 +37,7 @@ export function ZoneColumn({ zone, participants, heroProfileId }: ZoneColumnProp
 
       {/* Divider */}
       <div
-        className="w-full h-px mb-1 flex-shrink-0"
+        className="w-full h-px mb-0.5 flex-shrink-0"
         style={{
           background: `linear-gradient(90deg, transparent, ${config.color}44, transparent)`,
         }}
