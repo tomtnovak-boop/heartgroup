@@ -53,6 +53,9 @@ interface Workout {
   zone_3_seconds: number | null;
   zone_4_seconds: number | null;
   zone_5_seconds: number | null;
+  rank_avg_bpm: number | null;
+  rank_peak_bpm: number | null;
+  session_participant_count: number | null;
 }
 
 export default function Participant() {

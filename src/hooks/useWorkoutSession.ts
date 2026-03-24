@@ -131,6 +131,9 @@ export function useWorkoutSession() {
     const now = new Date().toISOString();
     const entries = Array.from(workouts.entries());
 
+    // First pass: calculate stats for all workouts
+    const workoutStats: { workoutId: string; avgBpm: number; maxBpm: number; updatePayload: Record<string, any> }[] = [];
+
     await Promise.all(entries.map(async ([profileId, workoutId]) => {
       try {
         const [{ data: hrData, error: hrError }, { data: profile }] = await Promise.all([
@@ -166,16 +169,35 @@ export function useWorkoutSession() {
           (durationSeconds / 60) * (0.6309 * avgBpm - 55.0969 + 0.1988 * weight + 0.2017 * age) / 4.184
         );
 
-        await supabase.from('workouts').update({
-          ended_at: now, avg_bpm: avgBpm, max_bpm: maxBpm, avg_zone: avgZone,
-          duration_seconds: durationSeconds,
-          zone_1_seconds: zoneCounts[1] * intervalSeconds, zone_2_seconds: zoneCounts[2] * intervalSeconds,
-          zone_3_seconds: zoneCounts[3] * intervalSeconds, zone_4_seconds: zoneCounts[4] * intervalSeconds,
-          zone_5_seconds: zoneCounts[5] * intervalSeconds, total_calories: Math.max(0, totalCalories),
-        }).eq('id', workoutId);
+        workoutStats.push({
+          workoutId, avgBpm, maxBpm,
+          updatePayload: {
+            ended_at: now, avg_bpm: avgBpm, max_bpm: maxBpm, avg_zone: avgZone,
+            duration_seconds: durationSeconds,
+            zone_1_seconds: zoneCounts[1] * intervalSeconds, zone_2_seconds: zoneCounts[2] * intervalSeconds,
+            zone_3_seconds: zoneCounts[3] * intervalSeconds, zone_4_seconds: zoneCounts[4] * intervalSeconds,
+            zone_5_seconds: zoneCounts[5] * intervalSeconds, total_calories: Math.max(0, totalCalories),
+          },
+        });
       } catch (err) {
         console.error('Error finalizing workout:', err);
       }
+    }));
+
+    // Second pass: calculate ranks and update all workouts
+    const participantCount = workoutStats.length;
+    const avgSorted = [...workoutStats].sort((a, b) => b.avgBpm - a.avgBpm);
+    const peakSorted = [...workoutStats].sort((a, b) => b.maxBpm - a.maxBpm);
+
+    await Promise.all(workoutStats.map(async (ws) => {
+      const rankAvg = avgSorted.findIndex(s => s.workoutId === ws.workoutId) + 1;
+      const rankPeak = peakSorted.findIndex(s => s.workoutId === ws.workoutId) + 1;
+      await supabase.from('workouts').update({
+        ...ws.updatePayload,
+        rank_avg_bpm: rankAvg,
+        rank_peak_bpm: rankPeak,
+        session_participant_count: participantCount,
+      }).eq('id', ws.workoutId);
     }));
   }, []);
 
