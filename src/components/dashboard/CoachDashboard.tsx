@@ -1,8 +1,8 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { ZoneColumn } from './ZoneColumn';
 import { CustomerList } from '@/components/admin/CustomerList';
 import { CoachList } from '@/components/admin/CoachList';
-import { EKGBackground } from './EKGBackground';
+import { EKGLine } from './EKGLine';
 import { Heart } from 'lucide-react';
 import { LiveHRData } from '@/hooks/useLiveHR';
 
@@ -23,6 +23,11 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
     });
     return groups;
   }, [participants]);
+
+  useEffect(() => {
+    const duration = averageBPM > 0 ? `${60 / averageBPM}s` : '6s';
+    document.documentElement.style.setProperty('--beat-duration', duration);
+  }, [averageBPM]);
 
   if (isLoading) {
     return (
@@ -66,14 +71,9 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
   return (
     <div
       className="relative h-full flex flex-col px-4 pt-1 pb-0 min-h-0 overflow-hidden"
-      style={{
-        background: '#0a0a0a',
-        backgroundImage: 'radial-gradient(ellipse at 50% 45%, #0a0a1f 0%, #050510 45%, #000000 100%)',
-        minHeight: '100vh',
-      }}
+      style={{ background: '#0a0a0a' }}
     >
-      {/* EKG ambient background */}
-      <EKGBackground averageBPM={averageBPM} />
+      <EKGLine />
       {/* Vignette overlay */}
       <div
         className="absolute inset-0 pointer-events-none"

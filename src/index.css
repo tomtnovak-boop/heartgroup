@@ -105,9 +105,8 @@
     @apply border-border;
   }
 
-  html, body, #root {
+  body {
     @apply bg-background text-foreground;
-    background-color: #0a0a0a !important;
   }
 }
 
