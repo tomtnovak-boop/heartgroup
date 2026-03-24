@@ -1,36 +1,33 @@
 
 
-## Plan: Mehrspaltige Kacheln pro Zone (2–3 Spalten)
+## Plan: Hero-Tile farblich ausfüllen statt vergrössern
 
 ### Idee
-Statt einer einzelnen vertikalen Reihe pro Zone werden die Hex-Kacheln in einem **Wrap-Grid** (2–3 nebeneinander) angeordnet. Dadurch:
-- Feste Kachelgröße (z.B. 64px) — kein dynamisches Schrumpfen mehr
-- Mehr Teilnehmer passen in den sichtbaren Bereich
-- Sortierung bleibt: höchster BPM oben-links → niedrigster unten-rechts
+Der Teilnehmer mit dem höchsten BPM in Zone 5 wird nicht mehr grösser dargestellt (1.8x), sondern behält die **gleiche Grösse** wie alle anderen — aber sein Hex-Hintergrund wird mit der **Zonen-Farbe gefüllt** statt dunkel. So sticht er sofort ins Auge, ohne das Layout zu stören.
 
-### Logik für Spaltenanzahl
-- Automatisch basierend auf Teilnehmeranzahl pro Zone:
-  - 1–4 Teilnehmer → 1 Spalte (wie bisher)
-  - 5–8 Teilnehmer → 2 Spalten
-  - 9+ Teilnehmer → 3 Spalten
+### Änderung: `HexTile.tsx`
 
-### Änderungen
+**Aktuell (Hero):**
+- `baseSize = tileSize * 1.8` → grösser
+- Dunkler Hintergrund wie alle anderen
 
-**1. `ZoneColumn.tsx`**
-- Tiles-Container: `flex flex-col` → `flex flex-wrap` mit dynamischer Breite
-- CSS Grid alternativ: `grid grid-cols-2` / `grid-cols-3` je nach Teilnehmerzahl
-- Hex-Versatz für ungerade Reihen beibehalten (Honigwaben-Effekt optional)
+**Neu (Hero):**
+- `baseSize = tileSize` → gleiche Grösse wie alle
+- Inner-Hex Hintergrund: `linear-gradient` mit Zonen-Farbe (z.B. `rgba(255,0,68,0.35)` für Zone 5) statt dunklem Grau
+- Äusserer Hex-Ring: Opacity von 0.3 → 0.6 (kräftiger)
+- Text-Farbe bleibt weiss (guter Kontrast auf farbigem Hintergrund)
+- Drop-Shadow etwas stärker (8px statt 5px)
 
-**2. `CoachDashboard.tsx`**
-- Dynamische `tileSize`-Berechnung entfernen
-- Feste Kachelgröße setzen (z.B. 64px)
-- `maxPerZone`-Logik wird nicht mehr benötigt
+### Visueller Unterschied
 
-**3. `HexTile.tsx`**
-- Keine Änderungen nötig — nimmt weiterhin `tileSize` als Prop
+```text
+Normal-Tile:          Hero-Tile:
+ ╱‾‾‾‾╲               ╱‾‾‾‾╲
+│ dunkel │            │▓farbig▓│
+│  140   │            │  178   │
+ ╲____╱               ╲____╱
+```
 
-### Ergebnis
-- Kacheln bleiben immer gleich groß und gut lesbar
-- Bei 9 Teilnehmern in Zone 1: 3×3 Grid statt einer langen Spalte
-- Alle Teilnehmer sichtbar ohne Scrolling
+### Dateien
+- **Ändern:** `HexTile.tsx` — Hero-Logik: gleiche Grösse, farbiger Hintergrund
 
