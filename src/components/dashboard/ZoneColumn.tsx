@@ -11,12 +11,12 @@ const ZONE_CONFIG: Record<number, { label: string; color: string }> = {
 
 type HexSize = 'lg' | 'md' | 'sm' | 'xs' | 'xxs';
 
-function getZoneLayout(count: number): { columns: 1 | 2; hexSize: HexSize } {
-  if (count <= 4) return { columns: 1, hexSize: 'lg' };
-  if (count <= 8) return { columns: 1, hexSize: 'md' };
-  if (count <= 14) return { columns: 2, hexSize: 'sm' };
-  if (count <= 21) return { columns: 2, hexSize: 'xs' };
-  return { columns: 2, hexSize: 'xxs' };
+function getZoneLayout(count: number): { hexSize: HexSize } {
+  if (count <= 4) return { hexSize: 'lg' };
+  if (count <= 8) return { hexSize: 'md' };
+  if (count <= 14) return { hexSize: 'sm' };
+  if (count <= 21) return { hexSize: 'xs' };
+  return { hexSize: 'xxs' };
 }
 
 const HEX_SIZES: Record<HexSize, number> = {
@@ -44,7 +44,7 @@ interface ZoneColumnProps {
 export function ZoneColumn({ zone, participants, selectedProfileId }: ZoneColumnProps) {
   const config = ZONE_CONFIG[zone];
   const sorted = [...participants].sort((a, b) => b.hr_percentage - a.hr_percentage);
-  const { columns, hexSize } = getZoneLayout(sorted.length);
+  const { hexSize } = getZoneLayout(sorted.length);
   const tileSize = HEX_SIZES[hexSize];
   const gap = GAP_SIZES[hexSize];
   const needsScroll = sorted.length > 21;
@@ -80,7 +80,7 @@ export function ZoneColumn({ zone, participants, selectedProfileId }: ZoneColumn
         className="flex-1 min-h-0"
         style={{
           display: 'grid',
-          gridTemplateColumns: `repeat(${columns}, 1fr)`,
+          gridTemplateColumns: 'repeat(2, 1fr)',
           gap: `${gap}px`,
           justifyItems: 'center',
           alignContent: 'start',
