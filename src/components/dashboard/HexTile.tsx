@@ -98,10 +98,10 @@ export function HexTile({ data, isHero = false, tileSize = 72 }: HexTileProps) {
 
         {/* Name */}
         <span
-          className="font-bold uppercase tracking-wider text-center px-1 truncate max-w-[90%]"
+          className="font-black uppercase tracking-wider text-center px-1 truncate max-w-[90%]"
           style={{
-            fontSize: Math.max(nameFontSize, 7),
-            color: 'rgba(255,255,255,0.75)',
+            fontSize: Math.max(nameFontSize, 9),
+            color: 'rgba(255,255,255,0.85)',
             lineHeight: 1.2,
             textShadow,
           }}
@@ -111,26 +111,14 @@ export function HexTile({ data, isHero = false, tileSize = 72 }: HexTileProps) {
 
         {/* BPM */}
         <span
-          className="font-black leading-none"
+          className="font-bold leading-none"
           style={{
-            fontSize: Math.max(bpmFontSize, 14),
+            fontSize: Math.max(bpmFontSize, 12),
             color: '#fff',
             textShadow: `0 0 6px ${color}88, ${textShadow}`,
           }}
         >
           {data.bpm}
-        </span>
-
-        {/* HR Percentage */}
-        <span
-          className="font-semibold"
-          style={{
-            fontSize: Math.max(pctFontSize, 7),
-            color: 'rgba(255,255,255,0.55)',
-            textShadow,
-          }}
-        >
-          {Math.round(data.hr_percentage)}%
         </span>
       </div>
     </div>
