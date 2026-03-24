@@ -423,9 +423,11 @@ export default function Participant() {
     );
   }
 
-  // Connection status
+  // Connection status — 4 states + "not recording" substate
   const connectionState = isConnecting ? 'connecting'
-    : isConnected && activeSession ? 'live'
+    : isConnected && currentWorkoutId ? 'live'
+    : isConnected && joinSkipped ? 'not-recording'
+    : isConnected && coachSessionActive ? 'waiting' // dialog will show
     : isConnected ? 'waiting'
     : 'disconnected';
 
