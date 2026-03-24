@@ -9,7 +9,6 @@ import { useNavigate } from 'react-router-dom';
 export default function Dashboard() {
   const { viewMode, changeView } = useViewMode('coach');
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('live');
 
   const {
