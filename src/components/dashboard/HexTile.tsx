@@ -12,30 +12,28 @@ const ZONE_COLORS: Record<number, string> = {
 interface HexTileProps {
   data: LiveHRData;
   isHero?: boolean;
+  tileSize?: number;
 }
 
-export function HexTile({ data, isHero = false }: HexTileProps) {
+export function HexTile({ data, isHero = false, tileSize = 72 }: HexTileProps) {
   const color = ZONE_COLORS[data.zone] || ZONE_COLORS[1];
   const displayName = data.profile?.nickname || data.profile?.name || 'Unknown';
 
-  const baseSize = isHero ? 180 : 72;
+  const baseSize = isHero ? Math.min(tileSize * 1.8, 130) : tileSize;
   const hexClip = 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)';
 
+  // Scale font sizes proportionally
+  const bpmFontSize = isHero ? baseSize * 0.28 : baseSize * 0.28;
+  const nameFontSize = isHero ? baseSize * 0.09 : baseSize * 0.11;
+  const pctFontSize = isHero ? baseSize * 0.09 : baseSize * 0.11;
+
   return (
-    <motion.div
+    <div
       className="relative flex items-center justify-center"
-      style={{ width: baseSize, height: baseSize * 1.15 }}
-      animate={{
-        filter: [
-          `drop-shadow(0 0 ${isHero ? 20 : 8}px ${color})`,
-          `drop-shadow(0 0 ${isHero ? 40 : 16}px ${color})`,
-          `drop-shadow(0 0 ${isHero ? 20 : 8}px ${color})`,
-        ],
-      }}
-      transition={{
-        duration: isHero ? 1.2 : 2,
-        repeat: Infinity,
-        ease: 'easeInOut',
+      style={{
+        width: baseSize,
+        height: baseSize * 1.15,
+        filter: `drop-shadow(0 0 ${isHero ? 10 : 5}px ${color}88)`,
       }}
     >
       {/* Outer glow border hex */}
@@ -44,7 +42,7 @@ export function HexTile({ data, isHero = false }: HexTileProps) {
         style={{
           clipPath: hexClip,
           background: color,
-          opacity: 0.35,
+          opacity: 0.3,
         }}
       />
 
@@ -54,19 +52,19 @@ export function HexTile({ data, isHero = false }: HexTileProps) {
         style={{
           clipPath: hexClip,
           background: `linear-gradient(180deg, rgba(20,20,20,0.95) 0%, rgba(10,10,10,0.98) 100%)`,
-          top: isHero ? 3 : 2,
-          left: isHero ? 3 : 2,
-          right: isHero ? 3 : 2,
-          bottom: isHero ? 3 : 2,
-          boxShadow: `inset 0 0 ${isHero ? 30 : 12}px ${color}33`,
+          top: 2,
+          left: 2,
+          right: 2,
+          bottom: 2,
+          boxShadow: `inset 0 0 ${isHero ? 15 : 8}px ${color}22`,
         }}
       >
         {/* Name */}
         <span
           className="font-bold uppercase tracking-wider text-center px-1 truncate max-w-[90%]"
           style={{
-            fontSize: isHero ? 14 : 8,
-            color: 'rgba(255,255,255,0.8)',
+            fontSize: Math.max(nameFontSize, 7),
+            color: 'rgba(255,255,255,0.75)',
             lineHeight: 1.2,
           }}
         >
@@ -77,11 +75,11 @@ export function HexTile({ data, isHero = false }: HexTileProps) {
         <motion.span
           className="font-black leading-none"
           style={{
-            fontSize: isHero ? 48 : 20,
+            fontSize: Math.max(bpmFontSize, 14),
             color: '#fff',
-            textShadow: `0 0 10px ${color}, 0 0 20px ${color}`,
+            textShadow: `0 0 6px ${color}88`,
           }}
-          animate={{ scale: [1, 1.05, 1] }}
+          animate={{ scale: [1, 1.03, 1] }}
           transition={{
             duration: data.bpm > 0 ? 60 / data.bpm : 1,
             repeat: Infinity,
@@ -95,13 +93,13 @@ export function HexTile({ data, isHero = false }: HexTileProps) {
         <span
           className="font-semibold"
           style={{
-            fontSize: isHero ? 14 : 8,
-            color: 'rgba(255,255,255,0.65)',
+            fontSize: Math.max(pctFontSize, 7),
+            color: 'rgba(255,255,255,0.55)',
           }}
         >
           {Math.round(data.hr_percentage)}%
         </span>
       </div>
-    </motion.div>
+    </div>
   );
 }
