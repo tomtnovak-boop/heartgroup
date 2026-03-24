@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { RegisterForm } from '@/components/auth/RegisterForm';
+import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
+  const [view, setView] = useState<'login' | 'register' | 'forgot'>('login');
   const { isAuthenticated, isLoading } = useAuthContext();
   const navigate = useNavigate();
 
@@ -35,10 +36,17 @@ export default function Auth() {
 
       {/* Main content */}
       <main className="flex-1 flex items-center justify-center p-6">
-        {isLogin ? (
-          <LoginForm onSwitchToRegister={() => setIsLogin(false)} />
-        ) : (
-          <RegisterForm onSwitchToLogin={() => setIsLogin(true)} />
+        {view === 'login' && (
+          <LoginForm
+            onSwitchToRegister={() => setView('register')}
+            onSwitchToForgotPassword={() => setView('forgot')}
+          />
+        )}
+        {view === 'register' && (
+          <RegisterForm onSwitchToLogin={() => setView('login')} />
+        )}
+        {view === 'forgot' && (
+          <ForgotPasswordForm onSwitchToLogin={() => setView('login')} />
         )}
       </main>
 

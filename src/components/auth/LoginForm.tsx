@@ -10,9 +10,10 @@ import { Loader2, Mail, Lock } from 'lucide-react';
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
+  onSwitchToForgotPassword: () => void;
 }
 
-export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
+export function LoginForm({ onSwitchToRegister, onSwitchToForgotPassword }: LoginFormProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -84,6 +85,16 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
                 required
               />
             </div>
+          </div>
+
+          <div className="text-right">
+            <button
+              type="button"
+              onClick={onSwitchToForgotPassword}
+              className="text-xs text-muted-foreground hover:text-primary hover:underline"
+            >
+              Passwort vergessen?
+            </button>
           </div>
 
           <Button type="submit" className="w-full" disabled={isLoading}>
