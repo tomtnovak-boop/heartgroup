@@ -226,13 +226,42 @@ export function useWorkoutSession() {
     }
   }, []);
 
+  // Add a late-joining participant to an active session
+  const addLateJoiner = useCallback(async (profileId: string, profileName: string): Promise<boolean> => {
+    if (!isActiveRef.current) return false;
+    if (activeWorkoutsRef.current.has(profileId)) return false;
+
+    try {
+      const { data, error } = await supabase
+        .from('workouts')
+        .insert({ profile_id: profileId, started_at: new Date().toISOString() })
+        .select('id, profile_id')
+        .single();
+
+      if (error) throw error;
+
+      setSession(prev => {
+        const updated = new Map(prev.activeWorkouts);
+        updated.set(data.profile_id, data.id);
+        return { ...prev, activeWorkouts: updated };
+      });
+
+      return true;
+    } catch (err) {
+      console.error('Error adding late joiner:', err);
+      return false;
+    }
+  }, []);
+
   return {
     isActive: session.isActive,
     startedAt: session.startedAt,
     elapsedSeconds: session.elapsedSeconds,
     activeWorkoutCount: session.activeWorkouts.size,
+    activeWorkoutProfileIds: Array.from(session.activeWorkouts.keys()),
     startSession,
     stopSession,
     recordHRData,
+    addLateJoiner,
   };
 }
