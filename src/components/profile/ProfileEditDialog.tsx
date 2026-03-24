@@ -31,6 +31,7 @@ interface Profile {
   birth_date?: string | null;
   custom_max_hr?: number | null;
   weight?: number | null;
+  height?: number | null;
   gender?: string | null;
 }
 
