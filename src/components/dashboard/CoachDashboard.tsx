@@ -41,6 +41,14 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
     );
   }
 
+  if (activeTab === 'coaches') {
+    return (
+      <div className="flex-1 px-4 pt-2 min-h-0 overflow-y-auto" style={{ background: '#0a0a0a' }}>
+        <CoachList />
+      </div>
+    );
+  }
+
   const ZONE_COLORS: Record<number, string> = {
     1: '#4fc3f7', 2: '#66bb6a', 3: '#fdd835', 4: '#ff9800', 5: '#e53935',
   };
