@@ -69,12 +69,13 @@ export function CoachDashboard() {
                 </div>
               </div>
             ) : (
-              <div className="flex flex-wrap gap-6 justify-center items-center content-center min-h-[400px]">
-                {participants.map((participant, index) => (
+              <div className="flex flex-wrap gap-3 justify-center items-center content-center min-h-[400px]">
+                {[...participants].sort((a, b) => b.bpm - a.bpm).map((participant, index) => (
                   <ParticipantBubble
                     key={participant.profile_id}
                     data={participant}
                     index={index}
+                    totalCount={participants.length}
                   />
                 ))}
               </div>
