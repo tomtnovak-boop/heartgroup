@@ -9,31 +9,8 @@ const ZONE_CONFIG: Record<number, { label: string; color: string }> = {
   5: { label: 'MAX EFFORT', color: '#e53935' },
 };
 
-type HexSize = 'lg' | 'md' | 'sm' | 'xs' | 'xxs';
-
-function getZoneLayout(count: number): { hexSize: HexSize } {
-  if (count <= 4) return { hexSize: 'lg' };
-  if (count <= 8) return { hexSize: 'md' };
-  if (count <= 14) return { hexSize: 'sm' };
-  if (count <= 21) return { hexSize: 'xs' };
-  return { hexSize: 'xxs' };
-}
-
-const HEX_SIZES: Record<HexSize, number> = {
-  lg: 64,
-  md: 52,
-  sm: 44,
-  xs: 38,
-  xxs: 32,
-};
-
-const GAP_SIZES: Record<HexSize, number> = {
-  lg: 6,
-  md: 5,
-  sm: 4,
-  xs: 3,
-  xxs: 2,
-};
+const FIXED_TILE_SIZE = 64;
+const FIXED_GAP = 6;
 
 interface ZoneColumnProps {
   zone: number;
@@ -44,10 +21,6 @@ interface ZoneColumnProps {
 export function ZoneColumn({ zone, participants, selectedProfileId }: ZoneColumnProps) {
   const config = ZONE_CONFIG[zone];
   const sorted = [...participants].sort((a, b) => b.hr_percentage - a.hr_percentage);
-  const { hexSize } = getZoneLayout(sorted.length);
-  const tileSize = HEX_SIZES[hexSize];
-  const gap = GAP_SIZES[hexSize];
-  const needsScroll = sorted.length > 21;
 
   return (
     <div className="flex flex-col items-center min-w-0 h-full">
