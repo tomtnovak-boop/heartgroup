@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect } from 'react';
 
 interface EKGBackgroundProps {
   averageBPM: number;
@@ -54,123 +54,112 @@ function interpolateBeat(phase: number): number {
 
 export function EKGBackground({ averageBPM }: EKGBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const bufferRef = useRef<number[]>([]);
+  const bufferRef = useRef<number[]>(new Array(400).fill(0));
   const phaseRef = useRef(0);
-  const lastTimeRef = useRef(0);
+  const lastTimeRef = useRef<number | null>(null);
   const bpmRef = useRef(averageBPM);
+  const frameRef = useRef<number | null>(null);
 
-  // Update BPM ref without re-triggering effect
   useEffect(() => {
     bpmRef.current = averageBPM;
   }, [averageBPM]);
 
-  const animate = useCallback((timestamp: number) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Handle resize
-    const rect = canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    const w = rect.width;
-    const h = rect.height;
-
-    if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
-      ctx.scale(dpr, dpr);
-    }
-
-    // Time delta
-    if (lastTimeRef.current === 0) lastTimeRef.current = timestamp;
-    const dt = (timestamp - lastTimeRef.current) / 1000; // seconds
-    lastTimeRef.current = timestamp;
-
-    const buffer = bufferRef.current;
-    const BUFFER_SIZE = 400;
-    const bpm = bpmRef.current;
-
-    // Scroll speed: pixels per second — fill screen width in ~5 seconds
-    const scrollSpeed = w / 5;
-    // How many data points to add per frame
-    const pointsPerSecond = BUFFER_SIZE / 5; // matches scroll speed
-    const pointsThisFrame = Math.max(1, Math.round(pointsPerSecond * dt));
-
-    // BPM to beat frequency
-    const beatsPerSecond = bpm > 0 ? bpm / 60 : 0;
-    // Phase increment per data point
-    const phasePerPoint = beatsPerSecond / pointsPerSecond;
-
-    for (let i = 0; i < pointsThisFrame; i++) {
-      if (bpm > 0) {
-        phaseRef.current += phasePerPoint;
-        if (phaseRef.current >= 1) phaseRef.current -= 1;
-        const val = interpolateBeat(phaseRef.current);
-        buffer.push(val);
-      } else {
-        // Gentle undulation when no data
-        phaseRef.current += 0.002;
-        const val = Math.sin(phaseRef.current * Math.PI * 2) * 0.02;
-        buffer.push(val);
-      }
-    }
-
-    // Trim buffer
-    while (buffer.length > BUFFER_SIZE) {
-      buffer.shift();
-    }
-
-    // Clear
-    ctx.clearRect(0, 0, w, h);
-
-    // Draw EKG line
-    if (buffer.length < 2) {
-      requestAnimationFrame(animate);
-      return;
-    }
-
-    const baselineY = h * 0.65;
-    const amplitude = h * 0.18; // R-wave peak height
-
-    ctx.save();
-    ctx.strokeStyle = '#00e5ff';
-    ctx.lineWidth = 1.5;
-    ctx.globalAlpha = 0.15;
-    ctx.shadowBlur = 8;
-    ctx.shadowColor = '#00e5ff';
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-
-    ctx.beginPath();
-    for (let i = 0; i < buffer.length; i++) {
-      const x = (i / (BUFFER_SIZE - 1)) * w;
-      const y = baselineY - buffer[i] * amplitude;
-      if (i === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-    }
-    ctx.stroke();
-    ctx.restore();
-
-    requestAnimationFrame(animate);
-  }, []);
-
   useEffect(() => {
-    // Initialize buffer
-    bufferRef.current = new Array(400).fill(0);
-    const id = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(id);
-  }, [animate]);
+    const animate = (timestamp: number) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const w = rect.width;
+      const h = rect.height;
+
+      if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
+        canvas.width = w * dpr;
+        canvas.height = h * dpr;
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.scale(dpr, dpr);
+      }
+
+      if (lastTimeRef.current === null) {
+        lastTimeRef.current = timestamp;
+      }
+
+      const dt = (timestamp - lastTimeRef.current) / 1000;
+      lastTimeRef.current = timestamp;
+
+      const buffer = bufferRef.current;
+      const BUFFER_SIZE = 400;
+      const pointsPerSecond = BUFFER_SIZE / 5;
+      const pointsThisFrame = Math.max(1, Math.round(pointsPerSecond * dt));
+      const bpm = bpmRef.current;
+      const beatsPerSecond = bpm > 0 ? bpm / 60 : 0;
+      const phasePerPoint = beatsPerSecond / pointsPerSecond;
+
+      for (let i = 0; i < pointsThisFrame; i++) {
+        if (bpm > 0) {
+          phaseRef.current += phasePerPoint;
+          if (phaseRef.current >= 1) phaseRef.current -= 1;
+          buffer.push(interpolateBeat(phaseRef.current));
+        } else {
+          phaseRef.current += 0.002;
+          buffer.push(Math.sin(phaseRef.current * Math.PI * 2) * 0.02);
+        }
+      }
+
+      while (buffer.length > BUFFER_SIZE) buffer.shift();
+
+      ctx.clearRect(0, 0, w, h);
+
+      if (buffer.length >= 2) {
+        const baselineY = h * 0.65;
+        const amplitude = h * 0.18;
+
+        ctx.save();
+        ctx.strokeStyle = '#00e5ff';
+        ctx.lineWidth = 1.5;
+        ctx.globalAlpha = 0.15;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = '#00e5ff';
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        ctx.beginPath();
+        for (let i = 0; i < buffer.length; i++) {
+          const x = (i / (BUFFER_SIZE - 1)) * w;
+          const y = baselineY - buffer[i] * amplitude;
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      frameRef.current = requestAnimationFrame(animate);
+    };
+
+    frameRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (frameRef.current !== null) {
+        cancelAnimationFrame(frameRef.current);
+      }
+      frameRef.current = null;
+      lastTimeRef.current = null;
+    };
+  }, []);
 
   return (
     <canvas
       ref={canvasRef}
       className="absolute inset-0 pointer-events-none"
-      style={{ zIndex: 1 }}
+      style={{ zIndex: 1, pointerEvents: 'none' }}
     />
   );
 }
