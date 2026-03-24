@@ -137,7 +137,7 @@ function RankingColumn({ title, entries, maxValue, valueKey, gradientFrom, gradi
                 <div className="h-full rounded-full transition-all duration-500"
                   style={{ width: `${barWidth}%`, background: `linear-gradient(90deg, ${gradientFrom}, ${gradientTo})`, opacity }} />
               </div>
-              <span className="text-[12px] font-bold text-white/90 tabular-nums flex-shrink-0 w-8 text-right" style={{ opacity }}>{value}</span>
+              <span className="text-[12px] font-bold text-white tabular-nums flex-shrink-0 w-8 text-right" style={{ opacity }}>{value}</span>
             </div>
           );
         })}
