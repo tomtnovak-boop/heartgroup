@@ -56,7 +56,7 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
           />
         ))}
       </div>
-      <div className="flex-shrink-0 grid grid-cols-5 gap-2 pt-1 pb-1">
+      <div className="absolute bottom-0 left-0 right-0 grid grid-cols-5 gap-2 px-4 py-1" style={{ background: '#0a0a0a' }}>
         {[1, 2, 3, 4, 5].map((zone) => (
           <div key={zone} className="flex justify-center">
             <div

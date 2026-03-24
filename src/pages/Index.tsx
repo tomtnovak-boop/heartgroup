@@ -61,7 +61,7 @@ export default function Index() {
           onStartSession={() => startSession(participants)}
           onStopSession={stopSession}
         />
-        <div className="flex-1">
+        <div className="flex-1 min-h-0 overflow-hidden">
           <CoachDashboard participants={participants} isLoading={isLoading} activeTab={activeTab} selectedProfileId={myProfileId} />
         </div>
       </div>
