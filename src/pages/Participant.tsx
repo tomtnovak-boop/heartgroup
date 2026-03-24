@@ -981,6 +981,17 @@ export default function Participant() {
           onProfileUpdated={(p) => setProfile(p)}
         />
       )}
+
+      {showLeaderboard && leaderboardData.length > 0 && (
+        <SessionLeaderboard
+          entries={leaderboardData}
+          sessionDuration={leaderboardDuration}
+          sessionDate={leaderboardDate}
+          onClose={() => setShowLeaderboard(false)}
+          highlightProfileId={profile?.id}
+          variant="participant"
+        />
+      )}
     </div>
   );
 }
