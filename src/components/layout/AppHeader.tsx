@@ -1,4 +1,4 @@
-import { Heart, Monitor, Users, LogOut, Activity, RefreshCw, Play, Square, Shield, ArrowDown, ArrowUp } from 'lucide-react';
+import { Heart, Monitor, Users, LogOut, Activity, RefreshCw, Play, Square, Shield, ArrowDown, ArrowUp, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { useNavigate } from 'react-router-dom';
@@ -63,6 +63,11 @@ export function AppHeader({
   return (
     <header className="flex items-center justify-between px-4 py-1.5 bg-background border-b border-border">
       <div className="flex items-center gap-2 flex-shrink-0">
+        {currentView === 'coach' && (
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate('/participant')} title="Home">
+            <Home className="w-3.5 h-3.5" />
+          </Button>
+        )}
         <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center">
           <Heart className="w-3.5 h-3.5 text-primary" fill="currentColor" />
         </div>
