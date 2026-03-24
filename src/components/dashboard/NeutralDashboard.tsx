@@ -176,8 +176,6 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
                 height: 'clamp(16px, 2.2vh, 32px)',
                 borderRadius: '6px',
                 overflow: 'hidden',
-                boxShadow: getBarGlow(row.zone),
-                transition: 'box-shadow 1s ease',
               }}>
                 {[1, 2, 3, 4, 5].map((z) => (
                   <div
