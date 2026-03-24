@@ -2,11 +2,11 @@ import { HexTile } from './HexTile';
 import { LiveHRData } from '@/hooks/useLiveHR';
 
 const ZONE_CONFIG: Record<number, { label: string; color: string }> = {
-  1: { label: 'REGENERATION', color: '#00d4ff' },
-  2: { label: 'FAT BURN', color: '#ffaa00' },
-  3: { label: 'AEROBIC', color: '#00ff88' },
-  4: { label: 'CARDIO', color: '#0088ff' },
-  5: { label: 'MAX EFFORT', color: '#ff0044' },
+  1: { label: 'REGENERATION', color: '#88ccee' },
+  2: { label: 'FAT BURN', color: '#44aa99' },
+  3: { label: 'AEROBIC', color: '#ddcc77' },
+  4: { label: 'CARDIO', color: '#cc6677' },
+  5: { label: 'MAX EFFORT', color: '#7b2d8e' },
 };
 
 
