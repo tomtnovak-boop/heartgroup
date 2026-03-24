@@ -57,6 +57,7 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
             zone={zone}
             participants={zoneGroups[zone]}
             heroProfileId={heroProfileId}
+            selectedProfileId={selectedProfileId}
           />
         ))}
       </div>
