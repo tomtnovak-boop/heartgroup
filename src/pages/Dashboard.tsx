@@ -37,7 +37,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-dvh bg-background flex flex-col overflow-hidden">
       <AppHeader
         currentView={viewMode}
         onViewChange={handleViewChange}
