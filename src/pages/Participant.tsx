@@ -292,6 +292,10 @@ export default function Participant() {
     if (prevCoachSessionActive.current && !coachSessionActive && currentWorkoutId) {
       setCurrentWorkoutId(null);
       setActiveSession(false);
+      setLobbyJoined(false);
+      setSessionCodeInput('');
+      setSessionCodeError('');
+      joinDialogShownRef.current = false;
       
       const timer = setTimeout(async () => {
         try {
