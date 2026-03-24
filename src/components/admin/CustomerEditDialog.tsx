@@ -178,6 +178,16 @@ export function CustomerEditDialog({
             />
           </div>
           <div className="grid gap-2">
+            <Label htmlFor="customer-nickname">Nickname</Label>
+            <Input
+              id="customer-nickname"
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              placeholder="Optional"
+              maxLength={30}
+            />
+          </div>
+          <div className="grid gap-2">
             <Label>Geburtsdatum</Label>
             <div className="flex gap-2">
               <Input
