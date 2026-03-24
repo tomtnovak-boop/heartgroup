@@ -106,7 +106,7 @@ function CoachLeaderboard({
           Back to Dashboard
         </button>
         <p className="text-center text-[10px] text-white/25 mt-1.5">
-          Automatically closes in {Math.max(0, 60 - elapsed)}s
+          Automatically closes in {Math.floor(Math.max(0, 300 - elapsed) / 60)}:{String(Math.max(0, 300 - elapsed) % 60).padStart(2, '0')}
         </p>
       </div>
     </div>
