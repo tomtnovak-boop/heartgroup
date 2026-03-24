@@ -100,7 +100,7 @@ export default function Participant() {
   } = useBluetoothHR();
   const { isSupported: wakeLockSupported, request: requestWakeLock } = useWakeLock();
 
-  const effectiveMaxHr = profile ? (profile.custom_max_hr || profile.max_hr) : 190;
+  const effectiveMaxHr = profile ? getEffectiveMaxHR(profile.age, profile.custom_max_hr) : 170;
 
   // Fetch profile
   useEffect(() => {
