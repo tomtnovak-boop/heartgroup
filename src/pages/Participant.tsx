@@ -77,6 +77,7 @@ export default function Participant() {
   const [joinSkipped, setJoinSkipped] = useState(false);
   const [coachSessionActive, setCoachSessionActive] = useState(false);
   const joinDialogShownRef = useRef(false);
+  const sessionWasActiveOnConnectRef = useRef(false);
 
   // Leaderboard state
   const [showLeaderboard, setShowLeaderboard] = useState(false);
