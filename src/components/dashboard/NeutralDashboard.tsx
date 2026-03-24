@@ -150,7 +150,7 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
                 paddingLeft: row.isLive && row.zone ? '9px' : '12px',
                 paddingRight: '12px',
                 borderBottom: '1px solid rgba(255,255,255,0.04)',
-                background: row.isLive && row.zone ? ROW_TINT[row.zone] : 'transparent',
+                background: 'transparent',
                 borderLeft: row.isLive && row.zone ? `3px solid ${LEFT_BORDER_COLORS[row.zone]}` : '3px solid transparent',
                 opacity: row.isLive ? 1 : 0.35,
                 overflow: 'hidden',
@@ -221,11 +221,6 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
                       justifyContent: 'center',
                       transition: 'left 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
                       zIndex: 10,
-                      animation: row.zone >= 5
-                        ? 'sliderPulse 0.8s ease-in-out infinite'
-                        : row.zone >= 4
-                          ? 'sliderPulse 1.2s ease-in-out infinite'
-                          : 'none',
                     }}
                   >
                     <span style={{ color: 'white', fontWeight: 'bold', fontSize: 'clamp(9px, 1.1vh, 14px)' }}>{row.number}</span>
