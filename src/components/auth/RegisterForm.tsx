@@ -147,6 +147,8 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     // Create profile
     const maxHr = calculateMaxHR(age);
     const customMaxHrNum = customMaxHr ? parseInt(customMaxHr) : null;
+    const parsedWeight = weight ? parseInt(weight, 10) : null;
+    const parsedHeight = height ? parseInt(height, 10) : null;
 
     const { error: profileError } = await supabase
       .from('profiles')
@@ -158,6 +160,8 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
         birth_date: format(birthDate, 'yyyy-MM-dd'),
         max_hr: maxHr,
         custom_max_hr: customMaxHrNum,
+        weight: parsedWeight,
+        height: parsedHeight,
       });
 
     if (profileError) {
