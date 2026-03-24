@@ -903,7 +903,16 @@ export default function Participant() {
                               <div className="space-y-1">
                                 {w.map(s => (
                                   <div key={s.id} className="flex items-center justify-between text-xs py-1.5 border-b border-border last:border-0">
-                                    <span className="font-medium">{format(new Date(s.started_at), 'MMM d, HH:mm')}</span>
+                                    <div className="flex flex-col">
+                                      <span className="font-medium">{format(new Date(s.started_at), 'MMM d, HH:mm')}</span>
+                                      {s.rank_avg_bpm != null && s.session_participant_count != null && (
+                                        <span className="text-[11px] mt-0.5">
+                                          <span className="text-purple-400">Avg #{s.rank_avg_bpm}/{s.session_participant_count}</span>
+                                          <span className="text-muted-foreground"> · </span>
+                                          <span className="text-red-400">Peak #{s.rank_peak_bpm}/{s.session_participant_count}</span>
+                                        </span>
+                                      )}
+                                    </div>
                                     <div className="flex items-center gap-3 text-muted-foreground">
                                       <span>{formatDuration(s.duration_seconds || 0)}</span>
                                       <span>{Math.round(s.total_calories || 0)} kcal</span>
