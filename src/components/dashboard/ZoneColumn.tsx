@@ -9,11 +9,6 @@ const ZONE_CONFIG: Record<number, { label: string; color: string }> = {
   5: { label: 'MAX EFFORT', color: '#ff0044' },
 };
 
-function getGridCols(count: number): number {
-  if (count <= 4) return 1;
-  if (count <= 8) return 2;
-  return 3;
-}
 
 interface ZoneColumnProps {
   zone: number;
