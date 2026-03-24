@@ -14,7 +14,7 @@ interface CoachDashboardProps {
   averageBPM?: number;
 }
 
-export function CoachDashboard({ participants, isLoading, activeTab, selectedProfileId }: CoachDashboardProps) {
+export function CoachDashboard({ participants, isLoading, activeTab, selectedProfileId, averageBPM = 0 }: CoachDashboardProps) {
   const zoneGroups = useMemo(() => {
     const groups: Record<number, LiveHRData[]> = { 1: [], 2: [], 3: [], 4: [], 5: [] };
     participants.forEach((p) => {
