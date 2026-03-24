@@ -10,7 +10,7 @@ export function EKGLine() {
       <style>{`
         @keyframes ekg-scroll {
           from { transform: translateX(0); }
-          to { transform: translateX(-25%); }
+          to { transform: translateX(-20%); }
         }
       `}</style>
       <svg
@@ -21,8 +21,8 @@ export function EKGLine() {
       >
         <g
           style={{
-            animation: 'ekg-scroll var(--beat-duration, 0.6s) linear infinite',
-            transformOrigin: 'center',
+            animation: 'ekg-scroll linear infinite',
+            animationDuration: 'var(--beat-duration, 2.5s)',
             willChange: 'transform',
           }}
         >

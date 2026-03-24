@@ -25,8 +25,12 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
   }, [participants]);
 
   useEffect(() => {
-    const duration = averageBPM > 0 ? `${60 / averageBPM}s` : '6s';
-    document.documentElement.style.setProperty('--beat-duration', duration);
+    if (!averageBPM || averageBPM === 0) {
+      document.documentElement.style.setProperty('--beat-duration', '2.5s');
+      return;
+    }
+    const duration = ((60 / averageBPM) * 3).toFixed(3);
+    document.documentElement.style.setProperty('--beat-duration', `${duration}s`);
   }, [averageBPM]);
 
   if (isLoading) {
