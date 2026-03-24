@@ -299,7 +299,8 @@ export default function Participant() {
     }
     prevCoachSessionActive.current = coachSessionActive;
   }, [coachSessionActive, currentWorkoutId]);
-  }, []);
+
+
 
   // Send HR data to live_hr when connected
   useEffect(() => {
