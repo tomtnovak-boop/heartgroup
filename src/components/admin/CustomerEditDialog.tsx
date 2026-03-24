@@ -122,14 +122,20 @@ export function CustomerEditDialog({
 
     const maxHr = calculateMaxHR(age);
 
+    const parsedWeight = weight ? parseInt(weight, 10) : null;
+    const parsedHeight = height ? parseInt(height, 10) : null;
+
     const { error } = await supabase
       .from('profiles')
       .update({
         name: name.trim(),
+        nickname: nickname.trim() || null,
         birth_date: format(birthDate, 'yyyy-MM-dd'),
         age: age,
         max_hr: maxHr,
         custom_max_hr: parsedCustomMaxHr,
+        weight: parsedWeight,
+        height: parsedHeight,
       })
       .eq('id', customer.id);
 
