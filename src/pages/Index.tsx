@@ -48,7 +48,7 @@ export default function Index() {
         </div>
         <h1 className="text-2xl font-bold mb-2">HR Training</h1>
         <p className="text-muted-foreground mb-8">Choose where to go</p>
-        <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
+        <div className="flex flex-col sm:flex-row gap-4 w-full max-w-lg">
           <Button
             size="lg"
             className="flex-1 gap-2"
@@ -64,7 +64,16 @@ export default function Index() {
             onClick={() => navigate('/dashboard')}
           >
             <Monitor className="w-5 h-5" />
-            Coach Dashboard
+            Dashboard Fancy
+          </Button>
+          <Button
+            size="lg"
+            variant="outline"
+            className="flex-1 gap-2"
+            onClick={() => navigate('/dashboard-neutral')}
+          >
+            <Monitor className="w-5 h-5" />
+            Dashboard Neutral
           </Button>
         </div>
       </div>

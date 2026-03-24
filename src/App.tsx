@@ -41,6 +41,14 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/dashboard-neutral" 
+              element={
+                <ProtectedRoute requireCoach>
+                  <DashboardNeutral />
+                </ProtectedRoute>
+              } 
+            />
             <Route path="/reset-password" element={<ResetPassword />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
