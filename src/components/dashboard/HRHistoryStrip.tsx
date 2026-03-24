@@ -29,29 +29,42 @@ export function HRHistoryStrip({ averageBPM, isSessionActive }: HRHistoryStripPr
   const rafRef = useRef<number | null>(null);
   const frozenRef = useRef(false);
   const prevActiveRef = useRef(isSessionActive);
+  const bpmRef = useRef(averageBPM);
   const MAX_POINTS = 600;
   const HEIGHT = 72;
+
+  // Keep bpmRef in sync without triggering re-renders
+  useEffect(() => {
+    bpmRef.current = averageBPM;
+  }, [averageBPM]);
 
   // Handle session start/stop
   useEffect(() => {
     if (isSessionActive && !prevActiveRef.current) {
-      // Session just started — clear buffer
       bufferRef.current = [];
       frozenRef.current = false;
     } else if (!isSessionActive && prevActiveRef.current) {
-      // Session just stopped — freeze
       frozenRef.current = true;
     }
     prevActiveRef.current = isSessionActive;
   }, [isSessionActive]);
 
-  // Collect data points
+  // Collect data points on a 1-second interval
   useEffect(() => {
-    if (!isSessionActive || frozenRef.current || averageBPM <= 0) return;
-    const buf = bufferRef.current;
-    buf.push({ time: Date.now(), bpm: averageBPM });
-    if (buf.length > MAX_POINTS) buf.shift();
-  }, [averageBPM, isSessionActive]);
+    if (!isSessionActive) return;
+    frozenRef.current = false;
+
+    const interval = setInterval(() => {
+      if (frozenRef.current) return;
+      const bpm = bpmRef.current;
+      if (bpm <= 0) return;
+      const buf = bufferRef.current;
+      buf.push({ time: Date.now(), bpm });
+      if (buf.length > MAX_POINTS) buf.shift();
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isSessionActive]);
 
   // RAF render loop — direct DOM manipulation, no React state
   const render = useCallback(() => {
