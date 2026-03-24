@@ -13,7 +13,7 @@ import { SessionLeaderboard } from '@/components/dashboard/SessionLeaderboard';
 import { useBluetoothHR } from '@/hooks/useBluetoothHR';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { enableNoSleep, isIOS } from '@/lib/noSleep';
-import { calculateZone, calculateHRPercentage, getZoneInfo, calculateCaloriesPerMinute } from '@/lib/heartRateUtils';
+import { calculateZone, calculateHRPercentage, getZoneInfo, calculateCaloriesPerMinute, getEffectiveMaxHR } from '@/lib/heartRateUtils';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -100,7 +100,7 @@ export default function Participant() {
   } = useBluetoothHR();
   const { isSupported: wakeLockSupported, request: requestWakeLock } = useWakeLock();
 
-  const effectiveMaxHr = profile ? (profile.custom_max_hr || profile.max_hr) : 190;
+  const effectiveMaxHr = profile ? getEffectiveMaxHR(profile.age, profile.custom_max_hr) : 170;
 
   // Fetch profile
   useEffect(() => {

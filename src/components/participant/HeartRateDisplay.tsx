@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { useBluetoothHR } from '@/hooks/useBluetoothHR';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { supabase } from '@/integrations/supabase/client';
-import { calculateZone, calculateHRPercentage, getZoneInfo, getZoneBgClass, calculateCaloriesPerMinute } from '@/lib/heartRateUtils';
+import { calculateZone, calculateHRPercentage, getZoneInfo, getZoneBgClass, calculateCaloriesPerMinute, getEffectiveMaxHR } from '@/lib/heartRateUtils';
 import { enableNoSleep, disableNoSleep, isIOS, isSafari } from '@/lib/noSleep';
 import { WorkoutSummary } from './WorkoutSummary';
 import { Bluetooth, BluetoothOff, Heart, ArrowLeft, Smartphone, AlertTriangle, RefreshCw, Loader2, Flame, Square } from 'lucide-react';
@@ -54,7 +54,7 @@ export function HeartRateDisplay({ profile, onBack }: HeartRateDisplayProps) {
   const [showSummary, setShowSummary] = useState(false);
   const [workoutSummaryData, setWorkoutSummaryData] = useState<any>(null);
 
-  const effectiveMaxHr = profile.custom_max_hr || profile.max_hr;
+  const effectiveMaxHr = getEffectiveMaxHR(profile.age, profile.custom_max_hr);
   const zone = bpm > 0 ? calculateZone(bpm, effectiveMaxHr) : 0;
   const hrPercentage = bpm > 0 ? calculateHRPercentage(bpm, effectiveMaxHr) : 0;
   const zoneInfo = zone > 0 ? getZoneInfo(zone) : null;
