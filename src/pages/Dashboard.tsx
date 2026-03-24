@@ -1,11 +1,10 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { CoachDashboard } from '@/components/dashboard/CoachDashboard';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { useViewMode } from '@/hooks/useViewMode';
 import { useLiveHR } from '@/hooks/useLiveHR';
 import { useWorkoutSession } from '@/hooks/useWorkoutSession';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
 
 export default function Dashboard() {
   const { viewMode, changeView } = useViewMode('coach');
