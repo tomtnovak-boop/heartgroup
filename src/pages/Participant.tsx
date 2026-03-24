@@ -261,6 +261,31 @@ export default function Participant() {
     };
   }, [monthlyWorkouts, prevMonthWorkouts]);
 
+  // Group workouts by month for the Month tab
+  const monthGroups = useMemo(() => {
+    const groups = new Map<string, Workout[]>();
+    allHistoricalWorkouts.forEach(w => {
+      const key = format(new Date(w.started_at), 'yyyy-MM');
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(w);
+    });
+    // Sort by month descending
+    return Array.from(groups.entries())
+      .sort(([a], [b]) => b.localeCompare(a))
+      .map(([key, workouts]) => {
+        const totalSecs = workouts.reduce((s, w) => s + (w.duration_seconds || 0), 0);
+        const totalCal = Math.round(workouts.reduce((s, w) => s + (w.total_calories || 0), 0));
+        return {
+          key,
+          label: format(new Date(key + '-01'), 'MMMM yyyy'),
+          workouts,
+          sessionCount: workouts.length,
+          totalSeconds: totalSecs,
+          totalCalories: totalCal,
+        };
+      });
+  }, [allHistoricalWorkouts]);
+
   const formatDuration = (s: number) => {
     const h = Math.floor(s / 3600);
     const m = Math.floor((s % 3600) / 60);
