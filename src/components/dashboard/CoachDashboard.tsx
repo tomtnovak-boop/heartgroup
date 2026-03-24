@@ -44,35 +44,43 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
     1: '#4fc3f7', 2: '#66bb6a', 3: '#fdd835', 4: '#ff9800', 5: '#e53935',
   };
 
-  const ZONE_GLOW_POSITIONS = [
-    { left: '10%', color: ZONE_COLORS[1] },
-    { left: '30%', color: ZONE_COLORS[2] },
-    { left: '50%', color: ZONE_COLORS[3] },
-    { left: '70%', color: ZONE_COLORS[4] },
-    { left: '90%', color: ZONE_COLORS[5] },
+  const ZONE_GLOWS = [
+    { left: '10%', color: '#00bcd4' },
+    { left: '30%', color: '#4caf50' },
+    { left: '50%', color: '#ffc107' },
+    { left: '70%', color: '#ff9800' },
+    { left: '90%', color: '#f44336' },
   ];
 
   return (
     <div
       className="relative h-full flex flex-col px-4 pt-1 pb-0 min-h-0 overflow-hidden"
       style={{
-        background: 'radial-gradient(ellipse at 50% 40%, #0d0d1a 0%, #050510 50%, #000000 100%)',
+        background: 'radial-gradient(ellipse at 50% 45%, #0a0a1f 0%, #050510 45%, #000000 100%)',
       }}
     >
-      {/* Subtle grid overlay */}
+      {/* Vignette overlay */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,0.45) 100%)',
+        }}
+      />
+
+      {/* Grid overlay */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           backgroundImage:
-            'linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px)',
+            'linear-gradient(rgba(255,255,255,0.09) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.09) 1px, transparent 1px)',
           backgroundSize: '60px 60px',
-          maskImage: 'radial-gradient(ellipse at 50% 50%, black 30%, transparent 80%)',
-          WebkitMaskImage: 'radial-gradient(ellipse at 50% 50%, black 30%, transparent 80%)',
+          maskImage: 'radial-gradient(ellipse at 50% 50%, black 20%, transparent 75%)',
+          WebkitMaskImage: 'radial-gradient(ellipse at 50% 50%, black 20%, transparent 75%)',
         }}
       />
 
-      {/* Ambient zone glow blobs */}
-      {ZONE_GLOW_POSITIONS.map((g, i) => (
+      {/* Zone glow blobs */}
+      {ZONE_GLOWS.map((g, i) => (
         <div
           key={i}
           className="absolute pointer-events-none"
@@ -80,12 +88,12 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
             left: g.left,
             top: '45%',
             transform: 'translate(-50%, -50%)',
-            width: '300px',
-            height: '400px',
+            width: '450px',
+            height: '500px',
             borderRadius: '50%',
             background: g.color,
-            opacity: 0.055,
-            filter: 'blur(250px)',
+            opacity: 0.18,
+            filter: 'blur(300px)',
           }}
         />
       ))}
