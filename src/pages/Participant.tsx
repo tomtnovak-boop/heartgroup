@@ -201,6 +201,31 @@ export default function Participant() {
     checkOwnWorkout();
   }, [profile]);
 
+  // Handle joining a session
+  const handleJoinSession = useCallback(async () => {
+    if (!profile) return;
+    try {
+      const { data, error } = await supabase
+        .from('workouts')
+        .insert({ profile_id: profile.id, started_at: new Date().toISOString() })
+        .select('id')
+        .single();
+      if (error) throw error;
+      setCurrentWorkoutId(data.id);
+      setActiveSession(true);
+      setShowJoinDialog(false);
+      toast({ title: "You've joined the session!" });
+    } catch (err) {
+      console.error('Error joining session:', err);
+      toast({ title: 'Failed to join session', variant: 'destructive' });
+    }
+  }, [profile, toast]);
+
+  const handleSkipSession = useCallback(() => {
+    setJoinSkipped(true);
+    setShowJoinDialog(false);
+  }, []);
+
   // Track whether session was already active when participant connects
   useEffect(() => {
     if (isConnected) {
@@ -274,30 +299,6 @@ export default function Participant() {
     }
     prevCoachSessionActive.current = coachSessionActive;
   }, [coachSessionActive, currentWorkoutId]);
-
-  // Handle joining a session
-  const handleJoinSession = useCallback(async () => {
-    if (!profile) return;
-    try {
-      const { data, error } = await supabase
-        .from('workouts')
-        .insert({ profile_id: profile.id, started_at: new Date().toISOString() })
-        .select('id')
-        .single();
-      if (error) throw error;
-      setCurrentWorkoutId(data.id);
-      setActiveSession(true);
-      setShowJoinDialog(false);
-      toast({ title: "You've joined the session!" });
-    } catch (err) {
-      console.error('Error joining session:', err);
-      toast({ title: 'Failed to join session', variant: 'destructive' });
-    }
-  }, [profile, toast]);
-
-  const handleSkipSession = useCallback(() => {
-    setJoinSkipped(true);
-    setShowJoinDialog(false);
   }, []);
 
   // Send HR data to live_hr when connected
