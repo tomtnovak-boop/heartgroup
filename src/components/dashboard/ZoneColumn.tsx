@@ -9,6 +9,32 @@ const ZONE_CONFIG: Record<number, { label: string; color: string }> = {
   5: { label: 'MAX EFFORT', color: '#e53935' },
 };
 
+type HexSize = 'lg' | 'md' | 'sm' | 'xs' | 'xxs';
+
+function getZoneLayout(count: number): { columns: 1 | 2; hexSize: HexSize } {
+  if (count <= 4) return { columns: 1, hexSize: 'lg' };
+  if (count <= 8) return { columns: 1, hexSize: 'md' };
+  if (count <= 14) return { columns: 2, hexSize: 'sm' };
+  if (count <= 21) return { columns: 2, hexSize: 'xs' };
+  return { columns: 2, hexSize: 'xxs' };
+}
+
+const HEX_SIZES: Record<HexSize, number> = {
+  lg: 64,
+  md: 52,
+  sm: 44,
+  xs: 38,
+  xxs: 32,
+};
+
+const GAP_SIZES: Record<HexSize, number> = {
+  lg: 6,
+  md: 5,
+  sm: 4,
+  xs: 3,
+  xxs: 2,
+};
+
 interface ZoneColumnProps {
   zone: number;
   participants: LiveHRData[];
@@ -18,6 +44,10 @@ interface ZoneColumnProps {
 export function ZoneColumn({ zone, participants, selectedProfileId }: ZoneColumnProps) {
   const config = ZONE_CONFIG[zone];
   const sorted = [...participants].sort((a, b) => b.hr_percentage - a.hr_percentage);
+  const { columns, hexSize } = getZoneLayout(sorted.length);
+  const tileSize = HEX_SIZES[hexSize];
+  const gap = GAP_SIZES[hexSize];
+  const needsScroll = sorted.length > 21;
 
   return (
     <div className="flex flex-col items-center min-w-0 h-full">
@@ -47,13 +77,15 @@ export function ZoneColumn({ zone, participants, selectedProfileId }: ZoneColumn
 
       {/* Tiles grid */}
       <div
-        className="flex-1 min-h-0 justify-start overflow-hidden"
+        className="flex-1 min-h-0"
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: '6px',
+          gridTemplateColumns: `repeat(${columns}, 1fr)`,
+          gap: `${gap}px`,
           justifyItems: 'center',
           alignContent: 'start',
+          overflowY: needsScroll ? 'auto' : 'hidden',
+          overflowX: 'hidden',
         }}
       >
         {sorted.length === 0 ? (
@@ -75,12 +107,11 @@ export function ZoneColumn({ zone, participants, selectedProfileId }: ZoneColumn
               key={p.profile_id}
               data={p}
               isSelected={p.profile_id === selectedProfileId}
-              tileSize={64}
+              tileSize={tileSize}
             />
           ))
         )}
       </div>
-
     </div>
   );
 }
