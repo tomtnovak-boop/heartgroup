@@ -16,9 +16,12 @@ import { Edit, Search, Users, Loader2 } from 'lucide-react';
 interface CustomerProfile {
   id: string;
   name: string;
+  nickname?: string | null;
   age: number;
   max_hr: number;
   custom_max_hr?: number | null;
+  weight?: number | null;
+  height?: number | null;
   user_id?: string | null;
 }
 
