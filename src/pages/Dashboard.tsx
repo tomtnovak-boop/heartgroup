@@ -26,36 +26,6 @@ export default function Dashboard() {
 
   const { participants, averageBPM, lowestBPM, highestBPM, averageZone, isLoading, refresh } = useLiveHR(onNewHRData);
 
-  // Track late-joining participants
-  const addedRef = useRef(new Set<string>());
-
-  useEffect(() => {
-    if (!sessionActive || participants.length === 0) return;
-
-    participants.forEach(async (p) => {
-      if (activeWorkoutProfileIds.includes(p.profile_id)) return;
-      if (addedRef.current.has(p.profile_id)) return;
-
-      addedRef.current.add(p.profile_id);
-      const added = await addLateJoiner(p.profile_id, p.profile?.name || 'Unknown');
-      if (added) {
-        toast({
-          title: 'New participant added to session',
-          description: p.profile?.name || p.profile_id,
-        });
-      } else {
-        addedRef.current.delete(p.profile_id);
-      }
-    });
-  }, [sessionActive, participants, activeWorkoutProfileIds, addLateJoiner, toast]);
-
-  // Reset tracking set when session stops
-  useEffect(() => {
-    if (!sessionActive) {
-      addedRef.current.clear();
-    }
-  }, [sessionActive]);
-
   const handleViewChange = (view: 'participant' | 'coach') => {
     changeView(view);
     if (view === 'participant') {
