@@ -193,7 +193,7 @@ function ParticipantResult({
 
           {/* Peak BPM rank */}
           <div className="flex-1 rounded-xl p-4 text-center" style={{ background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.2)' }}>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-2">Peak BPM</div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-white mb-2">Peak BPM</div>
             <div className="text-[32px] font-black text-white leading-none mb-1">
               #{peakRank || '—'}
             </div>
