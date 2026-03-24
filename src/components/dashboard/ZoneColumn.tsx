@@ -80,7 +80,7 @@ export function ZoneColumn({ zone, participants, selectedProfileId }: ZoneColumn
               key={p.profile_id}
               data={p}
               isSelected={p.profile_id === selectedProfileId}
-              tileSize={tileSize}
+              tileSize={FIXED_TILE_SIZE}
             />
           ))
         )}
