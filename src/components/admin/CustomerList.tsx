@@ -132,6 +132,46 @@ export function CustomerList() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Developer Tools */}
+      <div className="mt-8 pt-4 border-t border-border">
+        <h3 className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5 mb-3">
+          <Wrench className="w-3.5 h-3.5" />Developer Tools
+        </h3>
+        <CleanupLiveHRButton />
+      </div>
     </div>
+  );
+}
+
+function CleanupLiveHRButton() {
+  const [isRunning, setIsRunning] = useState(false);
+  const { toast } = useToast();
+
+  const handleCleanup = async () => {
+    setIsRunning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('cleanup-live-hr');
+      if (error) throw error;
+      toast({
+        title: 'Cleanup complete',
+        description: `Deleted ${(data?.deleted || 0).toLocaleString()} rows`,
+      });
+    } catch (err: any) {
+      toast({
+        title: 'Cleanup failed',
+        description: err.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  return (
+    <Button variant="outline" size="sm" onClick={handleCleanup} disabled={isRunning} className="text-xs gap-1.5">
+      {isRunning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+      Clean up live HR data
+    </Button>
   );
 }
