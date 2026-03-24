@@ -25,11 +25,12 @@ const ZONE_BG: Record<number, string> = {
   5: 'hsl(0 100% 55% / 0.08)',
 };
 
-function getZoneFromPercentage(hrPct: number): number {
-  if (hrPct < 60) return 1;
-  if (hrPct < 70) return 2;
-  if (hrPct < 80) return 3;
-  if (hrPct < 90) return 4;
+// Derive zone from position on the equally-divided bar (5 x 20%)
+function getBarZone(hrPercent: number): number {
+  if (hrPercent < 20) return 1;
+  if (hrPercent < 40) return 2;
+  if (hrPercent < 60) return 3;
+  if (hrPercent < 80) return 4;
   return 5;
 }
 
@@ -49,7 +50,7 @@ export function NeutralDashboard({ participants, allProfiles, isLoading }: Neutr
         name: profile.nickname || firstName,
         bpm: live?.bpm ?? null,
         hrPercentage: live?.hr_percentage ?? null,
-        zone: live ? getZoneFromPercentage(live.hr_percentage) : null,
+        zone: live ? getBarZone(live.hr_percentage) : null,
         isLive: !!live,
       };
     });
