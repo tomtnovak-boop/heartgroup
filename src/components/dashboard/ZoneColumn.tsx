@@ -14,11 +14,12 @@ interface ZoneColumnProps {
   zone: number;
   participants: LiveHRData[];
   heroProfileId?: string;
+  selectedProfileId?: string;
 }
 
-export function ZoneColumn({ zone, participants, heroProfileId }: ZoneColumnProps) {
+export function ZoneColumn({ zone, participants, heroProfileId, selectedProfileId }: ZoneColumnProps) {
   const config = ZONE_CONFIG[zone];
-  const sorted = [...participants].sort((a, b) => b.bpm - a.bpm);
+  const sorted = [...participants].sort((a, b) => b.hr_percentage - a.hr_percentage);
 
   return (
     <div className="flex flex-col items-center min-w-0 h-full">
