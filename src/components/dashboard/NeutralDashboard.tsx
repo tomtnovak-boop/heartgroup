@@ -1,6 +1,5 @@
-import { useMemo } from 'react'; // v4-fix
+import { useMemo } from 'react';
 import { LiveHRData } from '@/hooks/useLiveHR';
-import { Heart } from 'lucide-react';
 
 interface NeutralDashboardProps {
   participants: LiveHRData[];
@@ -17,15 +16,10 @@ const ZONE_COLORS: Record<number, string> = {
   5: 'hsl(0 100% 55%)',
 };
 
-const ZONE_BG: Record<number, string> = {
-  1: 'hsl(220 15% 45% / 0.08)',
-  2: 'hsl(200 100% 50% / 0.08)',
-  3: 'hsl(145 80% 45% / 0.08)',
-  4: 'hsl(45 100% 50% / 0.08)',
-  5: 'hsl(0 100% 55% / 0.08)',
+const SEGMENT_OPACITY: Record<number, number> = {
+  1: 0.18, 2: 0.22, 3: 0.28, 4: 0.35, 5: 0.42,
 };
 
-// Derive zone from position on the equally-divided bar (5 x 20%)
 function getBarZone(hrPercent: number): number {
   if (hrPercent < 20) return 1;
   if (hrPercent < 40) return 2;
@@ -34,7 +28,33 @@ function getBarZone(hrPercent: number): number {
   return 5;
 }
 
-export function NeutralDashboard({ participants, allProfiles, isLoading }: NeutralDashboardProps) {
+function getRowBg(zone: number | null): string {
+  if (!zone) return 'transparent';
+  if (zone <= 2) return `${ZONE_COLORS[zone].replace(')', ' / 0.04)')}`;
+  if (zone === 3) return `${ZONE_COLORS[zone].replace(')', ' / 0.07)')}`;
+  if (zone === 4) return `${ZONE_COLORS[zone].replace(')', ' / 0.12)')}`;
+  return `${ZONE_COLORS[zone].replace(')', ' / 0.18)')}`;
+}
+
+function getBarGlow(zone: number | null): string {
+  if (zone === 4) return '0 0 12px rgba(255, 165, 0, 0.35)';
+  if (zone === 5) return '0 0 20px rgba(255, 50, 50, 0.5), 0 0 40px rgba(255, 50, 50, 0.2)';
+  return 'none';
+}
+
+function getSliderGlow(zone: number | null): string {
+  if (zone === 4) return '0 0 8px rgba(255, 165, 0, 0.8), 0 0 16px rgba(255, 165, 0, 0.4)';
+  if (zone === 5) return '0 0 10px rgba(255, 50, 50, 1), 0 0 24px rgba(255, 50, 50, 0.6), 0 0 40px rgba(255, 50, 50, 0.3)';
+  return 'none';
+}
+
+function getBpmGlow(zone: number | null): string {
+  if (zone === 4) return '0 0 10px rgba(255, 165, 0, 0.8)';
+  if (zone === 5) return '0 0 12px rgba(255, 50, 50, 1), 0 0 24px rgba(255, 50, 50, 0.5)';
+  return 'none';
+}
+
+export function NeutralDashboard({ participants, allProfiles, isLoading, isSessionActive }: NeutralDashboardProps) {
   const rows = useMemo(() => {
     const sorted = [...allProfiles].sort(
       (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
@@ -63,131 +83,178 @@ export function NeutralDashboard({ participants, allProfiles, isLoading }: Neutr
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center" style={{ background: '#0a0a0a' }}>
-        <div className="text-center">
-          <Heart className="w-16 h-16 mx-auto text-primary animate-pulse mb-4" />
-          <p className="text-muted-foreground">Loading dashboard...</p>
-        </div>
+      <div className="flex-1 flex items-center justify-center" style={{ background: '#080808' }}>
+        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '16px' }}>Loading dashboard...</p>
       </div>
     );
   }
 
   if (allProfiles.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center" style={{ background: '#0a0a0a' }}>
-        <p className="text-muted-foreground text-lg">Waiting for participants...</p>
+      <div className="flex-1 flex items-center justify-center" style={{ background: '#080808' }}>
+        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '16px' }}>Waiting for participants...</p>
       </div>
     );
   }
 
   const rowCount = Math.max(rows.length, 1);
-  const rowHeight = `calc((100dvh - 56px - 32px) / ${rowCount})`;
+  const rowHeight = `calc((100dvh - 56px - 40px) / ${rowCount})`;
 
   return (
-    <div style={{ height: 'calc(100dvh - 56px)', overflow: 'hidden', background: '#0a0a0a', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: 'calc(100dvh - 56px)', overflow: 'hidden', background: '#080808', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+
+      {/* Session-active background pulse */}
+      {isSessionActive && (
+        <div style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+          background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.03) 0%, transparent 70%)',
+          animation: 'bgPulse 4s ease-in-out infinite',
+        }} />
+      )}
+
       {/* Average BPM bar */}
       <div style={{
-        height: '32px',
+        height: '40px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: '8px',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        gap: '12px',
+        background: 'rgba(255,255,255,0.03)',
+        borderBottom: '1px solid rgba(255,255,255,0.07)',
         flexShrink: 0,
+        position: 'relative',
+        zIndex: 1,
       }}>
-        <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-          Ø Group
+        <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+          Group Avg
         </span>
-        <span style={{ color: 'white', fontSize: '16px', fontWeight: 800 }}>
-          {avgBpm ?? '--'} <span style={{ fontSize: '11px', fontWeight: 400, color: 'rgba(255,255,255,0.4)' }}>bpm</span>
+        <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: '11px' }}>·</span>
+        <span style={{ color: 'white', fontSize: '28px', fontWeight: 900, textShadow: '0 0 20px rgba(255,255,255,0.3)' }}>
+          {avgBpm ?? '--'}
+          <span style={{ fontSize: '12px', fontWeight: 400, color: 'rgba(255,255,255,0.35)', marginLeft: '4px' }}>bpm</span>
         </span>
+        <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: '11px' }}>·</span>
         <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px' }}>
           {connectedRows.length} connected
         </span>
       </div>
 
       {/* Rows */}
-      <div style={{ flex: 1, overflow: 'hidden' }}>
-        {rows.map((row) => (
-          <div
-            key={row.profileId}
-            style={{
-              height: rowHeight,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              paddingLeft: '12px',
-              paddingRight: '12px',
-              borderBottom: '1px solid rgba(255,255,255,0.05)',
-              backgroundColor: row.isLive && row.zone ? ZONE_BG[row.zone] : 'transparent',
-              opacity: row.isLive ? 1 : 0.5,
-              overflow: 'hidden',
-              transition: 'background-color 1s ease',
-            }}
-          >
-            {/* Number */}
-            <div style={{ width: 32, textAlign: 'right', fontSize: 'clamp(9px, 1.2vh, 14px)', fontFamily: 'monospace', color: 'hsl(0 0% 50%)' }}>
-              {String(row.number).padStart(2, '0')}
-            </div>
-
-            {/* Name */}
-            <div style={{ width: 96, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 'clamp(10px, 1.3vh, 15px)', fontWeight: 500, color: 'white' }}>
-              {row.name}
-            </div>
-
-            {/* Zone Bar */}
-            <div style={{ position: 'relative', display: 'flex', flex: 1, height: 'clamp(14px, 2vh, 28px)', borderRadius: '4px', overflow: 'hidden' }}>
-              {[1, 2, 3, 4, 5].map((z) => (
-                <div
-                  key={z}
-                  style={{
-                    width: '20%',
-                    height: '100%',
-                    background: ZONE_COLORS[z],
-                    opacity: 0.25,
-                  }}
-                />
-              ))}
-
-              {row.isLive && row.hrPercentage !== null && row.zone !== null && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: `${Math.min(Math.max(row.hrPercentage, 2), 98)}%`,
-                    top: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    width: 'clamp(24px, 3vw, 36px)',
-                    height: 'clamp(14px, 2vh, 26px)',
-                    borderRadius: '4px',
-                    background: ZONE_COLORS[row.zone],
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'left 0.8s ease',
-                    zIndex: 10,
-                  }}
-                >
-                  <span style={{ color: 'white', fontWeight: 'bold', fontSize: 'clamp(8px, 1vh, 12px)' }}>{row.number}</span>
-                </div>
-              )}
-            </div>
-
-            {/* BPM */}
+      <div style={{ flex: 1, overflow: 'hidden', position: 'relative', zIndex: 1 }}>
+        {rows.map((row) => {
+          const isHighZone = row.zone && row.zone >= 4;
+          return (
             <div
+              key={row.profileId}
               style={{
-                width: 48,
-                textAlign: 'right',
-                fontWeight: 700,
-                fontSize: 'clamp(12px, 1.8vh, 22px)',
-                fontVariantNumeric: 'tabular-nums',
-                color: row.isLive && row.zone ? ZONE_COLORS[row.zone] : 'hsl(0 0% 30%)',
-                transition: 'color 1s ease',
+                height: rowHeight,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                paddingLeft: row.zone === 5 ? '9px' : row.zone === 4 ? '9px' : '12px',
+                paddingRight: '12px',
+                borderBottom: '1px solid rgba(255,255,255,0.04)',
+                backgroundColor: getRowBg(row.zone),
+                borderLeft: row.zone === 5 ? `3px solid ${ZONE_COLORS[5]}` : row.zone === 4 ? `3px solid ${ZONE_COLORS[4]}80` : '3px solid transparent',
+                opacity: row.isLive ? 1 : 0.35,
+                overflow: 'hidden',
+                transition: 'background-color 1s ease, border-left 1s ease',
               }}
             >
-              {row.isLive && row.bpm !== null ? row.bpm : '--'}
+              {/* Number */}
+              <div style={{
+                width: 28,
+                textAlign: 'right',
+                fontSize: 'clamp(10px, 1.2vh, 14px)',
+                fontFamily: 'monospace',
+                color: 'rgba(255,255,255,0.25)',
+              }}>
+                {String(row.number).padStart(2, '0')}
+              </div>
+
+              {/* Name */}
+              <div style={{
+                width: 110,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                fontSize: 'clamp(11px, 1.5vh, 18px)',
+                fontWeight: 700,
+                color: isHighZone ? 'white' : 'rgba(255,255,255,0.85)',
+              }}>
+                {row.name}
+              </div>
+
+              {/* Zone Bar */}
+              <div style={{
+                position: 'relative',
+                display: 'flex',
+                flex: 1,
+                height: 'clamp(16px, 2.2vh, 32px)',
+                borderRadius: '6px',
+                overflow: 'hidden',
+                boxShadow: getBarGlow(row.zone),
+                transition: 'box-shadow 1s ease',
+              }}>
+                {[1, 2, 3, 4, 5].map((z) => (
+                  <div
+                    key={z}
+                    style={{
+                      width: '20%',
+                      height: '100%',
+                      background: ZONE_COLORS[z],
+                      opacity: SEGMENT_OPACITY[z],
+                    }}
+                  />
+                ))}
+
+                {row.isLive && row.hrPercentage !== null && row.zone !== null && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: `${Math.min(Math.max(row.hrPercentage, 2), 98)}%`,
+                      top: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      width: 'clamp(26px, 3vw, 38px)',
+                      height: 'clamp(16px, 2.2vh, 30px)',
+                      borderRadius: '4px',
+                      background: ZONE_COLORS[row.zone],
+                      boxShadow: getSliderGlow(row.zone),
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'left 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                      zIndex: 10,
+                      animation: row.zone >= 5
+                        ? 'sliderPulse 0.8s ease-in-out infinite'
+                        : row.zone >= 4
+                          ? 'sliderPulse 1.2s ease-in-out infinite'
+                          : 'none',
+                    }}
+                  >
+                    <span style={{ color: 'white', fontWeight: 'bold', fontSize: 'clamp(9px, 1.1vh, 14px)' }}>{row.number}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* BPM */}
+              <div
+                style={{
+                  width: 56,
+                  textAlign: 'right',
+                  fontWeight: 800,
+                  fontSize: 'clamp(16px, 2.8vh, 36px)',
+                  fontVariantNumeric: 'tabular-nums',
+                  color: row.isLive && row.zone ? ZONE_COLORS[row.zone] : 'rgba(255,255,255,0.2)',
+                  textShadow: row.isLive ? getBpmGlow(row.zone) : 'none',
+                  transition: 'color 1s ease, text-shadow 1s ease',
+                }}
+              >
+                {row.isLive && row.bpm !== null ? row.bpm : '--'}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
