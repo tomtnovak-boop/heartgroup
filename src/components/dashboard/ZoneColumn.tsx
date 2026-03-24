@@ -9,11 +9,6 @@ const ZONE_CONFIG: Record<number, { label: string; color: string }> = {
   5: { label: 'MAX EFFORT', color: '#ff0044' },
 };
 
-function getGridCols(count: number): number {
-  if (count <= 4) return 1;
-  if (count <= 8) return 2;
-  return 3;
-}
 
 interface ZoneColumnProps {
   zone: number;
@@ -24,7 +19,6 @@ interface ZoneColumnProps {
 export function ZoneColumn({ zone, participants, heroProfileId }: ZoneColumnProps) {
   const config = ZONE_CONFIG[zone];
   const sorted = [...participants].sort((a, b) => b.bpm - a.bpm);
-  const cols = getGridCols(sorted.length);
 
   return (
     <div className="flex flex-col items-center min-w-0 h-full">
@@ -54,7 +48,7 @@ export function ZoneColumn({ zone, participants, heroProfileId }: ZoneColumnProp
         className="flex-1 min-h-0 justify-start overflow-hidden"
         style={{
           display: 'grid',
-          gridTemplateColumns: `repeat(${cols}, 1fr)`,
+          gridTemplateColumns: 'repeat(2, 1fr)',
           gap: '2px',
           justifyItems: 'center',
           alignContent: 'start',
