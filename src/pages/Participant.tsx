@@ -12,7 +12,7 @@ import { SessionLeaderboard } from '@/components/dashboard/SessionLeaderboard';
 import { useBluetoothHR } from '@/hooks/useBluetoothHR';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { enableNoSleep, isIOS } from '@/lib/noSleep';
-import { calculateZone, calculateHRPercentage } from '@/lib/heartRateUtils';
+import { calculateZone, calculateHRPercentage, getZoneInfo, calculateCaloriesPerMinute } from '@/lib/heartRateUtils';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
