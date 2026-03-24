@@ -77,6 +77,7 @@ export default function Participant() {
   const [joinSkipped, setJoinSkipped] = useState(false);
   const [coachSessionActive, setCoachSessionActive] = useState(false);
   const joinDialogShownRef = useRef(false);
+  const sessionWasActiveOnConnectRef = useRef(false);
 
   // Leaderboard state
   const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -200,21 +201,57 @@ export default function Participant() {
     checkOwnWorkout();
   }, [profile]);
 
-  // Show join dialog when connected + coach session active + not already joined/skipped
-  useEffect(() => {
-    if (isConnected && coachSessionActive && !currentWorkoutId && !joinSkipped && !joinDialogShownRef.current) {
-      joinDialogShownRef.current = true;
-      setShowJoinDialog(true);
+  // Handle joining a session
+  const handleJoinSession = useCallback(async () => {
+    if (!profile) return;
+    try {
+      const { data, error } = await supabase
+        .from('workouts')
+        .insert({ profile_id: profile.id, started_at: new Date().toISOString() })
+        .select('id')
+        .single();
+      if (error) throw error;
+      setCurrentWorkoutId(data.id);
+      setActiveSession(true);
+      setShowJoinDialog(false);
+      toast({ title: "You've joined the session!" });
+    } catch (err) {
+      console.error('Error joining session:', err);
+      toast({ title: 'Failed to join session', variant: 'destructive' });
     }
-  }, [isConnected, coachSessionActive, currentWorkoutId, joinSkipped]);
+  }, [profile, toast]);
 
-  // Reset join state when disconnecting
+  const handleSkipSession = useCallback(() => {
+    setJoinSkipped(true);
+    setShowJoinDialog(false);
+  }, []);
+
+  // Track whether session was already active when participant connects
   useEffect(() => {
-    if (!isConnected) {
+    if (isConnected) {
+      sessionWasActiveOnConnectRef.current = coachSessionActive;
+    } else {
+      sessionWasActiveOnConnectRef.current = false;
       setJoinSkipped(false);
       joinDialogShownRef.current = false;
     }
   }, [isConnected]);
+
+  // Auto-join if connected before session starts; show dialog for late joiners
+  useEffect(() => {
+    if (!isConnected || currentWorkoutId || joinSkipped || joinDialogShownRef.current) return;
+    if (!coachSessionActive) return;
+
+    joinDialogShownRef.current = true;
+
+    if (sessionWasActiveOnConnectRef.current) {
+      // Late joiner: session was already running when they connected → show dialog
+      setShowJoinDialog(true);
+    } else {
+      // Session started while participant was already connected → auto-join silently
+      handleJoinSession();
+    }
+  }, [isConnected, coachSessionActive, currentWorkoutId, joinSkipped, handleJoinSession]);
 
   // Detect session end → show leaderboard after 5s
   useEffect(() => {
@@ -263,30 +300,7 @@ export default function Participant() {
     prevCoachSessionActive.current = coachSessionActive;
   }, [coachSessionActive, currentWorkoutId]);
 
-  // Handle joining a session
-  const handleJoinSession = useCallback(async () => {
-    if (!profile) return;
-    try {
-      const { data, error } = await supabase
-        .from('workouts')
-        .insert({ profile_id: profile.id, started_at: new Date().toISOString() })
-        .select('id')
-        .single();
-      if (error) throw error;
-      setCurrentWorkoutId(data.id);
-      setActiveSession(true);
-      setShowJoinDialog(false);
-      toast({ title: "You've joined the session!" });
-    } catch (err) {
-      console.error('Error joining session:', err);
-      toast({ title: 'Failed to join session', variant: 'destructive' });
-    }
-  }, [profile, toast]);
 
-  const handleSkipSession = useCallback(() => {
-    setJoinSkipped(true);
-    setShowJoinDialog(false);
-  }, []);
 
   // Send HR data to live_hr when connected
   useEffect(() => {
