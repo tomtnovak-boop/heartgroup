@@ -254,14 +254,15 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
                 borderRadius: '6px',
                 overflow: 'hidden',
               }}>
-                {[1, 2, 3, 4, 5].map((z) => (
+                {ZONE_SEGMENTS.map(seg => (
                   <div
-                    key={z}
+                    key={seg.zone}
                     style={{
-                      width: '20%',
+                      width: seg.width,
                       height: '100%',
-                      background: ZONE_COLORS[z],
-                      opacity: SEGMENT_OPACITY[z],
+                      background: ZONE_COLORS[seg.zone],
+                      opacity: SEGMENT_OPACITY[seg.zone],
+                      flexShrink: 0,
                     }}
                   />
                 ))}
