@@ -8,6 +8,7 @@ interface CoachDashboardProps {
   participants: LiveHRData[];
   isLoading: boolean;
   activeTab: string;
+  selectedProfileId?: string;
 }
 
 export function CoachDashboard({ participants, isLoading, activeTab }: CoachDashboardProps) {
