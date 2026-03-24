@@ -54,7 +54,9 @@ export default function Participant() {
   const [monthlyWorkouts, setMonthlyWorkouts] = useState<Workout[]>([]);
   const [prevMonthWorkouts, setPrevMonthWorkouts] = useState<Workout[]>([]);
   const [recentWorkouts, setRecentWorkouts] = useState<Workout[]>([]);
+  const [allHistoricalWorkouts, setAllHistoricalWorkouts] = useState<Workout[]>([]);
   const [activeSession, setActiveSession] = useState(false);
+  const [expandedMonth, setExpandedMonth] = useState<string>('');
   const navigate = useNavigate();
   const { user, signOut } = useAuthContext();
 
