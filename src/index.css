@@ -138,6 +138,25 @@
   }
 }
 
+/* Hex breathing glow animations */
+@keyframes hex-breathe {
+  0%, 100% {
+    filter: var(--hex-filter) brightness(1);
+  }
+  50% {
+    filter: var(--hex-filter) brightness(1.15);
+  }
+}
+
+@keyframes hex-breathe-strong {
+  0%, 100% {
+    filter: var(--hex-filter) brightness(1);
+  }
+  50% {
+    filter: var(--hex-filter) brightness(1.3);
+  }
+}
+
 @keyframes float {
   0%, 100% {
     transform: translateY(0px);
@@ -153,6 +172,14 @@
 
 .animate-float {
   animation: float 3s ease-in-out infinite;
+}
+
+.hex-breathe {
+  animation: hex-breathe 4s ease-in-out infinite;
+}
+
+.hex-breathe-strong {
+  animation: hex-breathe-strong 2.5s ease-in-out infinite;
 }
 
 /* Zone Background Colors */
