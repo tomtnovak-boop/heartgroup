@@ -1,12 +1,23 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": Deno.env.get('APP_URL') || '*',
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+const DEFAULT_ALLOWED_ORIGIN = Deno.env.get("APP_URL") || "*";
+
+function getCorsHeaders(origin: string | null) {
+  const isLovablePreview = origin?.endsWith(".lovableproject.com") || origin?.endsWith(".lovable.app");
+  const allowOrigin = origin && (origin === DEFAULT_ALLOWED_ORIGIN || isLovablePreview)
+    ? origin
+    : DEFAULT_ALLOWED_ORIGIN;
+
+  return {
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+  };
+}
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req.headers.get("origin"));
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -79,7 +90,6 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Add coach role
       const { error: roleError } = await adminClient
         .from("user_roles")
         .insert({ user_id: newUser.user.id, role: "coach" });
@@ -154,7 +164,6 @@ Deno.serve(async (req) => {
         });
       }
 
-      // 1. Delete workout_hr_data for all workouts of this profile
       const { data: workouts } = await adminClient
         .from("workouts")
         .select("id")
@@ -165,18 +174,11 @@ Deno.serve(async (req) => {
         await adminClient.from("workout_hr_data").delete().in("workout_id", workoutIds);
       }
 
-      // 2. Delete workouts
       await adminClient.from("workouts").delete().eq("profile_id", profile_id);
-
-      // 3. Delete live_hr
       await adminClient.from("live_hr").delete().eq("profile_id", profile_id);
-
-      // 4. Delete profile
       await adminClient.from("profiles").delete().eq("id", profile_id);
 
-      // 5. Delete auth user if user_id provided
       if (targetUserId) {
-        // Delete user roles first
         await adminClient.from("user_roles").delete().eq("user_id", targetUserId);
         await adminClient.auth.admin.deleteUser(targetUserId);
       }
@@ -187,7 +189,6 @@ Deno.serve(async (req) => {
     }
 
     if (action === "listCoaches") {
-      // Get all users with coach role
       const { data: coachRoles, error: rolesError } = await adminClient
         .from("user_roles")
         .select("user_id, created_at")
@@ -200,7 +201,6 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Get emails from auth
       const coaches = [];
       for (const role of coachRoles || []) {
         const { data: userData } = await adminClient.auth.admin.getUserById(role.user_id);
@@ -223,7 +223,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
