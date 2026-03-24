@@ -70,6 +70,8 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
         background: 'radial-gradient(ellipse at 50% 45%, #0a0a1f 0%, #050510 45%, #000000 100%)',
       }}
     >
+      {/* EKG ambient background */}
+      <EKGBackground averageBPM={averageBPM} />
       {/* Vignette overlay */}
       <div
         className="absolute inset-0 pointer-events-none"
