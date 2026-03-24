@@ -33,7 +33,7 @@ export function SessionLeaderboard({
 
   useEffect(() => {
     const timer = setInterval(() => setElapsed(p => p + 1), 1000);
-    const autoClose = setTimeout(onClose, 60000);
+    const autoClose = setTimeout(onClose, 300000);
     return () => { clearInterval(timer); clearTimeout(autoClose); };
   }, [onClose]);
 
@@ -106,7 +106,7 @@ function CoachLeaderboard({
           Back to Dashboard
         </button>
         <p className="text-center text-[10px] text-white/25 mt-1.5">
-          Automatically closes in {Math.max(0, 60 - elapsed)}s
+          Automatically closes in {Math.floor(Math.max(0, 300 - elapsed) / 60)}:{String(Math.max(0, 300 - elapsed) % 60).padStart(2, '0')}
         </p>
       </div>
     </div>
@@ -236,7 +236,7 @@ function ParticipantResult({
           Back to my Dashboard
         </button>
         <p className="text-center text-[10px] text-white/25 mt-1.5">
-          Automatically closes in {Math.max(0, 60 - elapsed)}s
+          Automatically closes in {Math.floor(Math.max(0, 300 - elapsed) / 60)}:{String(Math.max(0, 300 - elapsed) % 60).padStart(2, '0')}
         </p>
       </div>
     </div>
