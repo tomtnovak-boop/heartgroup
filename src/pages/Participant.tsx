@@ -23,7 +23,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  Heart, Loader2, Bluetooth, BluetoothOff, LogOut, Settings, User,
+  Heart, Loader2, Bluetooth, BluetoothOff, LogOut, Settings, User, Home,
   TrendingUp, TrendingDown, Flame, Clock, Activity, ChevronRight, Zap,
   BarChart3, Calendar, ArrowDown, ArrowUp, ChevronDown, ArrowLeft,
 } from 'lucide-react';
