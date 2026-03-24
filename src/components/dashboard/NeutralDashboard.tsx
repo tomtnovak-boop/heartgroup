@@ -50,7 +50,7 @@ export function NeutralDashboard({ participants, allProfiles, isLoading }: Neutr
         name: profile.nickname || firstName,
         bpm: live?.bpm ?? null,
         hrPercentage: live?.hr_percentage ?? null,
-        zone: live ? getZoneFromPercentage(live.hr_percentage) : null,
+        zone: live ? getBarZone(live.hr_percentage) : null,
         isLive: !!live,
       };
     });
