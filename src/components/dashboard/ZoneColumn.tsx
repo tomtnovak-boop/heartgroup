@@ -37,7 +37,7 @@ export function ZoneColumn({ zone, participants, heroProfileId }: ZoneColumnProp
 
       {/* Divider */}
       <div
-        className="w-full h-px mb-1 flex-shrink-0"
+        className="w-full h-px mb-0.5 flex-shrink-0"
         style={{
           background: `linear-gradient(90deg, transparent, ${config.color}44, transparent)`,
         }}
@@ -72,7 +72,7 @@ export function ZoneColumn({ zone, participants, heroProfileId }: ZoneColumnProp
 
       {/* Count badge */}
       <div
-        className="text-[10px] font-bold rounded-full px-2 py-0.5 mt-1 flex-shrink-0"
+        className="text-[10px] font-bold rounded-full px-2 py-0.5 mt-0.5 flex-shrink-0"
         style={{
           color: config.color,
           background: `${config.color}12`,

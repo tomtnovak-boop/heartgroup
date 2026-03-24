@@ -1,16 +1,16 @@
-import { useState, useMemo } from 'react';
-import { useLiveHR } from '@/hooks/useLiveHR';
+import { useMemo } from 'react';
 import { ZoneColumn } from './ZoneColumn';
-import { TeamStats } from './TeamStats';
 import { CustomerList } from '@/components/admin/CustomerList';
-import { Heart, RefreshCw, Users, Activity } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Heart } from 'lucide-react';
+import { LiveHRData } from '@/hooks/useLiveHR';
 
-export function CoachDashboard() {
-  const { participants, averageBPM, averageZone, isLoading, refresh } = useLiveHR();
-  const [activeTab, setActiveTab] = useState<string>('live');
+interface CoachDashboardProps {
+  participants: LiveHRData[];
+  isLoading: boolean;
+  activeTab: string;
+}
 
+export function CoachDashboard({ participants, isLoading, activeTab }: CoachDashboardProps) {
   const { zoneGroups, heroProfileId } = useMemo(() => {
     const groups: Record<number, typeof participants> = { 1: [], 2: [], 3: [], 4: [], 5: [] };
     let heroId: string | undefined;
@@ -39,54 +39,30 @@ export function CoachDashboard() {
     );
   }
 
+  if (activeTab === 'customers') {
+    return (
+      <div className="flex-1 px-4 pt-2" style={{ background: '#0a0a0a' }}>
+        <CustomerList />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex-1 flex flex-col" style={{ background: '#0a0a0a' }}>
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-        <div className="flex items-center justify-between px-6 pt-4 pb-2">
-          <TabsList>
-            <TabsTrigger value="live" className="gap-2">
-              <Activity className="w-4 h-4" />
-              Live Training
-            </TabsTrigger>
-            <TabsTrigger value="customers" className="gap-2">
-              <Users className="w-4 h-4" />
-              Kunden verwalten
-            </TabsTrigger>
-          </TabsList>
-          {activeTab === 'live' && (
-            <Button variant="outline" size="icon" onClick={refresh}>
-              <RefreshCw className="w-4 h-4" />
-            </Button>
-          )}
-        </div>
-
-        <TabsContent value="live" className="flex-1 flex flex-col mt-0 px-6 pb-2">
-          <TeamStats
-            participantCount={participants.length}
-            averageBPM={averageBPM}
-            averageZone={averageZone}
+    <div className="flex-1 flex flex-col px-4 pt-1 pb-1" style={{ background: '#0a0a0a' }}>
+      <div className="flex-1 grid grid-cols-5 gap-2 min-h-0">
+        {[1, 2, 3, 4, 5].map((zone) => (
+          <ZoneColumn
+            key={zone}
+            zone={zone}
+            participants={zoneGroups[zone]}
+            heroProfileId={heroProfileId}
           />
+        ))}
+      </div>
 
-          <div className="flex-1 mt-2 grid grid-cols-5 gap-2 min-h-0">
-            {[1, 2, 3, 4, 5].map((zone) => (
-              <ZoneColumn
-                key={zone}
-                zone={zone}
-                participants={zoneGroups[zone]}
-                heroProfileId={heroProfileId}
-              />
-            ))}
-          </div>
-
-          <div className="text-center text-[10px] text-white/25 mt-1">
-            Echtzeit-Aktualisierung • Inaktive Teilnehmer werden nach 30s ausgeblendet
-          </div>
-        </TabsContent>
-
-        <TabsContent value="customers" className="flex-1 mt-0 px-6">
-          <CustomerList />
-        </TabsContent>
-      </Tabs>
+      <div className="text-center text-[10px] text-white/25 mt-0.5">
+        Echtzeit-Aktualisierung • Inaktive Teilnehmer werden nach 30s ausgeblendet
+      </div>
     </div>
   );
 }
