@@ -728,7 +728,7 @@ export default function Participant() {
           </Card>
 
           {/* Streak cards */}
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-4 gap-2">
             <Card className="p-3 text-center">
               <div className="text-xl font-bold">{monthStats.sessionCount}</div>
               <div className="text-[10px] text-muted-foreground">Sessions</div>
@@ -740,6 +740,16 @@ export default function Participant() {
             <Card className="p-3 text-center">
               <div className="text-xl font-bold">{monthStats.z3PlusShare}%</div>
               <div className="text-[10px] text-muted-foreground">Z3+ Share</div>
+            </Card>
+            <Card className="p-3 text-center">
+              <div className="text-xl font-bold text-purple-400">
+                {(() => {
+                  const ranked = monthlyWorkouts.filter(w => w.rank_avg_bpm != null);
+                  if (ranked.length === 0) return '--';
+                  return `#${Math.min(...ranked.map(w => w.rank_avg_bpm!))}`;
+                })()}
+              </div>
+              <div className="text-[10px] text-muted-foreground">Best Rank</div>
             </Card>
           </div>
 
