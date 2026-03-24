@@ -34,7 +34,7 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
 
   if (activeTab === 'customers') {
     return (
-      <div className="flex-1 px-4 pt-2" style={{ background: '#0a0a0a' }}>
+      <div className="flex-1 px-4 pt-2 min-h-0 overflow-y-auto" style={{ background: '#0a0a0a' }}>
         <CustomerList />
       </div>
     );
@@ -45,8 +45,8 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
   };
 
   return (
-    <div className="flex-1 flex flex-col px-4 pt-1 pb-1" style={{ background: '#0a0a0a' }}>
-      <div className="flex-1 grid grid-cols-5 gap-2 min-h-0">
+    <div className="flex-1 flex flex-col px-4 pt-1 pb-1 min-h-0" style={{ background: '#0a0a0a' }}>
+      <div className="flex-1 grid grid-cols-5 gap-2 min-h-0 overflow-hidden">
         {[1, 2, 3, 4, 5].map((zone) => (
           <ZoneColumn
             key={zone}
