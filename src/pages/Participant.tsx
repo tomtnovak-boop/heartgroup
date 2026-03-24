@@ -83,7 +83,7 @@ export default function Participant() {
     fetchProfile();
   }, [user]);
 
-  // Fetch monthly + recent workouts
+  // Fetch monthly + recent workouts + historical
   useEffect(() => {
     if (!profile) return;
     const now = new Date();
@@ -118,6 +118,19 @@ export default function Participant() {
       .order('started_at', { ascending: false })
       .limit(5)
       .then(({ data }) => setRecentWorkouts(data || []));
+
+    // Last 6 months of workouts (for Month tab)
+    const sixMonthsAgo = startOfMonth(subMonths(now, 5)).toISOString();
+    supabase.from('workouts').select('*')
+      .eq('profile_id', profile.id)
+      .not('ended_at', 'is', null)
+      .gte('started_at', sixMonthsAgo)
+      .order('started_at', { ascending: false })
+      .then(({ data }) => {
+        setAllHistoricalWorkouts(data || []);
+        // Set current month as expanded by default
+        setExpandedMonth(format(now, 'yyyy-MM'));
+      });
   }, [profile]);
 
   // Check for active session
