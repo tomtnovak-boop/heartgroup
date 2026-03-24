@@ -1,47 +1,79 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Heart, Monitor, Smartphone, Users, Activity, Zap } from 'lucide-react';
-import { AppHeader } from '@/components/layout/AppHeader';
-import { useViewMode } from '@/hooks/useViewMode';
-import { CoachDashboard } from '@/components/dashboard/CoachDashboard';
+import { Heart, Monitor, Smartphone, Users, Activity, Zap, Loader2 } from 'lucide-react';
 import { useAuthContext } from '@/components/auth/AuthProvider';
-import { useState, useCallback, useEffect } from 'react';
-import { useLiveHR } from '@/hooks/useLiveHR';
-import { useWorkoutSession } from '@/hooks/useWorkoutSession';
-import { supabase } from '@/integrations/supabase/client';
+import { useEffect } from 'react';
 
 export default function Index() {
-  const { viewMode, changeView } = useViewMode('participant');
-  const { user, isAuthenticated, isCoach } = useAuthContext();
+  const { user, isAuthenticated, isCoach, isAdmin, isLoading } = useAuthContext();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('live');
-  const [myProfileId, setMyProfileId] = useState<string | undefined>();
 
+  // Auto-redirect based on role
   useEffect(() => {
-    if (!isAuthenticated || !user) return;
-    supabase.from('profiles').select('id').eq('user_id', user.id).maybeSingle()
-      .then(({ data }) => { if (data) setMyProfileId(data.id); });
-  }, [isAuthenticated, user]);
+    if (isLoading || !isAuthenticated) return;
 
-  const { isActive: sessionActive, elapsedSeconds: sessionElapsed, startSession, stopSession, recordHRData } = useWorkoutSession();
-  const onNewHRData = useCallback((data: { profile_id: string; bpm: number; zone: number; hr_percentage: number; timestamp: string }) => { recordHRData(data); }, [recordHRData]);
-  const { participants, averageBPM, averageZone, isLoading, refresh } = useLiveHR(onNewHRData);
+    // Admins see the choice screen (rendered below)
+    if (isAdmin) return;
 
-  if (viewMode === 'coach' && isCoach) {
+    // Coaches go straight to dashboard
+    if (isCoach) {
+      navigate('/dashboard', { replace: true });
+      return;
+    }
+
+    // Participants go to their dashboard
+    navigate('/participant', { replace: true });
+  }, [isLoading, isAuthenticated, isCoach, isAdmin, navigate]);
+
+  // Loading state
+  if (isLoading) {
     return (
-      <div className="h-dvh bg-background flex flex-col overflow-hidden">
-        <AppHeader currentView={viewMode} onViewChange={changeView} showViewSwitcher={isCoach} activeTab={activeTab} onTabChange={setActiveTab} onRefresh={refresh} stats={{ participantCount: participants.length, averageBPM, lowestBPM: 0, highestBPM: 0, averageZone }} sessionActive={sessionActive} sessionElapsed={sessionElapsed} onStartSession={() => startSession(participants)} onStopSession={stopSession} />
-        <div className="flex-1 min-h-0 overflow-hidden">
-          <CoachDashboard participants={participants} isLoading={isLoading} activeTab={activeTab} selectedProfileId={myProfileId} averageBPM={averageBPM} isSessionActive={false} />
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+        <Heart className="w-12 h-12 text-primary animate-pulse" fill="currentColor" />
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span>Loading...</span>
         </div>
       </div>
     );
   }
 
+  // Admin choice screen
+  if (isAuthenticated && isAdmin) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+        <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-6">
+          <Heart className="w-8 h-8 text-primary" fill="currentColor" />
+        </div>
+        <h1 className="text-2xl font-bold mb-2">HR Training</h1>
+        <p className="text-muted-foreground mb-8">Choose where to go</p>
+        <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
+          <Button
+            size="lg"
+            className="flex-1 gap-2"
+            onClick={() => navigate('/participant')}
+          >
+            <Smartphone className="w-5 h-5" />
+            My Training
+          </Button>
+          <Button
+            size="lg"
+            variant="outline"
+            className="flex-1 gap-2"
+            onClick={() => navigate('/dashboard')}
+          >
+            <Monitor className="w-5 h-5" />
+            Coach Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Landing page for unauthenticated users
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader currentView={viewMode} onViewChange={changeView} showViewSwitcher={isCoach} />
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-background" />
         <div className="relative container mx-auto px-4 py-16 md:py-24">
@@ -53,16 +85,11 @@ export default function Index() {
             <p className="text-xl text-muted-foreground mb-8">
               Real-time heart rate monitoring for group training. Connect Bluetooth chest straps and visualize the intensity of all participants on a big screen.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              {isAuthenticated ? (
-                <Button size="lg" className="w-full sm:w-auto gap-2" onClick={() => navigate('/participant')}><Smartphone className="w-5 h-5" />Go to Training</Button>
-              ) : (
-                <Link to="/auth"><Button size="lg" className="w-full sm:w-auto gap-2"><Smartphone className="w-5 h-5" />Sign In / Register</Button></Link>
-              )}
-              {isCoach && (
-                <Button size="lg" variant="outline" className="w-full sm:w-auto gap-2" onClick={() => changeView('coach')}><Monitor className="w-5 h-5" />Coach Dashboard</Button>
-              )}
-            </div>
+            <Link to="/auth">
+              <Button size="lg" className="gap-2">
+                <Smartphone className="w-5 h-5" />Sign In / Register
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
@@ -120,32 +147,6 @@ export default function Index() {
               </ul>
             </CardContent>
           </Card>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 py-16">
-        <h2 className="text-2xl font-bold text-center mb-12">How It Works</h2>
-        <div className="grid md:grid-cols-4 gap-8">
-          <div className="text-center">
-            <div className="w-16 h-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center mb-4 text-2xl font-bold text-primary">1</div>
-            <h3 className="font-semibold mb-2">Create Profile</h3>
-            <p className="text-sm text-muted-foreground">Participants enter name and age</p>
-          </div>
-          <div className="text-center">
-            <div className="w-16 h-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center mb-4 text-2xl font-bold text-primary">2</div>
-            <h3 className="font-semibold mb-2">Connect HR Monitor</h3>
-            <p className="text-sm text-muted-foreground">Pair Bluetooth chest strap via Web Bluetooth</p>
-          </div>
-          <div className="text-center">
-            <div className="w-16 h-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center mb-4 text-2xl font-bold text-primary">3</div>
-            <h3 className="font-semibold mb-2">Start Training</h3>
-            <p className="text-sm text-muted-foreground">Heart rate is sent live to the server</p>
-          </div>
-          <div className="text-center">
-            <div className="w-16 h-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center mb-4 text-2xl font-bold text-primary">4</div>
-            <h3 className="font-semibold mb-2">Open Dashboard</h3>
-            <p className="text-sm text-muted-foreground">Coach sees all participants in real-time</p>
-          </div>
         </div>
       </div>
 
