@@ -185,15 +185,20 @@ export default function Participant() {
     const z5 = w.reduce((s, x) => s + (x.zone_5_seconds || 0), 0);
     const zTotal = z1 + z2 + z3 + z4 + z5 || 1;
 
-    // Weekly sessions
+    // Weekly sessions — always show all weeks of the month
     const weekMap = new Map<number, number>();
     w.forEach(x => {
       const wk = getISOWeek(new Date(x.started_at));
       weekMap.set(wk, (weekMap.get(wk) || 0) + 1);
     });
-    const weekData = Array.from(weekMap.entries())
-      .sort(([a], [b]) => a - b)
-      .map(([wk, count]) => ({ week: `CW${wk}`, count }));
+    const allWeekStarts = eachWeekOfInterval(
+      { start: monthStart, end: monthEnd },
+      { weekStartsOn: 1 }
+    );
+    const weekData = allWeekStarts.map(ws => {
+      const wk = getISOWeek(ws);
+      return { week: `W${wk}`, count: weekMap.get(wk) || 0 };
+    });
 
     // Streaks
     const weeklyStreak = (() => {
