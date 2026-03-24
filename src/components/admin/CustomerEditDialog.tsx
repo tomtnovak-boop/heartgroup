@@ -24,10 +24,13 @@ import { cn } from '@/lib/utils';
 interface CustomerProfile {
   id: string;
   name: string;
+  nickname?: string | null;
   age: number;
   max_hr: number;
   birth_date?: string | null;
   custom_max_hr?: number | null;
+  weight?: number | null;
+  height?: number | null;
   user_id?: string | null;
 }
 
