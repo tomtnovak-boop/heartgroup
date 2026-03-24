@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { HeartRateDisplay } from '@/components/participant/HeartRateDisplay';
 import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
 import { WorkoutHistory } from '@/components/participant/WorkoutHistory';
@@ -78,6 +79,11 @@ export default function Participant() {
   const [coachSessionActive, setCoachSessionActive] = useState(false);
   const joinDialogShownRef = useRef(false);
   const sessionWasActiveOnConnectRef = useRef(false);
+
+  // Lobby state
+  const [lobbyJoined, setLobbyJoined] = useState(false);
+  const [sessionCodeInput, setSessionCodeInput] = useState('');
+  const [sessionCodeError, setSessionCodeError] = useState('');
 
   // Leaderboard state
   const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -226,6 +232,31 @@ export default function Participant() {
     setShowJoinDialog(false);
   }, []);
 
+  // Handle entering the lobby with a session code
+  const handleEnterLobby = useCallback(async (code: string) => {
+    // Validate code against active_sessions
+    const { data: activeSessionData } = await supabase
+      .from('active_sessions')
+      .select('session_code')
+      .is('ended_at', null)
+      .order('started_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (!activeSessionData || activeSessionData.session_code !== code) {
+      setSessionCodeError('Invalid code. Please check with your coach.');
+      return;
+    }
+
+    // Add to lobby
+    await supabase.from('session_lobby').upsert({
+      session_code: code,
+      profile_id: profile!.id,
+    });
+
+    setLobbyJoined(true);
+  }, [profile]);
+
   // Track whether session was already active when participant connects
   useEffect(() => {
     if (isConnected) {
@@ -234,30 +265,37 @@ export default function Participant() {
       sessionWasActiveOnConnectRef.current = false;
       setJoinSkipped(false);
       joinDialogShownRef.current = false;
+      setLobbyJoined(false);
+      setSessionCodeInput('');
+      setSessionCodeError('');
     }
   }, [isConnected]);
 
-  // Auto-join if connected before session starts; show dialog for late joiners
+  // Auto-join if in lobby or connected before session starts; show dialog for late joiners
   useEffect(() => {
     if (!isConnected || currentWorkoutId || joinSkipped || joinDialogShownRef.current) return;
     if (!coachSessionActive) return;
 
     joinDialogShownRef.current = true;
 
-    if (sessionWasActiveOnConnectRef.current) {
-      // Late joiner: session was already running when they connected → show dialog
-      setShowJoinDialog(true);
-    } else {
-      // Session started while participant was already connected → auto-join silently
+    if (lobbyJoined || !sessionWasActiveOnConnectRef.current) {
+      // Was in lobby or session started while connected → auto-join silently
       handleJoinSession();
+    } else {
+      // Late joiner: session was already running when they connected → show code dialog
+      setShowJoinDialog(true);
     }
-  }, [isConnected, coachSessionActive, currentWorkoutId, joinSkipped, handleJoinSession]);
+  }, [isConnected, coachSessionActive, currentWorkoutId, joinSkipped, lobbyJoined, handleJoinSession]);
 
   // Detect session end → show leaderboard after 5s
   useEffect(() => {
     if (prevCoachSessionActive.current && !coachSessionActive && currentWorkoutId) {
       setCurrentWorkoutId(null);
       setActiveSession(false);
+      setLobbyJoined(false);
+      setSessionCodeInput('');
+      setSessionCodeError('');
+      joinDialogShownRef.current = false;
       
       const timer = setTimeout(async () => {
         try {
@@ -588,6 +626,55 @@ export default function Participant() {
         )}
       </div>
 
+      {/* Session Code Entry (before session starts) */}
+      {isConnected && !coachSessionActive && !currentWorkoutId && (
+        <Card className="p-4 mx-4 mt-3">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold">Enter Session Code</span>
+              {lobbyJoined && (
+                <span className="text-xs text-emerald-400 font-medium flex items-center gap-1">
+                  ✓ Ready
+                </span>
+              )}
+            </div>
+            {!lobbyJoined ? (
+              <>
+                <Input
+                  value={sessionCodeInput}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 4);
+                    setSessionCodeInput(val);
+                    setSessionCodeError('');
+                  }}
+                  placeholder="1234"
+                  maxLength={4}
+                  className="text-center text-2xl font-bold tracking-widest h-12"
+                  inputMode="numeric"
+                />
+                {sessionCodeError && (
+                  <p className="text-destructive text-xs text-center">{sessionCodeError}</p>
+                )}
+                <Button
+                  className="w-full"
+                  disabled={sessionCodeInput.length !== 4}
+                  onClick={() => handleEnterLobby(sessionCodeInput)}
+                >
+                  Join Lobby
+                </Button>
+              </>
+            ) : (
+              <div className="flex items-center justify-center gap-2 py-2">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400" />
+                </span>
+                <span className="text-sm text-emerald-400">In lobby — waiting for session to start</span>
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
 
 
       {/* Session Join Dialog */}

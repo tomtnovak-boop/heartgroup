@@ -1,4 +1,4 @@
-import { Heart, Users, Activity, RefreshCw, Play, Square, Shield, Home } from 'lucide-react';
+import { Heart, Users, Activity, RefreshCw, Play, Square, Shield, Home, Hash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { useNavigate } from 'react-router-dom';
@@ -26,6 +26,9 @@ interface AppHeaderProps {
   sessionElapsed?: number;
   onStartSession?: () => void;
   onStopSession?: () => void;
+  sessionCode?: string | null;
+  lobbyCount?: number;
+  onCreateSessionCode?: () => void;
 }
 
 function formatElapsed(seconds: number): string {
@@ -43,6 +46,7 @@ export function AppHeader({
   activeTab = 'live', onTabChange, onRefresh, stats,
   sessionActive = false, sessionElapsed = 0,
   onStartSession, onStopSession,
+  sessionCode, lobbyCount = 0, onCreateSessionCode,
 }: AppHeaderProps) {
   const { isAuthenticated, isAdmin, signOut, user } = useAuthContext();
   const navigate = useNavigate();
@@ -91,8 +95,37 @@ export function AppHeader({
         </div>
       )}
 
-      {/* Right: participant count, start/stop, refresh, avatar */}
+      {/* Right: session code, participant count, start/stop, refresh, avatar */}
       <div className="flex items-center gap-1.5 flex-shrink-0">
+        {/* Session code + lobby count */}
+        {currentView === 'coach' && activeTab === 'live' && (
+          <>
+            {sessionCode && !sessionActive && (
+              <div className="flex items-center gap-1.5 mr-1 px-2 py-0.5 rounded-full bg-muted">
+                <Hash className="w-3 h-3 text-muted-foreground" />
+                <span className="text-sm font-mono font-bold tracking-wider">{sessionCode}</span>
+                <span className="text-[11px] text-muted-foreground">{lobbyCount} ready</span>
+              </div>
+            )}
+            {sessionCode && sessionActive && (
+              <div className="flex items-center gap-1 mr-1 px-2 py-0.5 rounded-full bg-muted/50">
+                <Hash className="w-3 h-3 text-muted-foreground" />
+                <span className="text-xs font-mono font-bold tracking-wider text-muted-foreground">{sessionCode}</span>
+              </div>
+            )}
+            {!sessionCode && !sessionActive && (
+              <button
+                onClick={onCreateSessionCode}
+                className="flex items-center gap-1 mr-1 px-2 py-1 rounded-full bg-muted hover:bg-muted/80 transition-colors text-xs text-muted-foreground"
+                title="Create session code"
+              >
+                <Hash className="w-3 h-3" />
+                <span>New Code</span>
+              </button>
+            )}
+          </>
+        )}
+
         {/* Participant count */}
         {currentView === 'coach' && activeTab === 'live' && stats && (
           <div className="flex items-center gap-1 mr-1">
@@ -117,8 +150,13 @@ export function AppHeader({
           ) : (
             <button
               onClick={onStartSession}
-              className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center hover:bg-emerald-700 transition-colors"
-              title="Start Session"
+              disabled={!sessionCode || lobbyCount === 0}
+              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                sessionCode && lobbyCount > 0
+                  ? 'bg-emerald-600 hover:bg-emerald-700'
+                  : 'bg-muted cursor-not-allowed'
+              }`}
+              title={!sessionCode ? 'Create a session code first' : lobbyCount === 0 ? 'No participants in lobby' : 'Start Session'}
             >
               <Play className="w-3.5 h-3.5 text-white" fill="currentColor" />
             </button>

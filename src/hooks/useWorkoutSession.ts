@@ -9,6 +9,10 @@ interface WorkoutSession {
   activeWorkouts: Map<string, string>; // profile_id → workout_id
 }
 
+function generateSessionCode(): string {
+  return String(Math.floor(1000 + Math.random() * 9000));
+}
+
 export function useWorkoutSession() {
   const [session, setSession] = useState<WorkoutSession>({
     isActive: false,
@@ -16,11 +20,15 @@ export function useWorkoutSession() {
     elapsedSeconds: 0,
     activeWorkouts: new Map(),
   });
+  const [sessionCode, setSessionCode] = useState<string | null>(null);
+  const [lobbyCount, setLobbyCount] = useState(0);
+  const [lobbyProfileIds, setLobbyProfileIds] = useState<string[]>([]);
 
   const activeWorkoutsRef = useRef<Map<string, string>>(new Map());
   const isActiveRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startedAtRef = useRef<Date | null>(null);
+  const sessionCodeRef = useRef<string | null>(null);
 
   // Sync refs with state
   useEffect(() => {
@@ -28,6 +36,10 @@ export function useWorkoutSession() {
     isActiveRef.current = session.isActive;
     startedAtRef.current = session.startedAt;
   }, [session]);
+
+  useEffect(() => {
+    sessionCodeRef.current = sessionCode;
+  }, [sessionCode]);
 
   // Timer for elapsed time
   useEffect(() => {
@@ -49,6 +61,19 @@ export function useWorkoutSession() {
   useEffect(() => {
     const restoreSession = async () => {
       try {
+        // Check for active session code
+        const { data: activeSession } = await supabase
+          .from('active_sessions')
+          .select('session_code')
+          .is('ended_at', null)
+          .order('started_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (activeSession) {
+          setSessionCode(activeSession.session_code);
+        }
+
         const { data: openWorkouts, error } = await supabase
           .from('workouts')
           .select('id, profile_id, started_at')
@@ -83,13 +108,69 @@ export function useWorkoutSession() {
     restoreSession();
   }, []);
 
+  // Subscribe to lobby for current session code
+  useEffect(() => {
+    if (!sessionCode) {
+      setLobbyCount(0);
+      setLobbyProfileIds([]);
+      return;
+    }
+
+    const fetchLobby = async () => {
+      const { data } = await supabase
+        .from('session_lobby')
+        .select('profile_id')
+        .eq('session_code', sessionCode);
+      const ids = data?.map(d => d.profile_id) || [];
+      setLobbyCount(ids.length);
+      setLobbyProfileIds(ids);
+    };
+
+    fetchLobby();
+
+    const sub = supabase
+      .channel('lobby-changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'session_lobby',
+        filter: `session_code=eq.${sessionCode}`,
+      }, fetchLobby)
+      .subscribe();
+
+    return () => { supabase.removeChannel(sub); };
+  }, [sessionCode]);
+
+  // Create a new session code (called before starting)
+  const createSessionCode = useCallback(async () => {
+    const code = generateSessionCode();
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) return;
+
+    await supabase.from('active_sessions').insert({
+      session_code: code,
+      created_by: userData.user.id,
+    });
+    setSessionCode(code);
+  }, []);
+
   const startSession = useCallback(async (participants: LiveHRData[]) => {
-    if (participants.length === 0) return;
+    const code = sessionCodeRef.current;
+    if (!code) return;
 
     try {
+      // Fetch lobby participants
+      const { data: lobbyParticipants } = await supabase
+        .from('session_lobby')
+        .select('profile_id')
+        .eq('session_code', code);
+
+      const profileIds = lobbyParticipants?.map(p => p.profile_id) || [];
+      if (profileIds.length === 0) return;
+
       const now = new Date().toISOString();
-      const inserts = participants.map(p => ({
-        profile_id: p.profile_id,
+      const inserts = profileIds.map(profile_id => ({
+        profile_id,
         started_at: now,
       }));
 
@@ -114,9 +195,32 @@ export function useWorkoutSession() {
     }
   }, []);
 
+  const addLateJoiner = useCallback(async (profileId: string) => {
+    if (!isActiveRef.current) return;
+
+    try {
+      const now = new Date().toISOString();
+      const { data, error } = await supabase
+        .from('workouts')
+        .insert({ profile_id: profileId, started_at: startedAtRef.current?.toISOString() || now })
+        .select('id')
+        .single();
+
+      if (error) throw error;
+
+      setSession(prev => {
+        const newMap = new Map(prev.activeWorkouts);
+        newMap.set(profileId, data.id);
+        return { ...prev, activeWorkouts: newMap };
+      });
+    } catch (err) {
+      console.error('Error adding late joiner:', err);
+    }
+  }, []);
+
   const stopSession = useCallback(async () => {
     const workouts = activeWorkoutsRef.current;
-    if (workouts.size === 0) return;
+    const code = sessionCodeRef.current;
 
     // Immediately update UI
     const savedStartedAt = startedAtRef.current;
@@ -127,11 +231,23 @@ export function useWorkoutSession() {
       activeWorkouts: new Map(),
     });
 
+    // End the active session record
+    if (code) {
+      await supabase.from('active_sessions')
+        .update({ ended_at: new Date().toISOString() })
+        .eq('session_code', code)
+        .is('ended_at', null);
+      // Clean up lobby
+      await supabase.from('session_lobby').delete().eq('session_code', code);
+      setSessionCode(null);
+    }
+
+    if (workouts.size === 0) return;
+
     // Finalize workouts in background
     const now = new Date().toISOString();
     const entries = Array.from(workouts.entries());
 
-    // First pass: calculate stats for all workouts
     const workoutStats: { workoutId: string; avgBpm: number; maxBpm: number; updatePayload: Record<string, any> }[] = [];
 
     await Promise.all(entries.map(async ([profileId, workoutId]) => {
@@ -184,7 +300,6 @@ export function useWorkoutSession() {
       }
     }));
 
-    // Second pass: calculate ranks and update all workouts
     const participantCount = workoutStats.length;
     const avgSorted = [...workoutStats].sort((a, b) => b.avgBpm - a.avgBpm);
     const peakSorted = [...workoutStats].sort((a, b) => b.maxBpm - a.maxBpm);
@@ -227,8 +342,13 @@ export function useWorkoutSession() {
     elapsedSeconds: session.elapsedSeconds,
     activeWorkoutCount: session.activeWorkouts.size,
     activeWorkoutProfileIds: Array.from(session.activeWorkouts.keys()),
+    sessionCode,
+    lobbyCount,
+    lobbyProfileIds,
+    createSessionCode,
     startSession,
     stopSession,
+    addLateJoiner,
     recordHRData,
   };
 }

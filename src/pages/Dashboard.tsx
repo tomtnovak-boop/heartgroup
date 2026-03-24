@@ -24,6 +24,9 @@ export default function Dashboard() {
     isActive: sessionActive,
     elapsedSeconds: sessionElapsed,
     activeWorkoutProfileIds,
+    sessionCode,
+    lobbyCount,
+    createSessionCode,
     startSession,
     stopSession,
     recordHRData,
@@ -114,6 +117,9 @@ export default function Dashboard() {
         sessionElapsed={sessionElapsed}
         onStartSession={handleStartSession}
         onStopSession={stopSession}
+        sessionCode={sessionCode}
+        lobbyCount={lobbyCount}
+        onCreateSessionCode={createSessionCode}
       />
       <div className="flex-1 min-h-0 overflow-hidden">
         <CoachDashboard
