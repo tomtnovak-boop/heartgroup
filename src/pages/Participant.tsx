@@ -160,11 +160,16 @@ export default function Participant() {
     const w = monthlyWorkouts;
     const pw = prevMonthWorkouts;
 
-    const avgBpm = w.length > 0
-      ? Math.round(w.filter(x => x.avg_bpm).reduce((s, x) => s + (x.avg_bpm || 0), 0) / w.filter(x => x.avg_bpm).length)
-      : 0;
-    const prevAvgBpm = pw.length > 0
-      ? Math.round(pw.filter(x => x.avg_bpm).reduce((s, x) => s + (x.avg_bpm || 0), 0) / pw.filter(x => x.avg_bpm).length)
+    const withBpm = w.filter(x => x.avg_bpm && x.avg_bpm > 0);
+    const totalWeightedBpm = withBpm.reduce((s, x) => s + (x.avg_bpm || 0) * (x.duration_seconds || 1), 0);
+    const totalWeight = withBpm.reduce((s, x) => s + (x.duration_seconds || 1), 0);
+    const avgBpm = totalWeight > 0 ? Math.round(totalWeightedBpm / totalWeight) : 0;
+    const lowestSessionBpm = withBpm.length > 0 ? Math.min(...withBpm.map(x => x.avg_bpm!)) : 0;
+    const highestSessionBpm = withBpm.length > 0 ? Math.max(...withBpm.map(x => x.avg_bpm!)) : 0;
+
+    const pwWithBpm = pw.filter(x => x.avg_bpm && x.avg_bpm > 0);
+    const prevAvgBpm = pwWithBpm.length > 0
+      ? Math.round(pwWithBpm.reduce((s, x) => s + (x.avg_bpm || 0), 0) / pwWithBpm.length)
       : 0;
 
     const maxBpmEntry = w.reduce((max, x) => (x.max_bpm || 0) > (max?.max_bpm || 0) ? x : max, w[0]);
