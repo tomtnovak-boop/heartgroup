@@ -1,20 +1,35 @@
 
 
-## Plan: Sanftere Herzfrequenz-Simulation (±10% Abweichung)
+## Plan: Reduzierter Glow + Alle Kacheln immer sichtbar
 
-### Problem
-Aktuell wird jedes Mal ein komplett zufälliger BPM-Wert (90–180) generiert. Das ergibt wilde Sprünge — z.B. von 95 auf 170 auf 102 — was unnatürlich und unruhig aussieht.
+### Probleme (Screenshot-Analyse)
+1. **Zone 1 hat 9 Teilnehmer** — die untersten Kacheln (Ulla Pet., 60 BPM) werden abgeschnitten
+2. **Glow-Effekt ist intensiv** — die pulsierenden `drop-shadow`-Animationen lenken ab, besonders bei häufigem Draufschauen
+3. **Hero-Tile in Zone 5 ist sehr dominant** (2.5x) — nimmt viel Platz weg
 
-### Lösung
-Beim Start einen zufälligen Basis-BPM pro Profil setzen. Danach bei jeder Iteration den Wert nur um ±10% variieren, sodass die Herzfrequenz sanft schwankt.
+### Vorschlag
 
-### Änderung: `supabase/functions/simulate-hr/index.ts`
+**1. Glow reduzieren — subtiler, ruhiger**
+- `HexTile.tsx`: Pulsierender Glow-Effekt entfernen (keine Framer Motion `filter`-Animation mehr)
+- Stattdessen: Statischer, dezenter `drop-shadow` (z.B. `0 0 6px color` statt `0 0 20px`)
+- BPM-Zahl behält einen leichten `text-shadow` für Lesbarkeit
+- Hero-Tile: Nur ein etwas stärkerer statischer Glow, kein Pulsieren
 
-- Vor der Loop: Für jedes Profil einen zufälligen Start-BPM (90–180) in einer Map speichern
-- In jeder Iteration: Den aktuellen BPM um einen Zufallswert im Bereich ±10% ändern (z.B. bei BPM 140 → Schwankung zwischen 126–154)
-- BPM auf den Bereich 60–200 begrenzen (Clamp), damit keine unrealistischen Werte entstehen
-- Den neuen BPM-Wert als Basis für die nächste Iteration speichern
+**2. Dynamische Kachelgröße — alle passen rein**
+- `HexTile.tsx` + `ZoneColumn.tsx`: Kachelgröße dynamisch berechnen basierend auf der **maximalen Anzahl** Teilnehmer in einer Spalte
+- Formel: Verfügbare Höhe (Viewport minus Header/Stats/Footer) geteilt durch die max. Anzahl pro Spalte
+- Basis-Hex-Größe: `min(72px, verfügbareHöhe / maxProSpalte - gap)`
+- Hero-Tile: Nur 1.8x statt 2.5x (passt besser rein)
+
+**3. Layout-Anpassung**
+- `ZoneColumn.tsx`: `overflow-hidden` entfernen, stattdessen `flex-shrink` auf Kacheln
+- Container bekommt eine feste Höhe (`calc(100vh - headerHöhe)`) und die Kacheln passen sich an
+- `gap` zwischen Kacheln wird proportional kleiner bei mehr Teilnehmern
+
+### Dateien
+- **Ändern:** `HexTile.tsx` (Glow reduzieren, dynamische Größe), `ZoneColumn.tsx` (max-count Prop durchreichen), `CoachDashboard.tsx` (max-count berechnen und übergeben)
 
 ### Ergebnis
-Statt wilder Sprünge sieht man sanfte, realistische Herzfrequenz-Verläufe auf dem Dashboard.
+- Ruhigeres, augenfreundliches Design — kein Pulsieren, nur dezente Farbakzente
+- Alle 20 Teilnehmer sind immer sichtbar, egal wie sie verteilt sind
 
