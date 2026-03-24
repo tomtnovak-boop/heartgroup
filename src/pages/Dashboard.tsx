@@ -8,13 +8,7 @@ import { useWorkoutSession } from '@/hooks/useWorkoutSession';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
-interface LeaderboardEntry {
-  profile_id: string;
-  name: string;
-  avg_bpm: number;
-  max_bpm: number;
-  duration_seconds: number;
-}
+import { LeaderboardEntry } from '@/components/dashboard/SessionLeaderboard';
 
 export default function Dashboard() {
   const { viewMode, changeView } = useViewMode('coach');
@@ -51,7 +45,7 @@ export default function Dashboard() {
           const thirtySecsAgo = new Date(Date.now() - 30000).toISOString();
           const { data: workouts } = await supabase
             .from('workouts')
-            .select('profile_id, avg_bpm, max_bpm, duration_seconds, started_at, ended_at')
+            .select('profile_id, avg_bpm, max_bpm, duration_seconds, total_calories, started_at, ended_at')
             .not('ended_at', 'is', null)
             .gte('ended_at', thirtySecsAgo);
 
@@ -72,6 +66,7 @@ export default function Dashboard() {
             avg_bpm: w.avg_bpm || 0,
             max_bpm: w.max_bpm || 0,
             duration_seconds: w.duration_seconds || 0,
+            total_calories: Number(w.total_calories) || 0,
           }));
 
           const maxDuration = Math.max(...entries.map(e => e.duration_seconds), 0);
