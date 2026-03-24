@@ -60,10 +60,13 @@ export function CustomerEditDialog({
   useEffect(() => {
     if (customer) {
       setName(customer.name);
+      setNickname(customer.nickname || '');
       const date = customer.birth_date ? new Date(customer.birth_date) : undefined;
       setBirthDate(date);
       setDateInput(date ? formatDateToInput(date) : '');
       setCustomMaxHr(customer.custom_max_hr?.toString() || '');
+      setWeight(customer.weight?.toString() || '');
+      setHeight(customer.height?.toString() || '');
     }
   }, [customer]);
 
