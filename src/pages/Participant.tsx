@@ -58,7 +58,7 @@ export default function Participant() {
   const [activeSession, setActiveSession] = useState(false);
   const [expandedMonth, setExpandedMonth] = useState<string>('');
   const navigate = useNavigate();
-  const { user, signOut } = useAuthContext();
+  const { user, signOut, isCoach } = useAuthContext();
 
   const {
     isConnected, isConnecting, bpm, connect, disconnect, deviceName,
