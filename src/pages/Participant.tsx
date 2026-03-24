@@ -232,6 +232,31 @@ export default function Participant() {
     setShowJoinDialog(false);
   }, []);
 
+  // Handle entering the lobby with a session code
+  const handleEnterLobby = useCallback(async (code: string) => {
+    // Validate code against active_sessions
+    const { data: activeSessionData } = await supabase
+      .from('active_sessions')
+      .select('session_code')
+      .is('ended_at', null)
+      .order('started_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (!activeSessionData || activeSessionData.session_code !== code) {
+      setSessionCodeError('Invalid code. Please check with your coach.');
+      return;
+    }
+
+    // Add to lobby
+    await supabase.from('session_lobby').upsert({
+      session_code: code,
+      profile_id: profile!.id,
+    });
+
+    setLobbyJoined(true);
+  }, [profile]);
+
   // Track whether session was already active when participant connects
   useEffect(() => {
     if (isConnected) {
@@ -240,24 +265,27 @@ export default function Participant() {
       sessionWasActiveOnConnectRef.current = false;
       setJoinSkipped(false);
       joinDialogShownRef.current = false;
+      setLobbyJoined(false);
+      setSessionCodeInput('');
+      setSessionCodeError('');
     }
   }, [isConnected]);
 
-  // Auto-join if connected before session starts; show dialog for late joiners
+  // Auto-join if in lobby or connected before session starts; show dialog for late joiners
   useEffect(() => {
     if (!isConnected || currentWorkoutId || joinSkipped || joinDialogShownRef.current) return;
     if (!coachSessionActive) return;
 
     joinDialogShownRef.current = true;
 
-    if (sessionWasActiveOnConnectRef.current) {
-      // Late joiner: session was already running when they connected → show dialog
-      setShowJoinDialog(true);
-    } else {
-      // Session started while participant was already connected → auto-join silently
+    if (lobbyJoined || !sessionWasActiveOnConnectRef.current) {
+      // Was in lobby or session started while connected → auto-join silently
       handleJoinSession();
+    } else {
+      // Late joiner: session was already running when they connected → show code dialog
+      setShowJoinDialog(true);
     }
-  }, [isConnected, coachSessionActive, currentWorkoutId, joinSkipped, handleJoinSession]);
+  }, [isConnected, coachSessionActive, currentWorkoutId, joinSkipped, lobbyJoined, handleJoinSession]);
 
   // Detect session end → show leaderboard after 5s
   useEffect(() => {
