@@ -31,7 +31,7 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center" style={{ background: '#0a0a0a' }}>
+      <div className="flex-1 flex items-center justify-center" style={{ background: '#121212' }}>
         <div className="text-center">
           <Heart className="w-16 h-16 mx-auto text-primary animate-pulse mb-4" />
           <p className="text-muted-foreground">Lade Dashboard...</p>
