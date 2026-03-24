@@ -30,7 +30,7 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
       <div className="flex-1 flex items-center justify-center" style={{ background: '#0a0a0a' }}>
         <div className="text-center">
           <Heart className="w-16 h-16 mx-auto text-primary animate-pulse mb-4" />
-          <p className="text-muted-foreground">Lade Dashboard...</p>
+          <p className="text-muted-foreground">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -65,76 +65,26 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
   ];
 
   return (
-    <div
-      className="relative h-full flex flex-col px-4 pt-1 pb-0 min-h-0 overflow-hidden"
-      style={{ background: '#0a0a0a' }}
-    >
-      {/* Vignette overlay */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,0.45) 100%)',
-        }}
-      />
+    <div className="relative h-full flex flex-col px-4 pt-1 pb-0 min-h-0 overflow-hidden" style={{ background: '#0a0a0a' }}>
+      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,0.45) 100%)' }} />
+      <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.09) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.09) 1px, transparent 1px)', backgroundSize: '60px 60px', maskImage: 'radial-gradient(ellipse at 50% 50%, black 20%, transparent 75%)', WebkitMaskImage: 'radial-gradient(ellipse at 50% 50%, black 20%, transparent 75%)' }} />
 
-      {/* Grid overlay */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          backgroundImage:
-            'linear-gradient(rgba(255,255,255,0.09) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.09) 1px, transparent 1px)',
-          backgroundSize: '60px 60px',
-          maskImage: 'radial-gradient(ellipse at 50% 50%, black 20%, transparent 75%)',
-          WebkitMaskImage: 'radial-gradient(ellipse at 50% 50%, black 20%, transparent 75%)',
-        }}
-      />
-
-      {/* Zone glow blobs */}
       {ZONE_GLOWS.map((g, i) => (
-        <div
-          key={i}
-          className="absolute pointer-events-none"
-          style={{
-            left: g.left,
-            top: '45%',
-            transform: 'translate(-50%, -50%)',
-            width: '450px',
-            height: '500px',
-            borderRadius: '50%',
-            background: g.color,
-            opacity: 0.18,
-            filter: 'blur(300px)',
-          }}
-        />
+        <div key={i} className="absolute pointer-events-none" style={{ left: g.left, top: '45%', transform: 'translate(-50%, -50%)', width: '450px', height: '500px', borderRadius: '50%', background: g.color, opacity: 0.18, filter: 'blur(300px)' }} />
       ))}
 
-      {/* Hexagon grid */}
       <div className="relative flex-1 grid grid-cols-5 gap-2 min-h-0 overflow-hidden z-10">
         {[1, 2, 3, 4, 5].map((zone) => (
-          <ZoneColumn
-            key={zone}
-            zone={zone}
-            participants={zoneGroups[zone]}
-            selectedProfileId={selectedProfileId}
-          />
+          <ZoneColumn key={zone} zone={zone} participants={zoneGroups[zone]} selectedProfileId={selectedProfileId} />
         ))}
       </div>
 
-      {/* HR History Chart Strip */}
       <HRHistoryStrip averageBPM={averageBPM} isSessionActive={isSessionActive} />
 
-      {/* Zone count badges */}
       <div className="relative grid grid-cols-5 gap-2 py-1 z-10" style={{ background: 'linear-gradient(to top, #000000 60%, transparent)' }}>
         {[1, 2, 3, 4, 5].map((zone) => (
           <div key={zone} className="flex justify-center">
-            <div
-              className="text-[10px] font-bold rounded-full px-2 py-0.5"
-              style={{
-                color: ZONE_COLORS[zone],
-                background: `${ZONE_COLORS[zone]}12`,
-                border: `1px solid ${ZONE_COLORS[zone]}22`,
-              }}
-            >
+            <div className="text-[10px] font-bold rounded-full px-2 py-0.5" style={{ color: ZONE_COLORS[zone], background: `${ZONE_COLORS[zone]}12`, border: `1px solid ${ZONE_COLORS[zone]}22` }}>
               {zoneGroups[zone].length}
             </div>
           </div>

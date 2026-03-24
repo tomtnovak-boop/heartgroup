@@ -33,12 +33,8 @@ export function HRHistoryStrip({ averageBPM, isSessionActive }: HRHistoryStripPr
   const MAX_POINTS = 600;
   const HEIGHT = 72;
 
-  // Keep bpmRef in sync without triggering re-renders
-  useEffect(() => {
-    bpmRef.current = averageBPM;
-  }, [averageBPM]);
+  useEffect(() => { bpmRef.current = averageBPM; }, [averageBPM]);
 
-  // Handle session start/stop
   useEffect(() => {
     if (isSessionActive && !prevActiveRef.current) {
       bufferRef.current = [];
@@ -49,22 +45,18 @@ export function HRHistoryStrip({ averageBPM, isSessionActive }: HRHistoryStripPr
     prevActiveRef.current = isSessionActive;
   }, [isSessionActive]);
 
-  // Collect data points always when BPM > 0
   useEffect(() => {
     const interval = setInterval(() => {
       if (frozenRef.current) return;
       const bpm = bpmRef.current;
       if (bpm <= 0) return;
-      console.log('HRHistoryStrip collecting:', { bpm, isSessionActive: !frozenRef.current });
       const buf = bufferRef.current;
       buf.push({ time: Date.now(), bpm });
       if (buf.length > MAX_POINTS) buf.shift();
     }, 1000);
-
     return () => clearInterval(interval);
   }, []);
 
-  // RAF render loop — direct DOM manipulation, no React state
   const render = useCallback(() => {
     const svg = svgRef.current;
     const polyline = polylineRef.current;
@@ -82,7 +74,6 @@ export function HRHistoryStrip({ averageBPM, isSessionActive }: HRHistoryStripPr
     const pad = 2;
 
     if (buf.length < 2) {
-      // Show empty state
       polyline.setAttribute('points', '');
       polygon.setAttribute('points', '');
       label.textContent = '';
@@ -93,9 +84,7 @@ export function HRHistoryStrip({ averageBPM, isSessionActive }: HRHistoryStripPr
 
     empty.style.display = 'none';
 
-    // Calculate BPM range
-    let minBPM = Infinity;
-    let maxBPM = -Infinity;
+    let minBPM = Infinity, maxBPM = -Infinity;
     for (const p of buf) {
       if (p.bpm < minBPM) minBPM = p.bpm;
       if (p.bpm > maxBPM) maxBPM = p.bpm;
@@ -103,16 +92,11 @@ export function HRHistoryStrip({ averageBPM, isSessionActive }: HRHistoryStripPr
     minBPM = Math.max(0, minBPM - 10);
     maxBPM = maxBPM + 10;
     const range = maxBPM - minBPM || 1;
-
     const timeStart = buf[0].time;
     const timeEnd = buf[buf.length - 1].time;
     const timeRange = timeEnd - timeStart || 1;
 
-    // Build polyline points
-    let linePoints = '';
-    let polyPoints = '';
-    let lastX = 0;
-
+    let linePoints = '', polyPoints = '', lastX = 0;
     for (let i = 0; i < buf.length; i++) {
       const x = ((buf[i].time - timeStart) / timeRange) * (w - 40) + 4;
       const y = h - pad - ((buf[i].bpm - minBPM) / range) * (h - pad * 2);
@@ -120,29 +104,23 @@ export function HRHistoryStrip({ averageBPM, isSessionActive }: HRHistoryStripPr
       polyPoints += `${x},${y} `;
       lastX = x;
     }
-
-    // Close polygon to bottom
     polyPoints += `${lastX},${h} 4,${h} `;
 
     polyline.setAttribute('points', linePoints.trim());
     polygon.setAttribute('points', polyPoints.trim());
 
-    // Update label
     const lastBPM = Math.round(buf[buf.length - 1].bpm);
     label.textContent = `⌀ ${lastBPM}`;
     label.setAttribute('x', String(Math.min(lastX + 6, w - 30)));
     const lastY = h - pad - ((buf[buf.length - 1].bpm - minBPM) / range) * (h - pad * 2);
     label.setAttribute('y', String(Math.max(12, lastY - 4)));
 
-    // Update gradient stops based on actual data BPM distribution
     const gradStops = svg.querySelectorAll('#hr-line-grad stop');
     if (gradStops.length === 5) {
-      // Map gradient stops to the BPM distribution across width
       const samplePositions = [0, 0.25, 0.5, 0.75, 1];
       for (let s = 0; s < 5; s++) {
         const idx = Math.min(Math.floor(samplePositions[s] * (buf.length - 1)), buf.length - 1);
-        const color = bpmToZoneColor(buf[idx].bpm, 200);
-        gradStops[s].setAttribute('stop-color', color);
+        gradStops[s].setAttribute('stop-color', bpmToZoneColor(buf[idx].bpm, 200));
       }
     }
     const fillStops = svg.querySelectorAll('#hr-fill-grad stop');
@@ -150,8 +128,7 @@ export function HRHistoryStrip({ averageBPM, isSessionActive }: HRHistoryStripPr
       const samplePositions = [0, 0.25, 0.5, 0.75, 1];
       for (let s = 0; s < 5; s++) {
         const idx = Math.min(Math.floor(samplePositions[s] * (buf.length - 1)), buf.length - 1);
-        const color = bpmToZoneColor(buf[idx].bpm, 200);
-        fillStops[s].setAttribute('stop-color', color);
+        fillStops[s].setAttribute('stop-color', bpmToZoneColor(buf[idx].bpm, 200));
       }
     }
 
@@ -160,19 +137,12 @@ export function HRHistoryStrip({ averageBPM, isSessionActive }: HRHistoryStripPr
 
   useEffect(() => {
     rafRef.current = requestAnimationFrame(render);
-    return () => {
-      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-    };
+    return () => { if (rafRef.current !== null) cancelAnimationFrame(rafRef.current); };
   }, [render]);
 
   return (
     <div className="relative w-full z-10 pointer-events-none" style={{ height: `${HEIGHT}px` }}>
-      <svg
-        ref={svgRef}
-        className="w-full h-full"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-      >
+      <svg ref={svgRef} className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
         <defs>
           <linearGradient id="hr-line-grad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#00bcd4" />
@@ -189,47 +159,13 @@ export function HRHistoryStrip({ averageBPM, isSessionActive }: HRHistoryStripPr
             <stop offset="100%" stopColor="#f44336" stopOpacity="0.15" />
           </linearGradient>
         </defs>
-
-        {/* Filled area under line */}
         <polygon ref={polygonRef} fill="url(#hr-fill-grad)" />
-
-        {/* Line */}
-        <polyline
-          ref={polylineRef}
-          fill="none"
-          stroke="url(#hr-line-grad)"
-          strokeWidth="2"
-          strokeLinejoin="round"
-          strokeLinecap="round"
-        />
-
-        {/* BPM label */}
-        <text
-          ref={labelRef}
-          fill="white"
-          fontSize="11"
-          fontWeight="bold"
-          dominantBaseline="auto"
-        />
-
-        {/* Empty state */}
+        <polyline ref={polylineRef} fill="none" stroke="url(#hr-line-grad)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+        <text ref={labelRef} fill="white" fontSize="11" fontWeight="bold" dominantBaseline="auto" />
         <g ref={emptyRef}>
-          <line
-            x1="4" y1="36" x2="100%" y2="36"
-            stroke="#ffffff"
-            strokeOpacity="0.15"
-            strokeWidth="1"
-            strokeDasharray="6 4"
-          />
-          <text
-            x="50%"
-            y="52"
-            fill="#ffffff"
-            fillOpacity="0.3"
-            fontSize="10"
-            textAnchor="middle"
-          >
-            Session starten um Verlauf aufzuzeichnen
+          <line x1="4" y1="36" x2="100%" y2="36" stroke="#ffffff" strokeOpacity="0.15" strokeWidth="1" strokeDasharray="6 4" />
+          <text x="50%" y="52" fill="#ffffff" fillOpacity="0.3" fontSize="10" textAnchor="middle">
+            Start a session to record history
           </text>
         </g>
       </svg>

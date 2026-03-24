@@ -20,19 +20,13 @@ export function ProtectedRoute({ children, requireCoach = false }: ProtectedRout
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Loader2 className="w-4 h-4 animate-spin" />
-          <span>Lade...</span>
+          <span>Loading...</span>
         </div>
       </div>
     );
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/auth" state={{ from: location }} replace />;
-  }
-
-  if (requireCoach && !isCoach) {
-    return <Navigate to="/participant" replace />;
-  }
-
+  if (!isAuthenticated) return <Navigate to="/auth" state={{ from: location }} replace />;
+  if (requireCoach && !isCoach) return <Navigate to="/participant" replace />;
   return <>{children}</>;
 }

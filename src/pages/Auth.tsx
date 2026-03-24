@@ -19,7 +19,6 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
       <header className="flex items-center justify-center p-6 border-b border-border">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
@@ -27,32 +26,19 @@ export default function Auth() {
           </div>
           <div>
             <h1 className="text-lg font-bold">HR Training</h1>
-            <p className="text-xs text-muted-foreground">
-              Gruppen-Herzfrequenz-Training
-            </p>
+            <p className="text-xs text-muted-foreground">Group Heart Rate Training</p>
           </div>
         </div>
       </header>
 
-      {/* Main content */}
       <main className="flex-1 flex items-center justify-center p-6">
-        {view === 'login' && (
-          <LoginForm
-            onSwitchToRegister={() => setView('register')}
-            onSwitchToForgotPassword={() => setView('forgot')}
-          />
-        )}
-        {view === 'register' && (
-          <RegisterForm onSwitchToLogin={() => setView('login')} />
-        )}
-        {view === 'forgot' && (
-          <ForgotPasswordForm onSwitchToLogin={() => setView('login')} />
-        )}
+        {view === 'login' && <LoginForm onSwitchToRegister={() => setView('register')} onSwitchToForgotPassword={() => setView('forgot')} />}
+        {view === 'register' && <RegisterForm onSwitchToLogin={() => setView('login')} />}
+        {view === 'forgot' && <ForgotPasswordForm onSwitchToLogin={() => setView('login')} />}
       </main>
 
-      {/* Footer */}
       <footer className="p-4 text-center text-sm text-muted-foreground border-t border-border">
-        Deine Daten werden sicher gespeichert
+        Your data is stored securely
       </footer>
     </div>
   );
