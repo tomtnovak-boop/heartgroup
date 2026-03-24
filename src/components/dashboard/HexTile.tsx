@@ -37,6 +37,9 @@ export function HexTile({ data, isHero = false, tileSize = 72 }: HexTileProps) {
     ? Math.max(0, Math.min(1, (data.hr_percentage - zoneMinPercent) / zoneRange))
     : 0.5;
 
+  // Fill percentage based on zone progress (0% at zone bottom, 100% at zone top)
+  const fillPercent = Math.max(0, Math.min(100, zoneProgress * 100));
+
   // Fill opacity: 10% at bottom of zone, 100% at top
   const fillOpacity = Math.round((0.10 + zoneProgress * 0.90) * 255);
   const fillOpacityHex = fillOpacity.toString(16).padStart(2, '0');
