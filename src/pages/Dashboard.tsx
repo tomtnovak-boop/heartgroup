@@ -8,13 +8,7 @@ import { useWorkoutSession } from '@/hooks/useWorkoutSession';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
-interface LeaderboardEntry {
-  profile_id: string;
-  name: string;
-  avg_bpm: number;
-  max_bpm: number;
-  duration_seconds: number;
-}
+import { LeaderboardEntry } from '@/components/dashboard/SessionLeaderboard';
 
 export default function Dashboard() {
   const { viewMode, changeView } = useViewMode('coach');
