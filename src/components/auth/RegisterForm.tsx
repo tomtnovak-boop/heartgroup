@@ -20,6 +20,25 @@ interface RegisterFormProps {
 }
 
 export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
+  const REGISTRATION_OPEN = false;
+
+  if (!REGISTRATION_OPEN) {
+    return (
+      <Card className="w-full max-w-md mx-auto bg-card border-border">
+        <CardContent className="text-center p-8 space-y-4">
+          <h2 className="text-xl font-semibold">Registration Currently Closed</h2>
+          <p className="text-muted-foreground">
+            We are not accepting new registrations at this time.<br />
+            Please contact the administrator if you need access.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Already registered?{' '}
+            <button type="button" onClick={onSwitchToLogin} className="text-primary hover:underline font-medium">Sign in now</button>
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
