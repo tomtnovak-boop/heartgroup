@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { LiveHRData } from '@/hooks/useLiveHR';
+import { calculateZone, getEffectiveMaxHR } from '@/lib/heartRateUtils';
 
 interface NeutralDashboardProps {
   participants: LiveHRData[];
