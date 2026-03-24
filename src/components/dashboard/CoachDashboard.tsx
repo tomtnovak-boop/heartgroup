@@ -8,9 +8,10 @@ interface CoachDashboardProps {
   participants: LiveHRData[];
   isLoading: boolean;
   activeTab: string;
+  selectedProfileId?: string;
 }
 
-export function CoachDashboard({ participants, isLoading, activeTab }: CoachDashboardProps) {
+export function CoachDashboard({ participants, isLoading, activeTab, selectedProfileId }: CoachDashboardProps) {
   const { zoneGroups, heroProfileId } = useMemo(() => {
     const groups: Record<number, typeof participants> = { 1: [], 2: [], 3: [], 4: [], 5: [] };
     let heroId: string | undefined;
@@ -56,6 +57,7 @@ export function CoachDashboard({ participants, isLoading, activeTab }: CoachDash
             zone={zone}
             participants={zoneGroups[zone]}
             heroProfileId={heroProfileId}
+            selectedProfileId={selectedProfileId}
           />
         ))}
       </div>

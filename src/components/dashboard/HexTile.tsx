@@ -1,29 +1,31 @@
 import { LiveHRData } from '@/hooks/useLiveHR';
 import { HEART_RATE_ZONES } from '@/lib/heartRateUtils';
 
+// Colorblind-friendly zone colors: Ice Blue → Green → Yellow → Orange → Deep Violet
 const ZONE_COLORS: Record<number, string> = {
-  1: '#00d4ff',
-  2: '#ffaa00',
-  3: '#00ff88',
-  4: '#0088ff',
-  5: '#ff0044',
+  1: '#88ccee', // Ice Blue (Z1 - Recovery)
+  2: '#44aa99', // Teal Green (Z2 - Fat Burn)
+  3: '#ddcc77', // Sand Yellow (Z3 - Aerobic)
+  4: '#cc6677', // Rose (Z4 - Cardio)
+  5: '#7b2d8e', // Deep Violet (Z5 - Max Effort)
 };
 
 interface HexTileProps {
   data: LiveHRData;
   isHero?: boolean;
+  isSelected?: boolean;
   tileSize?: number;
 }
 
-export function HexTile({ data, isHero = false, tileSize = 72 }: HexTileProps) {
+export function HexTile({ data, isHero = false, isSelected = false, tileSize = 72 }: HexTileProps) {
   const color = ZONE_COLORS[data.zone] || ZONE_COLORS[1];
   const displayName = data.profile?.nickname || data.profile?.name?.split(' ')[0] || 'Unknown';
 
   const baseSize = tileSize;
   const hexClip = 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)';
 
-  const bpmFontSize = baseSize * 0.22;
-  const nameFontSize = baseSize * 0.18;
+  const bpmFontSize = baseSize * 0.32;
+  const nameFontSize = baseSize * 0.14;
 
   // Zone threshold - upper boundary of current zone
   const zoneInfo = HEART_RATE_ZONES[data.zone - 1];
@@ -36,91 +38,93 @@ export function HexTile({ data, isHero = false, tileSize = 72 }: HexTileProps) {
     ? Math.max(0, Math.min(1, (data.hr_percentage - zoneMinPercent) / zoneRange))
     : 0.5;
 
-  // Fill percentage based on zone progress (0% at zone bottom, 100% at zone top)
-  const fillPercent = Math.max(0, Math.min(100, zoneProgress * 100));
+  // Opacity: 50% at mid-zone, 100% at top (>90% of zone range)
+  const fillOpacity = zoneProgress >= 0.9
+    ? 1.0
+    : 0.35 + zoneProgress * 0.55;
 
-  // Fill opacity: 10% at bottom of zone, 100% at top
-  const fillOpacity = Math.round((0.10 + zoneProgress * 0.90) * 255);
-  const fillOpacityHex = fillOpacity.toString(16).padStart(2, '0');
-
-  // Outer ring opacity scales with zone progress
-  const outerOpacity = isHero
-    ? 0.3 + zoneProgress * 0.4
-    : 0.15 + zoneProgress * 0.45;
-
-  const thresholdBottom = zoneMaxPercent;
-  const showThreshold = data.zone < 5;
-
-  const textShadow = '0 1px 3px rgba(0,0,0,0.8)';
+  // Selected (self) marker: thick pulsing white glow
+  const selectedGlow = isSelected
+    ? `drop-shadow(0 0 6px rgba(255,255,255,0.9)) drop-shadow(0 0 12px rgba(255,255,255,0.6)) drop-shadow(0 0 20px rgba(255,255,255,0.3))`
+    : `drop-shadow(0 0 ${isHero ? 8 : 4}px ${color}66)`;
 
   return (
     <div
-      className="relative flex items-center justify-center"
+      className="relative flex flex-col items-center"
       style={{
         width: baseSize,
-        height: baseSize * 1.15,
-        filter: `drop-shadow(0 0 ${isHero ? 8 : 5}px ${color}88)`,
+        gap: 1,
       }}
     >
-      {/* Outer glow border hex */}
+      {/* Hexagon container */}
       <div
-        className="absolute inset-0"
+        className={`relative flex items-center justify-center ${isSelected ? 'animate-pulse' : ''}`}
         style={{
-          clipPath: hexClip,
-          background: color,
-          opacity: outerOpacity,
-        }}
-      />
-
-      {/* Inner hex with liquid fill */}
-      <div
-        className="absolute flex flex-col items-center justify-center"
-        style={{
-          clipPath: hexClip,
-          background: `linear-gradient(to top, ${color}${fillOpacityHex} ${fillPercent}%, rgba(15,15,15,0.95) ${fillPercent}%)`,
-          top: 2,
-          left: 2,
-          right: 2,
-          bottom: 2,
+          width: baseSize,
+          height: baseSize * 1.15,
+          filter: selectedGlow,
+          animationDuration: isSelected ? '2s' : undefined,
         }}
       >
-        {/* Zone threshold line */}
-        {showThreshold && (
-          <div
-            className="absolute left-0 right-0"
-            style={{
-              bottom: `${thresholdBottom}%`,
-              height: 1,
-              background: `${color}44`,
-            }}
-          />
-        )}
-
-        {/* Name */}
-        <span
-          className="font-black uppercase tracking-wider text-center px-1 truncate max-w-[90%]"
+        {/* Outer border hex */}
+        <div
+          className="absolute inset-0"
           style={{
-            fontSize: Math.max(nameFontSize, 9),
-            color: 'rgba(255,255,255,0.85)',
-            lineHeight: 1.2,
-            textShadow,
+            clipPath: hexClip,
+            background: isSelected ? '#ffffff' : color,
+            opacity: isSelected ? 0.5 : 0.25,
           }}
-        >
-          {displayName}
-        </span>
+        />
 
-        {/* BPM */}
-        <span
-          className="font-bold leading-none"
+        {/* Inner hex with solid zone fill */}
+        <div
+          className="absolute flex items-center justify-center"
           style={{
-            fontSize: Math.max(bpmFontSize, 12),
+            clipPath: hexClip,
+            background: color,
+            opacity: fillOpacity,
+            top: isSelected ? 3 : 2,
+            left: isSelected ? 3 : 2,
+            right: isSelected ? 3 : 2,
+            bottom: isSelected ? 3 : 2,
+          }}
+        />
+
+        {/* BPM number — dominant center element */}
+        <span
+          className="relative font-black leading-none z-10"
+          style={{
+            fontSize: Math.max(bpmFontSize, 16),
             color: '#fff',
-            textShadow: `0 0 6px ${color}88, ${textShadow}`,
+            textShadow: '0 1px 4px rgba(0,0,0,0.7), 0 0 8px rgba(0,0,0,0.5)',
+            letterSpacing: '-0.02em',
           }}
         >
           {data.bpm}
         </span>
       </div>
+
+      {/* Name bar — outside hexagon, high contrast */}
+      <div
+        className="rounded-sm px-1.5 py-0.5 text-center truncate max-w-full"
+        style={{
+          background: `${color}44`,
+          borderLeft: `2px solid ${color}`,
+        }}
+      >
+        <span
+          className="font-bold uppercase tracking-wider block truncate"
+          style={{
+            fontSize: Math.max(nameFontSize, 8),
+            color: '#fff',
+            lineHeight: 1.1,
+          }}
+        >
+          {displayName}
+        </span>
+      </div>
     </div>
   );
 }
+
+export { ZONE_COLORS };

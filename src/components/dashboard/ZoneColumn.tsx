@@ -2,11 +2,11 @@ import { HexTile } from './HexTile';
 import { LiveHRData } from '@/hooks/useLiveHR';
 
 const ZONE_CONFIG: Record<number, { label: string; color: string }> = {
-  1: { label: 'REGENERATION', color: '#00d4ff' },
-  2: { label: 'FAT BURN', color: '#ffaa00' },
-  3: { label: 'AEROBIC', color: '#00ff88' },
-  4: { label: 'CARDIO', color: '#0088ff' },
-  5: { label: 'MAX EFFORT', color: '#ff0044' },
+  1: { label: 'REGENERATION', color: '#88ccee' },
+  2: { label: 'FAT BURN', color: '#44aa99' },
+  3: { label: 'AEROBIC', color: '#ddcc77' },
+  4: { label: 'CARDIO', color: '#cc6677' },
+  5: { label: 'MAX EFFORT', color: '#7b2d8e' },
 };
 
 
@@ -14,11 +14,12 @@ interface ZoneColumnProps {
   zone: number;
   participants: LiveHRData[];
   heroProfileId?: string;
+  selectedProfileId?: string;
 }
 
-export function ZoneColumn({ zone, participants, heroProfileId }: ZoneColumnProps) {
+export function ZoneColumn({ zone, participants, heroProfileId, selectedProfileId }: ZoneColumnProps) {
   const config = ZONE_CONFIG[zone];
-  const sorted = [...participants].sort((a, b) => b.bpm - a.bpm);
+  const sorted = [...participants].sort((a, b) => b.hr_percentage - a.hr_percentage);
 
   return (
     <div className="flex flex-col items-center min-w-0 h-full">
@@ -64,6 +65,7 @@ export function ZoneColumn({ zone, participants, heroProfileId }: ZoneColumnProp
               key={p.profile_id}
               data={p}
               isHero={p.profile_id === heroProfileId}
+              isSelected={p.profile_id === selectedProfileId}
               tileSize={64}
             />
           ))
