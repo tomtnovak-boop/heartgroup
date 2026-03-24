@@ -97,20 +97,51 @@ export function AppHeader({
 
       {/* Right: session code, participant count, start/stop, refresh, avatar */}
       <div className="flex items-center gap-1.5 flex-shrink-0">
-        {/* Session code + lobby count */}
+        {/* Session code badge */}
         {currentView === 'coach' && activeTab === 'live' && (
           <>
-            {sessionCode && !sessionActive && (
-              <div className="flex items-center gap-1.5 mr-1 px-2 py-0.5 rounded-full bg-muted">
-                <Hash className="w-3 h-3 text-muted-foreground" />
-                <span className="text-sm font-mono font-bold tracking-wider">{sessionCode}</span>
-                <span className="text-[11px] text-muted-foreground">{lobbyCount} ready</span>
-              </div>
-            )}
-            {sessionCode && sessionActive && (
-              <div className="flex items-center gap-1 mr-1 px-2 py-0.5 rounded-full bg-muted/50">
-                <Hash className="w-3 h-3 text-muted-foreground" />
-                <span className="text-xs font-mono font-bold tracking-wider text-muted-foreground">{sessionCode}</span>
+            {sessionCode && (
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: '10px',
+                padding: '4px 14px',
+                minWidth: '80px',
+                lineHeight: 1.1,
+                marginRight: '4px',
+              }}>
+                <span style={{
+                  fontSize: '9px',
+                  fontWeight: 600,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: 'rgba(255,255,255,0.4)',
+                }}>
+                  {sessionActive ? 'Session' : 'Next'}
+                </span>
+                <span style={{
+                  fontSize: '22px',
+                  fontWeight: 900,
+                  color: 'white',
+                  letterSpacing: '0.15em',
+                  fontVariantNumeric: 'tabular-nums',
+                }}>
+                  {sessionCode}
+                </span>
+                {!sessionActive && (
+                  <span style={{
+                    fontSize: '9px',
+                    fontWeight: 500,
+                    color: lobbyCount > 0 ? 'hsl(145 80% 45%)' : 'rgba(255,255,255,0.3)',
+                    letterSpacing: '0.05em',
+                  }}>
+                    {lobbyCount > 0 ? `${lobbyCount} ready` : 'waiting...'}
+                  </span>
+                )}
               </div>
             )}
             {!sessionCode && !sessionActive && (
