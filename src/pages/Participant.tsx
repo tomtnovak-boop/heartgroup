@@ -201,21 +201,32 @@ export default function Participant() {
     checkOwnWorkout();
   }, [profile]);
 
-  // Show join dialog when connected + coach session active + not already joined/skipped
+  // Track whether session was already active when participant connects
   useEffect(() => {
-    if (isConnected && coachSessionActive && !currentWorkoutId && !joinSkipped && !joinDialogShownRef.current) {
-      joinDialogShownRef.current = true;
-      setShowJoinDialog(true);
-    }
-  }, [isConnected, coachSessionActive, currentWorkoutId, joinSkipped]);
-
-  // Reset join state when disconnecting
-  useEffect(() => {
-    if (!isConnected) {
+    if (isConnected) {
+      sessionWasActiveOnConnectRef.current = coachSessionActive;
+    } else {
+      sessionWasActiveOnConnectRef.current = false;
       setJoinSkipped(false);
       joinDialogShownRef.current = false;
     }
   }, [isConnected]);
+
+  // Auto-join if connected before session starts; show dialog for late joiners
+  useEffect(() => {
+    if (!isConnected || currentWorkoutId || joinSkipped || joinDialogShownRef.current) return;
+    if (!coachSessionActive) return;
+
+    joinDialogShownRef.current = true;
+
+    if (sessionWasActiveOnConnectRef.current) {
+      // Late joiner: session was already running when they connected → show dialog
+      setShowJoinDialog(true);
+    } else {
+      // Session started while participant was already connected → auto-join silently
+      handleJoinSession();
+    }
+  }, [isConnected, coachSessionActive, currentWorkoutId, joinSkipped, handleJoinSession]);
 
   // Detect session end → show leaderboard after 5s
   useEffect(() => {
