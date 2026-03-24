@@ -105,7 +105,7 @@ function CoachLeaderboard({
           <ArrowLeft className="w-3.5 h-3.5" />
           Back to Dashboard
         </button>
-        <p className="text-center text-[10px] text-white/60 mt-1.5">
+        <p className="text-center text-[10px] text-white mt-1.5">
           Automatically closes in {Math.floor(Math.max(0, 300 - elapsed) / 60)}:{String(Math.max(0, 300 - elapsed) % 60).padStart(2, '0')}
         </p>
       </div>
