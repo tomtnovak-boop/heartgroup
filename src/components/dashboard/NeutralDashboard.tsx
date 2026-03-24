@@ -36,19 +36,6 @@ const LEFT_BORDER_COLORS: Record<number, string> = {
   5: 'hsl(0 100% 55% / 1)',
 };
 
-const ROW_TINT: Record<number, string> = {
-  1: 'rgba(100, 116, 139, 0.08)',
-  2: 'rgba(0,   200, 255, 0.09)',
-  3: 'rgba(50,  200, 80,  0.11)',
-  4: 'rgba(255, 180, 0,   0.15)',
-  5: 'rgba(255, 40,  40,  0.22)',
-};
-
-function getBarGlow(zone: number | null): string {
-  if (zone === 4) return '0 0 12px rgba(255, 165, 0, 0.35)';
-  if (zone === 5) return '0 0 20px rgba(255, 50, 50, 0.5), 0 0 40px rgba(255, 50, 50, 0.2)';
-  return 'none';
-}
 
 export function NeutralDashboard({ participants, allProfiles, isLoading, isSessionActive }: NeutralDashboardProps) {
   const rows = useMemo(() => {
@@ -189,8 +176,6 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
                 height: 'clamp(16px, 2.2vh, 32px)',
                 borderRadius: '6px',
                 overflow: 'hidden',
-                boxShadow: getBarGlow(row.zone),
-                transition: 'box-shadow 1s ease',
               }}>
                 {[1, 2, 3, 4, 5].map((z) => (
                   <div
@@ -223,7 +208,7 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
                       zIndex: 10,
                     }}
                   >
-                    <span style={{ color: 'white', fontWeight: 'bold', fontSize: 'clamp(9px, 1.1vh, 14px)' }}>{row.number}</span>
+                    <span style={{ color: 'white', fontWeight: 900, fontSize: 'clamp(10px, 1.3vh, 15px)', textShadow: '0 1px 3px rgba(0,0,0,0.8)', lineHeight: 1, userSelect: 'none' }}>{row.number}</span>
                   </div>
                 )}
               </div>
