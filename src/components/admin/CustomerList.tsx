@@ -3,15 +3,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { CustomerEditDialog } from './CustomerEditDialog';
-import { Edit, Search, Users, Loader2 } from 'lucide-react';
+import { Edit, Search, Users, Loader2, Trash2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface CustomerProfile {
   id: string;
@@ -31,6 +31,9 @@ export function CustomerList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [editingCustomer, setEditingCustomer] = useState<CustomerProfile | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [deletingCustomer, setDeletingCustomer] = useState<CustomerProfile | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { toast } = useToast();
 
   const fetchCustomers = async () => {
     setIsLoading(true);
@@ -59,6 +62,34 @@ export function CustomerList() {
   };
 
   const handleCustomerUpdated = () => {
+    fetchCustomers();
+  };
+
+  const handleDelete = async () => {
+    if (!deletingCustomer) return;
+    setIsDeleting(true);
+
+    const { data, error } = await supabase.functions.invoke('manage-coach', {
+      body: {
+        action: 'deleteParticipant',
+        profile_id: deletingCustomer.id,
+        user_id: deletingCustomer.user_id || null,
+      },
+    });
+
+    setIsDeleting(false);
+
+    if (error || data?.error) {
+      toast({
+        title: 'Fehler beim Löschen',
+        description: data?.error || error?.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({ title: 'Teilnehmer gelöscht', description: `${deletingCustomer.name} wurde entfernt.` });
+    setDeletingCustomer(null);
     fetchCustomers();
   };
 
@@ -125,14 +156,24 @@ export function CustomerList() {
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEdit(customer)}
-                    >
-                      <Edit className="w-4 h-4 mr-1" />
-                      Bearbeiten
-                    </Button>
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(customer)}
+                      >
+                        <Edit className="w-4 h-4 mr-1" />
+                        Bearbeiten
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => setDeletingCustomer(customer)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -148,6 +189,30 @@ export function CustomerList() {
         onOpenChange={setIsEditDialogOpen}
         onCustomerUpdated={handleCustomerUpdated}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deletingCustomer} onOpenChange={(open) => !open && setDeletingCustomer(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Teilnehmer löschen</AlertDialogTitle>
+            <AlertDialogDescription>
+              Teilnehmer <strong>{deletingCustomer?.name}</strong> wirklich löschen?
+              Diese Aktion kann nicht rückgängig gemacht werden. Alle Trainingsdaten werden ebenfalls gelöscht.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Löschen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

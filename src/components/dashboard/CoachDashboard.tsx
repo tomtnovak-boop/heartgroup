@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { ZoneColumn } from './ZoneColumn';
 import { CustomerList } from '@/components/admin/CustomerList';
+import { CoachList } from '@/components/admin/CoachList';
 import { Heart } from 'lucide-react';
 import { LiveHRData } from '@/hooks/useLiveHR';
 
@@ -36,6 +37,14 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
     return (
       <div className="flex-1 px-4 pt-2 min-h-0 overflow-y-auto" style={{ background: '#0a0a0a' }}>
         <CustomerList />
+      </div>
+    );
+  }
+
+  if (activeTab === 'coaches') {
+    return (
+      <div className="flex-1 px-4 pt-2 min-h-0 overflow-y-auto" style={{ background: '#0a0a0a' }}>
+        <CoachList />
       </div>
     );
   }
