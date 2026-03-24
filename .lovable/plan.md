@@ -1,33 +1,15 @@
 
 
-## Plan: Hero-Tile farblich ausfüllen statt vergrössern
+## Plan: Feste 2-Spalten-Anordnung pro Zone
 
-### Idee
-Der Teilnehmer mit dem höchsten BPM in Zone 5 wird nicht mehr grösser dargestellt (1.8x), sondern behält die **gleiche Grösse** wie alle anderen — aber sein Hex-Hintergrund wird mit der **Zonen-Farbe gefüllt** statt dunkel. So sticht er sofort ins Auge, ohne das Layout zu stören.
+### Problem
+Die Spaltenanzahl wechselt dynamisch (1→2→3) wenn Teilnehmer die Zone wechseln, was ein unruhiges "Springen" verursacht.
 
-### Änderung: `HexTile.tsx`
+### Lösung
+In `ZoneColumn.tsx` die `getGridCols()`-Logik entfernen und stattdessen immer `gridTemplateColumns: repeat(2, 1fr)` setzen — unabhängig von der Teilnehmerzahl.
 
-**Aktuell (Hero):**
-- `baseSize = tileSize * 1.8` → grösser
-- Dunkler Hintergrund wie alle anderen
-
-**Neu (Hero):**
-- `baseSize = tileSize` → gleiche Grösse wie alle
-- Inner-Hex Hintergrund: `linear-gradient` mit Zonen-Farbe (z.B. `rgba(255,0,68,0.35)` für Zone 5) statt dunklem Grau
-- Äusserer Hex-Ring: Opacity von 0.3 → 0.6 (kräftiger)
-- Text-Farbe bleibt weiss (guter Kontrast auf farbigem Hintergrund)
-- Drop-Shadow etwas stärker (8px statt 5px)
-
-### Visueller Unterschied
-
-```text
-Normal-Tile:          Hero-Tile:
- ╱‾‾‾‾╲               ╱‾‾‾‾╲
-│ dunkel │            │▓farbig▓│
-│  140   │            │  178   │
- ╲____╱               ╲____╱
-```
-
-### Dateien
-- **Ändern:** `HexTile.tsx` — Hero-Logik: gleiche Grösse, farbiger Hintergrund
+### Änderung: `ZoneColumn.tsx`
+- `getGridCols()` Funktion entfernen
+- Grid-Spalten fest auf `2` setzen
+- Bei nur 1 Teilnehmer: wird einfach links platziert, rechts bleibt leer — kein Layout-Sprung
 
