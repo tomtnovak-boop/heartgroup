@@ -62,7 +62,7 @@ export default function Index() {
           onStopSession={stopSession}
         />
         <div className="flex-1 min-h-0 overflow-hidden">
-          <CoachDashboard participants={participants} isLoading={isLoading} activeTab={activeTab} selectedProfileId={myProfileId} averageBPM={averageBPM} />
+          <CoachDashboard participants={participants} isLoading={isLoading} activeTab={activeTab} selectedProfileId={myProfileId} averageBPM={averageBPM} isSessionActive={false} />
         </div>
       </div>
     );
