@@ -33,15 +33,6 @@ const ZONE_SEGMENT_COLORS: Record<number, string> = {
   5: 'hsl(0 100% 55% / 0.3)',
 };
 
-// Zone widths as percentages: Z1=0-60%, Z2=60-70%, Z3=70-80%, Z4=80-90%, Z5=90-100%
-const ZONE_SEGMENTS = [
-  { zone: 1, width: 60 },
-  { zone: 2, width: 10 },
-  { zone: 3, width: 10 },
-  { zone: 4, width: 10 },
-  { zone: 5, width: 10 },
-];
-
 function getZoneFromPercentage(hrPct: number): number {
   if (hrPct < 60) return 1;
   if (hrPct < 70) return 2;
@@ -50,13 +41,11 @@ function getZoneFromPercentage(hrPct: number): number {
   return 5;
 }
 
-export function NeutralDashboard({ participants, allProfiles, isLoading, isSessionActive }: NeutralDashboardProps) {
-  // Build ordered list: sorted by created_at, with live data merged in
+export function NeutralDashboard({ participants, allProfiles, isLoading }: NeutralDashboardProps) {
   const rows = useMemo(() => {
     const sorted = [...allProfiles].sort(
       (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
     );
-
     const liveMap = new Map(participants.map(p => [p.profile_id, p]));
 
     return sorted.map((profile, idx) => {
@@ -92,22 +81,17 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
     );
   }
 
-  // Sort: live first, then disconnected
-  const liveRows = rows.filter(r => r.isLive);
-  const offlineRows = rows.filter(r => !r.isLive);
-  const sortedRows = [...liveRows, ...offlineRows];
-
   return (
     <div className="h-full overflow-y-auto" style={{ background: '#0a0a0a' }}>
       <div className="flex flex-col">
-        {sortedRows.map((row) => (
+        {rows.map((row) => (
           <div
             key={row.profileId}
             className="flex items-center gap-3 px-3 py-2 border-b transition-colors duration-1000"
             style={{
               borderColor: 'rgba(255,255,255,0.05)',
               backgroundColor: row.isLive && row.zone ? ZONE_BG[row.zone] : 'transparent',
-              opacity: row.isLive ? 1 : 0.4,
+              opacity: row.isLive ? 1 : 0.5,
             }}
           >
             {/* Number */}
@@ -120,30 +104,32 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
               {row.name}
             </div>
 
-            {/* Zone Bar */}
+            {/* Zone Bar — 5 equal segments (20% each) */}
             <div className="flex-1 relative h-5 rounded-sm overflow-hidden flex">
-              {ZONE_SEGMENTS.map((seg) => (
+              {[1, 2, 3, 4, 5].map((zone) => (
                 <div
-                  key={seg.zone}
+                  key={zone}
                   style={{
-                    width: `${seg.width}%`,
-                    backgroundColor: ZONE_SEGMENT_COLORS[seg.zone],
+                    width: '20%',
+                    backgroundColor: ZONE_SEGMENT_COLORS[zone],
                   }}
                 />
               ))}
 
-              {/* Slider circle */}
+              {/* Slider — rounded rectangle */}
               {row.isLive && row.hrPercentage !== null && row.zone !== null && (
                 <div
-                  className="absolute top-1/2 -translate-y-1/2 flex items-center justify-center rounded-full border-2 border-white font-bold text-white text-[10px]"
+                  className="absolute flex items-center justify-center font-bold text-white text-[10px]"
                   style={{
-                    width: 28,
-                    height: 28,
+                    width: 32,
+                    height: 22,
+                    borderRadius: 4,
                     backgroundColor: ZONE_COLORS[row.zone],
-                    left: `clamp(14px, ${row.hrPercentage}%, calc(100% - 14px))`,
+                    left: `${Math.min(Math.max(row.hrPercentage, 2), 98)}%`,
+                    top: '50%',
                     transform: 'translate(-50%, -50%)',
                     transition: 'left 0.8s ease',
-                    top: '50%',
+                    zIndex: 10,
                   }}
                 >
                   {row.number}
