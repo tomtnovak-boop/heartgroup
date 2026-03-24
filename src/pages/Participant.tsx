@@ -221,7 +221,7 @@ export default function Participant() {
     const z3PlusShare = zTotal > 0 ? Math.round(((z3 + z4 + z5) / zTotal) * 100) : 0;
 
     return {
-      avgBpm, prevAvgBpm, maxBpm, maxBpmDate,
+      avgBpm, prevAvgBpm, lowestSessionBpm, highestSessionBpm, maxBpm, maxBpmDate,
       totalSeconds, prevTotalSeconds,
       totalCalories, maxSessionCal,
       zonePercents: {
