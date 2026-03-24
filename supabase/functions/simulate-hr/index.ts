@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
     const rows = profiles.map((p) => {
       const prevBpm = currentBpm.get(p.id)!;
       // Vary by ±10% of current BPM
-      const maxDelta = Math.round(prevBpm * 0.1);
+      const maxDelta = Math.round(prevBpm * 0.05);
       const delta = Math.floor(Math.random() * (maxDelta * 2 + 1)) - maxDelta;
       const bpm = clamp(prevBpm + delta, 60, 200);
       currentBpm.set(p.id, bpm);
