@@ -36,8 +36,15 @@ const LEFT_BORDER_COLORS: Record<number, string> = {
   5: 'hsl(0 100% 55% / 1)',
 };
 
-
 const ZONE_LABELS = ['Z1 Recovery', 'Z2 Fat Burn', 'Z3 Aerobic', 'Z4 Anaerobic', 'Z5 Max'];
+
+const ZONE_GLOWS = [
+  { left: '10%', color: '#00bcd4' },
+  { left: '30%', color: '#4caf50' },
+  { left: '50%', color: '#ffc107' },
+  { left: '70%', color: '#ff9800' },
+  { left: '90%', color: '#f44336' },
+];
 
 export function NeutralDashboard({ participants, allProfiles, isLoading, isSessionActive }: NeutralDashboardProps) {
   const rows = useMemo(() => {
@@ -68,7 +75,7 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center" style={{ background: '#080808' }}>
+      <div className="flex-1 flex items-center justify-center" style={{ background: '#0a0a0a' }}>
         <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '16px' }}>Loading dashboard...</p>
       </div>
     );
@@ -76,7 +83,7 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
 
   if (allProfiles.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center" style={{ background: '#080808' }}>
+      <div className="flex-1 flex items-center justify-center" style={{ background: '#0a0a0a' }}>
         <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '16px' }}>Waiting for participants...</p>
       </div>
     );
@@ -86,21 +93,33 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
   const rowHeight = `calc((100dvh - 56px - 40px - 28px) / ${rowCount})`;
 
   return (
-    <div style={{ height: 'calc(100dvh - 56px)', overflow: 'hidden', background: '#080808', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+    <div className="relative" style={{ height: 'calc(100dvh - 56px)', overflow: 'hidden', background: '#0a0a0a', display: 'flex', flexDirection: 'column' }}>
 
-      {/* Background depth layers */}
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,100,50,0.04) 0%, transparent 70%)' }} />
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse 60% 30% at 50% 100%, rgba(0,100,200,0.05) 0%, transparent 70%)' }} />
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse 100% 100% at 50% 50%, transparent 50%, rgba(0,0,0,0.5) 100%)' }} />
+      {/* Radial vignette overlay */}
+      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,0.45) 100%)' }} />
 
-      {/* Session-active background pulse */}
-      {isSessionActive && (
-        <div style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
-          background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.03) 0%, transparent 70%)',
-          animation: 'bgPulse 4s ease-in-out infinite',
+      {/* Grid pattern with fade mask */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        backgroundImage: 'linear-gradient(rgba(255,255,255,0.09) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.09) 1px, transparent 1px)',
+        backgroundSize: '60px 60px',
+        maskImage: 'radial-gradient(ellipse at 50% 50%, black 20%, transparent 75%)',
+        WebkitMaskImage: 'radial-gradient(ellipse at 50% 50%, black 20%, transparent 75%)',
+      }} />
+
+      {/* Zone glow blobs */}
+      {ZONE_GLOWS.map((g, i) => (
+        <div key={i} className="absolute pointer-events-none" style={{
+          left: g.left,
+          top: '45%',
+          transform: 'translate(-50%, -50%)',
+          width: '450px',
+          height: '500px',
+          borderRadius: '50%',
+          background: g.color,
+          opacity: 0.18,
+          filter: 'blur(300px)',
         }} />
-      )}
+      ))}
 
       {/* Average BPM bar */}
       <div style={{
