@@ -19,13 +19,12 @@ export function HexTile({ data, isHero = false, tileSize = 72 }: HexTileProps) {
   const color = ZONE_COLORS[data.zone] || ZONE_COLORS[1];
   const displayName = data.profile?.nickname || data.profile?.name || 'Unknown';
 
-  const baseSize = isHero ? Math.min(tileSize * 1.8, 130) : tileSize;
+  const baseSize = tileSize;
   const hexClip = 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)';
 
-  // Scale font sizes proportionally
-  const bpmFontSize = isHero ? baseSize * 0.28 : baseSize * 0.28;
-  const nameFontSize = isHero ? baseSize * 0.09 : baseSize * 0.11;
-  const pctFontSize = isHero ? baseSize * 0.09 : baseSize * 0.11;
+  const bpmFontSize = baseSize * 0.28;
+  const nameFontSize = baseSize * 0.11;
+  const pctFontSize = baseSize * 0.11;
 
   return (
     <div
@@ -33,7 +32,7 @@ export function HexTile({ data, isHero = false, tileSize = 72 }: HexTileProps) {
       style={{
         width: baseSize,
         height: baseSize * 1.15,
-        filter: `drop-shadow(0 0 ${isHero ? 10 : 5}px ${color}88)`,
+        filter: `drop-shadow(0 0 ${isHero ? 8 : 5}px ${color}88)`,
       }}
     >
       {/* Outer glow border hex */}
@@ -42,7 +41,7 @@ export function HexTile({ data, isHero = false, tileSize = 72 }: HexTileProps) {
         style={{
           clipPath: hexClip,
           background: color,
-          opacity: 0.3,
+          opacity: isHero ? 0.6 : 0.3,
         }}
       />
 
@@ -51,7 +50,9 @@ export function HexTile({ data, isHero = false, tileSize = 72 }: HexTileProps) {
         className="absolute flex flex-col items-center justify-center"
         style={{
           clipPath: hexClip,
-          background: `linear-gradient(180deg, rgba(20,20,20,0.95) 0%, rgba(10,10,10,0.98) 100%)`,
+          background: isHero
+            ? `linear-gradient(180deg, ${color}55 0%, ${color}30 100%)`
+            : `linear-gradient(180deg, rgba(20,20,20,0.95) 0%, rgba(10,10,10,0.98) 100%)`,
           top: 2,
           left: 2,
           right: 2,
