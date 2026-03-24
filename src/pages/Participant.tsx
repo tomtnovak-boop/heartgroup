@@ -53,6 +53,9 @@ interface Workout {
   zone_3_seconds: number | null;
   zone_4_seconds: number | null;
   zone_5_seconds: number | null;
+  rank_avg_bpm: number | null;
+  rank_peak_bpm: number | null;
+  session_participant_count: number | null;
 }
 
 export default function Participant() {
@@ -725,7 +728,7 @@ export default function Participant() {
           </Card>
 
           {/* Streak cards */}
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-4 gap-2">
             <Card className="p-3 text-center">
               <div className="text-xl font-bold">{monthStats.sessionCount}</div>
               <div className="text-[10px] text-muted-foreground">Sessions</div>
@@ -737,6 +740,16 @@ export default function Participant() {
             <Card className="p-3 text-center">
               <div className="text-xl font-bold">{monthStats.z3PlusShare}%</div>
               <div className="text-[10px] text-muted-foreground">Z3+ Share</div>
+            </Card>
+            <Card className="p-3 text-center">
+              <div className="text-xl font-bold text-purple-400">
+                {(() => {
+                  const ranked = monthlyWorkouts.filter(w => w.rank_avg_bpm != null);
+                  if (ranked.length === 0) return '--';
+                  return `#${Math.min(...ranked.map(w => w.rank_avg_bpm!))}`;
+                })()}
+              </div>
+              <div className="text-[10px] text-muted-foreground">Best Rank</div>
             </Card>
           </div>
 
@@ -762,6 +775,13 @@ export default function Participant() {
                             <span>⌀ {w.avg_bpm || '--'} bpm</span>
                             <span>{zoneLabels[dz]}</span>
                           </div>
+                          {w.rank_avg_bpm != null && w.session_participant_count != null && (
+                            <div className="text-[11px] mt-0.5 flex items-center gap-2">
+                              <span className="text-purple-400">Avg #{w.rank_avg_bpm}/{w.session_participant_count}</span>
+                              <span className="text-muted-foreground">·</span>
+                              <span className="text-red-400">Peak #{w.rank_peak_bpm}/{w.session_participant_count}</span>
+                            </div>
+                          )}
                         </div>
                         <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                       </div>
@@ -883,7 +903,16 @@ export default function Participant() {
                               <div className="space-y-1">
                                 {w.map(s => (
                                   <div key={s.id} className="flex items-center justify-between text-xs py-1.5 border-b border-border last:border-0">
-                                    <span className="font-medium">{format(new Date(s.started_at), 'MMM d, HH:mm')}</span>
+                                    <div className="flex flex-col">
+                                      <span className="font-medium">{format(new Date(s.started_at), 'MMM d, HH:mm')}</span>
+                                      {s.rank_avg_bpm != null && s.session_participant_count != null && (
+                                        <span className="text-[11px] mt-0.5">
+                                          <span className="text-purple-400">Avg #{s.rank_avg_bpm}/{s.session_participant_count}</span>
+                                          <span className="text-muted-foreground"> · </span>
+                                          <span className="text-red-400">Peak #{s.rank_peak_bpm}/{s.session_participant_count}</span>
+                                        </span>
+                                      )}
+                                    </div>
                                     <div className="flex items-center gap-3 text-muted-foreground">
                                       <span>{formatDuration(s.duration_seconds || 0)}</span>
                                       <span>{Math.round(s.total_calories || 0)} kcal</span>
