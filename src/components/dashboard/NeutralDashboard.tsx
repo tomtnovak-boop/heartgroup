@@ -150,7 +150,7 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
                 paddingLeft: row.isLive && row.zone ? '9px' : '12px',
                 paddingRight: '12px',
                 borderBottom: '1px solid rgba(255,255,255,0.04)',
-                background: row.isLive && row.zone ? ROW_TINT[row.zone] : 'transparent',
+                background: 'transparent',
                 borderLeft: row.isLive && row.zone ? `3px solid ${LEFT_BORDER_COLORS[row.zone]}` : '3px solid transparent',
                 opacity: row.isLive ? 1 : 0.35,
                 overflow: 'hidden',
