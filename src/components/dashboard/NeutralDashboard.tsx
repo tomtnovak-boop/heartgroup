@@ -21,13 +21,6 @@ const SEGMENT_OPACITY: Record<number, number> = {
   1: 0.18, 2: 0.22, 3: 0.28, 4: 0.35, 5: 0.42,
 };
 
-function getBarZone(hrPercent: number): number {
-  if (hrPercent < 20) return 1;
-  if (hrPercent < 40) return 2;
-  if (hrPercent < 60) return 3;
-  if (hrPercent < 80) return 4;
-  return 5;
-}
 
 const LEFT_BORDER_COLORS: Record<number, string> = {
   1: 'hsl(220 15% 45% / 0.35)',
