@@ -42,7 +42,7 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
 
   if (activeTab === 'customers') {
     return (
-      <div className="flex-1 px-4 pt-2" style={{ background: '#0a0a0a' }}>
+      <div className="flex-1 px-4 pt-2" style={{ background: '#121212' }}>
         <CustomerList />
       </div>
     );
