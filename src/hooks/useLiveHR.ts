@@ -139,6 +139,15 @@ export function useLiveHR(onNewData?: (data: { profile_id: string; bpm: number; 
               });
               return updated;
             });
+
+            // Notify session recorder
+            onNewData?.({
+              profile_id: newData.profile_id,
+              bpm: newData.bpm,
+              zone: newData.zone,
+              hr_percentage: Number(newData.hr_percentage),
+              timestamp: newData.timestamp,
+            });
           }
         }
       )
