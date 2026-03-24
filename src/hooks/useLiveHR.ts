@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
-import { getEffectiveMaxHR } from '@/lib/heartRateUtils';
+import { getEffectiveMaxHR, calculateZone, calculateHRPercentage } from '@/lib/heartRateUtils';
 
 export interface LiveHRData {
   id: string;
