@@ -150,16 +150,87 @@ export default function Participant() {
       });
   }, [profile]);
 
-  // Check for active session
+  // Check for coach-started active session (any open workout within last 3 hours)
   useEffect(() => {
     if (!profile) return;
-    supabase.from('workouts').select('id')
-      .eq('profile_id', profile.id)
-      .is('ended_at', null)
-      .then(({ data }) => setActiveSession((data || []).length > 0));
+    
+    const checkCoachSession = async () => {
+      const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
+      const { data } = await supabase
+        .from('workouts')
+        .select('id')
+        .is('ended_at', null)
+        .gte('started_at', threeHoursAgo)
+        .limit(1);
+      setCoachSessionActive((data || []).length > 0);
+    };
+
+    checkCoachSession();
+    // Poll every 15 seconds to detect when coach starts a session
+    const interval = setInterval(checkCoachSession, 15000);
+    return () => clearInterval(interval);
   }, [profile]);
 
-  // Send HR data when connected
+  // Check if participant already has an active workout
+  useEffect(() => {
+    if (!profile) return;
+    const checkOwnWorkout = async () => {
+      const { data } = await supabase
+        .from('workouts')
+        .select('id')
+        .eq('profile_id', profile.id)
+        .is('ended_at', null)
+        .limit(1);
+      if (data && data.length > 0) {
+        setCurrentWorkoutId(data[0].id);
+        setActiveSession(true);
+      }
+    };
+    checkOwnWorkout();
+  }, [profile]);
+
+  // Show join dialog when connected + coach session active + not already joined/skipped
+  useEffect(() => {
+    if (isConnected && coachSessionActive && !currentWorkoutId && !joinSkipped && !joinDialogShownRef.current) {
+      joinDialogShownRef.current = true;
+      setShowJoinDialog(true);
+    }
+  }, [isConnected, coachSessionActive, currentWorkoutId, joinSkipped]);
+
+  // Reset join state when disconnecting
+  useEffect(() => {
+    if (!isConnected) {
+      setJoinSkipped(false);
+      joinDialogShownRef.current = false;
+    }
+  }, [isConnected]);
+
+  // Handle joining a session
+  const handleJoinSession = useCallback(async () => {
+    if (!profile) return;
+    try {
+      const { data, error } = await supabase
+        .from('workouts')
+        .insert({ profile_id: profile.id, started_at: new Date().toISOString() })
+        .select('id')
+        .single();
+      if (error) throw error;
+      setCurrentWorkoutId(data.id);
+      setActiveSession(true);
+      setShowJoinDialog(false);
+      toast({ title: "You've joined the session!" });
+    } catch (err) {
+      console.error('Error joining session:', err);
+      toast({ title: 'Failed to join session', variant: 'destructive' });
+    }
+  }, [profile, toast]);
+
+  const handleSkipSession = useCallback(() => {
+    setJoinSkipped(true);
+    setShowJoinDialog(false);
+  }, []);
+
+  // Send HR data to live_hr when connected
   useEffect(() => {
     if (!isConnected || bpm <= 0 || !profile) return;
     const zone = calculateZone(bpm, effectiveMaxHr);
@@ -168,6 +239,16 @@ export default function Participant() {
       profile_id: profile.id, bpm, zone, hr_percentage: hrPct,
     }).then(() => {});
   }, [bpm, isConnected, profile, effectiveMaxHr]);
+
+  // Also record HR data to workout_hr_data when in an active workout
+  useEffect(() => {
+    if (!currentWorkoutId || bpm <= 0) return;
+    const zone = calculateZone(bpm, effectiveMaxHr);
+    const hrPct = calculateHRPercentage(bpm, effectiveMaxHr);
+    supabase.from('workout_hr_data').insert({
+      workout_id: currentWorkoutId, bpm, zone, hr_percentage: hrPct,
+    }).then(() => {});
+  }, [bpm, currentWorkoutId, effectiveMaxHr]);
 
   // Wake lock
   useEffect(() => {
