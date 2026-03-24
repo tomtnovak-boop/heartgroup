@@ -1,22 +1,13 @@
 
 
-## Plan: Hex-Kachel Lesbarkeit verbessern
+## Plan: Teilnehmer-Anzahl immer am unteren Bildschirmrand fixieren
 
-### Problem
-Der Name ist auf den Hex-Kacheln schlecht lesbar, besonders aus Distanz (TV-Display). Die HR%-Anzeige nimmt Platz weg, der besser für den Namen genutzt werden kann.
+### Änderung in `ZoneColumn.tsx`
 
-### Änderungen in `HexTile.tsx`
+Die Spalte nutzt bereits `flex flex-col h-full`. Der Count-Badge sitzt aktuell direkt unter den Tiles mit `mt-1`. Um ihn ganz unten zu fixieren, muss er mit `mt-auto` nach unten gedrückt werden — so bleibt er immer am Ende der Spalte, unabhängig davon wie viele Tiles vorhanden sind.
 
-1. **HR-Prozent entfernen** — den `{Math.round(data.hr_percentage)}%` Span komplett entfernen
-2. **Name grösser machen** — `nameFontSize` von `baseSize * 0.11` auf `baseSize * 0.18` erhöhen, dickere Schrift (`font-black` statt `font-bold`)
-3. **BPM etwas kleiner** — `bpmFontSize` von `baseSize * 0.28` auf `baseSize * 0.22` reduzieren
-4. **Layout-Reihenfolge anpassen** — Name oben (prominent), BPM darunter (kompakt)
+**Einzige Änderung:** Zeile 86 — `mt-1` durch `mt-auto` ersetzen.
 
-### Ergebnis
-- Name: gut lesbar auch aus 3-4m Entfernung
-- BPM: weiterhin sichtbar, aber kompakter
-- Mehr vertikaler Platz durch Wegfall der %-Zeile
-
-### Dateien
-- **Ändern:** `src/components/dashboard/HexTile.tsx`
+### Datei
+- **Ändern:** `src/components/dashboard/ZoneColumn.tsx` (1 Zeile)
 
