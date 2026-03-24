@@ -80,7 +80,7 @@ export function ZoneColumn({ zone, participants, selectedProfileId }: ZoneColumn
         className="flex-1 min-h-0"
         style={{
           display: 'grid',
-          gridTemplateColumns: `repeat(${columns}, 1fr)`,
+          gridTemplateColumns: 'repeat(2, 1fr)',
           gap: `${gap}px`,
           justifyItems: 'center',
           alignContent: 'start',
