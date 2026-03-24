@@ -59,6 +59,7 @@ export default function Dashboard() {
         participants={participants}
         isLoading={isLoading}
         activeTab={activeTab}
+        averageBPM={averageBPM}
       />
     </div>
   );

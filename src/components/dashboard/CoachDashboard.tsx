@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { ZoneColumn } from './ZoneColumn';
 import { CustomerList } from '@/components/admin/CustomerList';
 import { CoachList } from '@/components/admin/CoachList';
+import { EKGBackground } from './EKGBackground';
 import { Heart } from 'lucide-react';
 import { LiveHRData } from '@/hooks/useLiveHR';
 
@@ -10,9 +11,10 @@ interface CoachDashboardProps {
   isLoading: boolean;
   activeTab: string;
   selectedProfileId?: string;
+  averageBPM?: number;
 }
 
-export function CoachDashboard({ participants, isLoading, activeTab, selectedProfileId }: CoachDashboardProps) {
+export function CoachDashboard({ participants, isLoading, activeTab, selectedProfileId, averageBPM = 0 }: CoachDashboardProps) {
   const zoneGroups = useMemo(() => {
     const groups: Record<number, LiveHRData[]> = { 1: [], 2: [], 3: [], 4: [], 5: [] };
     participants.forEach((p) => {
@@ -68,6 +70,8 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
         background: 'radial-gradient(ellipse at 50% 45%, #0a0a1f 0%, #050510 45%, #000000 100%)',
       }}
     >
+      {/* EKG ambient background */}
+      <EKGBackground averageBPM={averageBPM} />
       {/* Vignette overlay */}
       <div
         className="absolute inset-0 pointer-events-none"
