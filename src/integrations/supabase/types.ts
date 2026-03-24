@@ -163,6 +163,9 @@ export type Database = {
           id: string
           max_bpm: number | null
           profile_id: string
+          rank_avg_bpm: number | null
+          rank_peak_bpm: number | null
+          session_participant_count: number | null
           started_at: string
           total_calories: number | null
           zone_1_seconds: number | null
@@ -180,6 +183,9 @@ export type Database = {
           id?: string
           max_bpm?: number | null
           profile_id: string
+          rank_avg_bpm?: number | null
+          rank_peak_bpm?: number | null
+          session_participant_count?: number | null
           started_at?: string
           total_calories?: number | null
           zone_1_seconds?: number | null
@@ -197,6 +203,9 @@ export type Database = {
           id?: string
           max_bpm?: number | null
           profile_id?: string
+          rank_avg_bpm?: number | null
+          rank_peak_bpm?: number | null
+          session_participant_count?: number | null
           started_at?: string
           total_calories?: number | null
           zone_1_seconds?: number | null
