@@ -118,92 +118,65 @@ export function useWorkoutSession() {
     const workouts = activeWorkoutsRef.current;
     if (workouts.size === 0) return;
 
-    try {
-      const now = new Date().toISOString();
+    // Immediately update UI
+    const savedStartedAt = startedAtRef.current;
+    setSession({
+      isActive: false,
+      startedAt: null,
+      elapsedSeconds: 0,
+      activeWorkouts: new Map(),
+    });
 
-      for (const [profileId, workoutId] of workouts) {
-        // Get all HR data for this workout
-        const { data: hrData, error: hrError } = await supabase
-          .from('workout_hr_data')
-          .select('bpm, zone, hr_percentage')
-          .eq('workout_id', workoutId);
+    // Finalize workouts in background
+    const now = new Date().toISOString();
+    const entries = Array.from(workouts.entries());
 
-        if (hrError) {
-          console.error('Error fetching workout HR data:', hrError);
-          continue;
-        }
+    await Promise.all(entries.map(async ([profileId, workoutId]) => {
+      try {
+        const [{ data: hrData, error: hrError }, { data: profile }] = await Promise.all([
+          supabase.from('workout_hr_data').select('bpm, zone, hr_percentage').eq('workout_id', workoutId),
+          supabase.from('profiles').select('weight, age, gender').eq('id', profileId).single(),
+        ]);
 
-        // Get profile for calorie calculation
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('weight, age, gender')
-          .eq('id', profileId)
-          .single();
+        if (hrError) { console.error('Error fetching workout HR data:', hrError); return; }
 
-        const entries = hrData || [];
-        const count = entries.length;
+        const hrs = hrData || [];
+        const count = hrs.length;
 
         if (count === 0) {
-          // No data recorded, just close the workout
-          await supabase
-            .from('workouts')
-            .update({ ended_at: now, duration_seconds: 0 })
-            .eq('id', workoutId);
-          continue;
+          await supabase.from('workouts').update({ ended_at: now, duration_seconds: 0 }).eq('id', workoutId);
+          return;
         }
 
-        const avgBpm = Math.round(entries.reduce((s, e) => s + e.bpm, 0) / count);
-        const maxBpm = Math.max(...entries.map(e => e.bpm));
-        const avgZone = Math.round(entries.reduce((s, e) => s + e.zone, 0) / count);
+        const avgBpm = Math.round(hrs.reduce((s, e) => s + e.bpm, 0) / count);
+        const maxBpm = Math.max(...hrs.map(e => e.bpm));
+        const avgZone = Math.round(hrs.reduce((s, e) => s + e.zone, 0) / count);
 
-        // Each entry ≈ 2 seconds (simulation interval)
         const intervalSeconds = 2;
         const zoneCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-        entries.forEach(e => {
-          const z = Math.min(Math.max(e.zone, 1), 5) as 1 | 2 | 3 | 4 | 5;
-          zoneCounts[z]++;
-        });
+        hrs.forEach(e => { zoneCounts[Math.min(Math.max(e.zone, 1), 5) as 1|2|3|4|5]++; });
 
-        const startedAt = startedAtRef.current;
-        const durationSeconds = startedAt
-          ? Math.floor((new Date(now).getTime() - startedAt.getTime()) / 1000)
+        const durationSeconds = savedStartedAt
+          ? Math.floor((new Date(now).getTime() - savedStartedAt.getTime()) / 1000)
           : count * intervalSeconds;
 
-        // Keytel calorie formula
         const weight = profile?.weight || 75;
         const age = profile?.age || 30;
-        const durationMinutes = durationSeconds / 60;
         const totalCalories = Math.round(
-          durationMinutes * (0.6309 * avgBpm - 55.0969 + 0.1988 * weight + 0.2017 * age) / 4.184
+          (durationSeconds / 60) * (0.6309 * avgBpm - 55.0969 + 0.1988 * weight + 0.2017 * age) / 4.184
         );
 
-        await supabase
-          .from('workouts')
-          .update({
-            ended_at: now,
-            avg_bpm: avgBpm,
-            max_bpm: maxBpm,
-            avg_zone: avgZone,
-            duration_seconds: durationSeconds,
-            zone_1_seconds: zoneCounts[1] * intervalSeconds,
-            zone_2_seconds: zoneCounts[2] * intervalSeconds,
-            zone_3_seconds: zoneCounts[3] * intervalSeconds,
-            zone_4_seconds: zoneCounts[4] * intervalSeconds,
-            zone_5_seconds: zoneCounts[5] * intervalSeconds,
-            total_calories: Math.max(0, totalCalories),
-          })
-          .eq('id', workoutId);
+        await supabase.from('workouts').update({
+          ended_at: now, avg_bpm: avgBpm, max_bpm: maxBpm, avg_zone: avgZone,
+          duration_seconds: durationSeconds,
+          zone_1_seconds: zoneCounts[1] * intervalSeconds, zone_2_seconds: zoneCounts[2] * intervalSeconds,
+          zone_3_seconds: zoneCounts[3] * intervalSeconds, zone_4_seconds: zoneCounts[4] * intervalSeconds,
+          zone_5_seconds: zoneCounts[5] * intervalSeconds, total_calories: Math.max(0, totalCalories),
+        }).eq('id', workoutId);
+      } catch (err) {
+        console.error('Error finalizing workout:', err);
       }
-
-      setSession({
-        isActive: false,
-        startedAt: null,
-        elapsedSeconds: 0,
-        activeWorkouts: new Map(),
-      });
-    } catch (err) {
-      console.error('Error stopping session:', err);
-    }
+    }));
   }, []);
 
   // Called on every new live_hr realtime event
