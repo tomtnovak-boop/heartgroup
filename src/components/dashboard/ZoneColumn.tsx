@@ -19,7 +19,6 @@ interface ZoneColumnProps {
 export function ZoneColumn({ zone, participants, heroProfileId }: ZoneColumnProps) {
   const config = ZONE_CONFIG[zone];
   const sorted = [...participants].sort((a, b) => b.bpm - a.bpm);
-  const cols = getGridCols(sorted.length);
 
   return (
     <div className="flex flex-col items-center min-w-0 h-full">
