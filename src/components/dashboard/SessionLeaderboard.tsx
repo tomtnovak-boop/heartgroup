@@ -119,7 +119,7 @@ function RankingColumn({ title, entries, maxValue, valueKey, gradientFrom, gradi
 }) {
   return (
     <div className="flex-1 flex flex-col min-h-0">
-      <div className="text-[10px] font-bold uppercase tracking-wider text-white/40 px-1 pb-1.5">{title}</div>
+      <div className="text-[10px] font-bold uppercase tracking-wider text-white px-1 pb-1.5">{title}</div>
       <div className="flex-1 min-h-0 flex flex-col justify-between">
         {entries.map((entry, idx) => {
           const rank = idx + 1;
