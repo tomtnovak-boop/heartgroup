@@ -6,9 +6,10 @@ import { AppHeader } from '@/components/layout/AppHeader';
 import { useViewMode } from '@/hooks/useViewMode';
 import { CoachDashboard } from '@/components/dashboard/CoachDashboard';
 import { useAuthContext } from '@/components/auth/AuthProvider';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useLiveHR } from '@/hooks/useLiveHR';
 import { useWorkoutSession } from '@/hooks/useWorkoutSession';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Index() {
   const { viewMode, changeView } = useViewMode('participant');
