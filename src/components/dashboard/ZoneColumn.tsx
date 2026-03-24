@@ -54,10 +54,10 @@ export function ZoneColumn({ zone, participants, selectedProfileId }: ZoneColumn
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: `${gap}px`,
+          gap: `${FIXED_GAP}px`,
           justifyItems: 'center',
           alignContent: 'start',
-          overflowY: needsScroll ? 'auto' : 'hidden',
+          overflowY: 'auto',
           overflowX: 'hidden',
         }}
       >
