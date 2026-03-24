@@ -191,8 +191,9 @@ export default function Participant() {
       const wk = getISOWeek(new Date(x.started_at));
       weekMap.set(wk, (weekMap.get(wk) || 0) + 1);
     });
+    const now = new Date();
     const allWeekStarts = eachWeekOfInterval(
-      { start: monthStart, end: monthEnd },
+      { start: startOfMonth(now), end: endOfMonth(now) },
       { weekStartsOn: 1 }
     );
     const weekData = allWeekStarts.map(ws => {
