@@ -99,7 +99,7 @@ function CoachLeaderboard({
       <div className="flex-shrink-0 px-4 pb-4 pt-2">
         <button
           onClick={onClose}
-          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium text-white/70 hover:text-white transition-colors"
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium text-white hover:text-white transition-colors"
           style={{ background: 'rgba(255,255,255,0.06)' }}
         >
           <ArrowLeft className="w-3.5 h-3.5" />
