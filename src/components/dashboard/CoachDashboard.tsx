@@ -101,7 +101,7 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
           />
         ))}
       </div>
-      <div className="absolute bottom-0 left-0 right-0 grid grid-cols-5 gap-2 px-4 py-1" style={{ background: '#0a0a0a' }}>
+      <div className="absolute bottom-0 left-0 right-0 grid grid-cols-5 gap-2 px-4 py-1 z-10" style={{ background: 'linear-gradient(to top, #000000 60%, transparent)' }}>
         {[1, 2, 3, 4, 5].map((zone) => (
           <div key={zone} className="flex justify-center">
             <div
