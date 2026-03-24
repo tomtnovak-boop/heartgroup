@@ -26,9 +26,6 @@ export function HexTile({ data, isHero = false, tileSize = 72 }: HexTileProps) {
   const nameFontSize = baseSize * 0.11;
   const pctFontSize = baseSize * 0.11;
 
-  // Fill percentage clamped 0-100
-  const fillPercent = Math.max(0, Math.min(100, data.hr_percentage));
-
   // Zone threshold - upper boundary of current zone
   const zoneInfo = HEART_RATE_ZONES[data.zone - 1];
   const zoneMinPercent = zoneInfo?.minPercent ?? 0;
