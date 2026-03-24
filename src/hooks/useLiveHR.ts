@@ -179,6 +179,14 @@ export function useLiveHR(onNewData?: (data: { profile_id: string; bpm: number; 
     ? Math.round(participantsList.reduce((sum, p) => sum + p.bpm, 0) / participantsList.length)
     : 0;
 
+  const lowestBPM = participantsList.length > 0
+    ? Math.min(...participantsList.map(p => p.bpm))
+    : 0;
+
+  const highestBPM = participantsList.length > 0
+    ? Math.max(...participantsList.map(p => p.bpm))
+    : 0;
+
   const averageZone = participantsList.length > 0
     ? Math.round(participantsList.reduce((sum, p) => sum + p.zone, 0) / participantsList.length)
     : 0;
@@ -186,6 +194,8 @@ export function useLiveHR(onNewData?: (data: { profile_id: string; bpm: number; 
   return {
     participants: participantsList,
     averageBPM,
+    lowestBPM,
+    highestBPM,
     averageZone,
     isLoading,
     refresh: fetchLatestData,

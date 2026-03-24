@@ -1,4 +1,4 @@
-import { Heart, Monitor, Users, LogOut, Activity, RefreshCw, Play, Square, Shield } from 'lucide-react';
+import { Heart, Monitor, Users, LogOut, Activity, RefreshCw, Play, Square, Shield, ArrowDown, ArrowUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { useNavigate } from 'react-router-dom';
@@ -10,6 +10,8 @@ export type ViewMode = 'participant' | 'coach';
 interface StatsData {
   participantCount: number;
   averageBPM: number;
+  lowestBPM: number;
+  highestBPM: number;
   averageZone: number;
 }
 
@@ -88,8 +90,16 @@ export function AppHeader({
                 <span className="text-sm font-bold">{stats.participantCount}</span>
               </div>
               <div className="flex items-center gap-1">
+                <ArrowDown className="w-3 h-3 text-cyan-400" />
+                <span className="text-sm font-bold text-cyan-400">{stats.lowestBPM > 0 ? stats.lowestBPM : '--'}</span>
+              </div>
+              <div className="flex items-center gap-1">
                 <Heart className="w-3 h-3 text-destructive" fill="currentColor" />
                 <span className="text-sm font-bold">{stats.averageBPM > 0 ? stats.averageBPM : '--'}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <ArrowUp className="w-3 h-3 text-orange-400" />
+                <span className="text-sm font-bold text-orange-400">{stats.highestBPM > 0 ? stats.highestBPM : '--'}</span>
                 <span className="text-[10px] text-muted-foreground">BPM</span>
               </div>
               <div className="flex items-center gap-1">
