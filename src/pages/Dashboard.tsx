@@ -27,7 +27,7 @@ export default function Dashboard() {
     recordHRData(data);
   }, [recordHRData]);
 
-  const { participants, averageBPM, averageZone, isLoading, refresh } = useLiveHR(onNewHRData);
+  const { participants, averageBPM, lowestBPM, highestBPM, averageZone, isLoading, refresh } = useLiveHR(onNewHRData);
 
   // Track late-joining participants
   const addedRef = useRef(new Set<string>());
