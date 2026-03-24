@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { RegisterForm } from '@/components/auth/RegisterForm';
+import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 
 export default function Auth() {
