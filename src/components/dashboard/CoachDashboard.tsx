@@ -7,12 +7,14 @@ import { Heart, RefreshCw, Users, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+// Header + stats + footer ≈ 160px
+const CHROME_HEIGHT = 160;
+
 export function CoachDashboard() {
   const { participants, averageBPM, averageZone, isLoading, refresh } = useLiveHR();
   const [activeTab, setActiveTab] = useState<string>('live');
 
-  // Group participants by zone and find hero (highest BPM in zone 5)
-  const { zoneGroups, heroProfileId } = useMemo(() => {
+  const { zoneGroups, heroProfileId, maxPerZone, tileSize } = useMemo(() => {
     const groups: Record<number, typeof participants> = { 1: [], 2: [], 3: [], 4: [], 5: [] };
     let heroId: string | undefined;
     let heroMaxBpm = 0;
@@ -26,7 +28,15 @@ export function CoachDashboard() {
       }
     });
 
-    return { zoneGroups: groups, heroProfileId: heroId };
+    const maxCount = Math.max(1, ...Object.values(groups).map((g) => g.length));
+
+    // Calculate tile size to fit all in viewport
+    const availableHeight = (typeof window !== 'undefined' ? window.innerHeight : 800) - CHROME_HEIGHT;
+    // Each tile height = size * 1.15 + gap(2px)
+    const calculatedSize = Math.floor((availableHeight - maxCount * 2) / (maxCount * 1.15));
+    const size = Math.min(72, Math.max(40, calculatedSize));
+
+    return { zoneGroups: groups, heroProfileId: heroId, maxPerZone: maxCount, tileSize: size };
   }, [participants]);
 
   if (isLoading) {
@@ -61,27 +71,26 @@ export function CoachDashboard() {
           )}
         </div>
 
-        <TabsContent value="live" className="flex-1 flex flex-col mt-0 px-6 pb-4">
-          {/* Team Stats */}
+        <TabsContent value="live" className="flex-1 flex flex-col mt-0 px-6 pb-2">
           <TeamStats
             participantCount={participants.length}
             averageBPM={averageBPM}
             averageZone={averageZone}
           />
 
-          {/* Zone Columns */}
-          <div className="flex-1 mt-4 grid grid-cols-5 gap-2 min-h-0 overflow-hidden">
+          <div className="flex-1 mt-2 grid grid-cols-5 gap-2 min-h-0">
             {[1, 2, 3, 4, 5].map((zone) => (
               <ZoneColumn
                 key={zone}
                 zone={zone}
                 participants={zoneGroups[zone]}
                 heroProfileId={heroProfileId}
+                tileSize={tileSize}
               />
             ))}
           </div>
 
-          <div className="text-center text-[10px] text-white/25 mt-2">
+          <div className="text-center text-[10px] text-white/25 mt-1">
             Echtzeit-Aktualisierung • Inaktive Teilnehmer werden nach 30s ausgeblendet
           </div>
         </TabsContent>
