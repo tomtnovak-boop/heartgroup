@@ -596,120 +596,115 @@ export default function Participant() {
         </TabsContent>
 
         {/* MONTH TAB */}
-        <TabsContent value="month" className="flex-1 overflow-y-auto pb-4 space-y-4">
-          <h2 className="text-sm font-semibold text-muted-foreground pt-2">
-            {monthLabel} — Detailed Stats
-          </h2>
+        <TabsContent value="month" className="flex-1 overflow-y-auto pb-4 space-y-2">
+          <h2 className="text-sm font-semibold text-muted-foreground pt-2">Monthly History</h2>
 
-          {/* Heart Rate card - full width */}
-          <Card className="p-4 border-pink-500/30">
-            <div className="flex items-center gap-1.5 mb-3">
-              <Heart className="w-3.5 h-3.5 text-pink-400" />
-              <span className="text-[10px] text-muted-foreground">Heart Rate this month</span>
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div>
-                <ArrowDown className="w-4 h-4 mx-auto mb-1 text-cyan-400" />
-                <div className="text-xl font-bold text-cyan-400">{monthStats.lowestSessionBpm || '--'}</div>
-                <div className="text-[10px] text-muted-foreground">Lowest</div>
-              </div>
-              <div>
-                <Heart className="w-4 h-4 mx-auto mb-1 text-purple-400" fill="currentColor" />
-                <div className="text-2xl font-bold text-purple-400">{monthStats.avgBpm || '--'}</div>
-                <div className="text-[10px] text-muted-foreground">bpm</div>
-              </div>
-              <div>
-                <ArrowUp className="w-4 h-4 mx-auto mb-1 text-red-400" />
-                <div className="text-xl font-bold text-red-400">{monthStats.highestSessionBpm || '--'}</div>
-                <div className="text-[10px] text-muted-foreground">Highest</div>
-              </div>
-            </div>
-            <div className="text-[9px] text-muted-foreground text-center mt-2">Based on session averages</div>
-            {monthStats.prevAvgBpm > 0 && monthStats.avgBpm > 0 && (
-              <div className={`text-xs flex items-center justify-center gap-0.5 mt-1 ${monthStats.avgBpm > monthStats.prevAvgBpm ? 'text-destructive' : 'text-emerald-400'}`}>
-                {monthStats.avgBpm > monthStats.prevAvgBpm ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                {monthStats.avgBpm > monthStats.prevAvgBpm ? '+' : ''}{monthStats.avgBpm - monthStats.prevAvgBpm} bpm vs. {prevMonthName}
-              </div>
-            )}
-          </Card>
-
-          {/* Summary metric cards */}
-          <div className="grid grid-cols-3 gap-2">
-            <Card className="p-3 border-purple-500/30">
-              <div className="flex items-center gap-1.5 mb-1">
-                <Activity className="w-3.5 h-3.5 text-purple-400" />
-                <span className="text-[10px] text-muted-foreground">Sessions</span>
-              </div>
-              <div className="text-2xl font-bold">{monthlyWorkouts.filter(w => w.ended_at).length}</div>
-            </Card>
-            <Card className="p-3 border-emerald-500/30">
-              <div className="flex items-center gap-1.5 mb-1">
-                <Clock className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="text-[10px] text-muted-foreground">Time</span>
-              </div>
-              <div className="text-lg font-bold">{formatDuration(monthStats.totalSeconds)}</div>
-              {monthStats.prevTotalSeconds > 0 && monthStats.totalSeconds > 0 && (
-                <div className={`text-[10px] flex items-center gap-0.5 mt-0.5 ${monthStats.totalSeconds > monthStats.prevTotalSeconds ? 'text-emerald-400' : 'text-destructive'}`}>
-                  {monthStats.totalSeconds > monthStats.prevTotalSeconds ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
-                  {monthStats.totalSeconds > monthStats.prevTotalSeconds ? '+' : ''}{formatDuration(Math.abs(monthStats.totalSeconds - monthStats.prevTotalSeconds))}
-                </div>
-              )}
-            </Card>
-            <Card className="p-3 border-orange-500/30">
-              <div className="flex items-center gap-1.5 mb-1">
-                <Flame className="w-3.5 h-3.5 text-orange-400" />
-                <span className="text-[10px] text-muted-foreground">Calories</span>
-              </div>
-              <div className="text-lg font-bold">{monthStats.totalCalories}</div>
-              {monthStats.maxSessionCal > 0 && (
-                <div className="text-[10px] text-muted-foreground mt-0.5">Best: {monthStats.maxSessionCal}</div>
-              )}
-            </Card>
-          </div>
-
-          {monthlyWorkouts.length === 0 ? (
+          {monthGroups.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Calendar className="w-12 h-12 mx-auto mb-3 opacity-40" />
-              <p className="text-sm">No workouts this month yet.</p>
+              <p className="text-sm">No workouts recorded yet.</p>
             </div>
           ) : (
-            <>
-              {/* Zone time breakdown */}
-              <Card className="p-3">
-                <h3 className="text-xs font-semibold mb-3">Time in Zones</h3>
-                <div className="space-y-2">
-                  {[
-                    { label: 'Z1 Recovery', secs: monthlyWorkouts.reduce((s, w) => s + (w.zone_1_seconds || 0), 0), color: zoneColors.z1 },
-                    { label: 'Z2 Fat Burn', secs: monthlyWorkouts.reduce((s, w) => s + (w.zone_2_seconds || 0), 0), color: zoneColors.z2 },
-                    { label: 'Z3 Aerobic', secs: monthlyWorkouts.reduce((s, w) => s + (w.zone_3_seconds || 0), 0), color: zoneColors.z3 },
-                    { label: 'Z4 Cardio', secs: monthlyWorkouts.reduce((s, w) => s + (w.zone_4_seconds || 0), 0), color: zoneColors.z4 },
-                    { label: 'Z5 Max Effort', secs: monthlyWorkouts.reduce((s, w) => s + (w.zone_5_seconds || 0), 0), color: zoneColors.z5 },
-                  ].map(z => (
-                    <div key={z.label} className="flex items-center justify-between">
-                      <span className="text-xs font-medium" style={{ color: z.color }}>{z.label}</span>
-                      <span className="text-xs text-muted-foreground">{formatDuration(z.secs)}</span>
+            monthGroups.map(group => {
+              const isExpanded = expandedMonth === group.key;
+              return (
+                <div key={group.key} className="border border-border rounded-lg overflow-hidden">
+                  {/* Collapsible header */}
+                  <button
+                    className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-muted/50 transition-colors"
+                    onClick={() => setExpandedMonth(isExpanded ? '' : group.key)}
+                  >
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="font-semibold">{group.label}</span>
+                      <span className="text-muted-foreground">•</span>
+                      <span className="text-muted-foreground">{group.sessionCount} sessions</span>
+                      <span className="text-muted-foreground">•</span>
+                      <span className="text-muted-foreground">{formatDuration(group.totalSeconds)}</span>
+                      <span className="text-muted-foreground">•</span>
+                      <span className="text-muted-foreground">{group.totalCalories.toLocaleString()} kcal</span>
                     </div>
-                  ))}
-                </div>
-              </Card>
+                    <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                  </button>
 
-              {/* All sessions this month */}
-              <Card className="p-3">
-                <h3 className="text-xs font-semibold mb-3">All Sessions ({monthlyWorkouts.length})</h3>
-                <div className="space-y-2">
-                  {monthlyWorkouts.map(w => (
-                    <div key={w.id} className="flex items-center justify-between text-xs py-1.5 border-b border-border last:border-0">
-                      <span className="font-medium">{format(new Date(w.started_at), 'MMM d, HH:mm')}</span>
-                      <div className="flex items-center gap-3 text-muted-foreground">
-                        <span>{formatDuration(w.duration_seconds || 0)}</span>
-                        <span>{Math.round(w.total_calories || 0)} kcal</span>
-                        <span>⌀ {w.avg_bpm || '--'}</span>
-                      </div>
+                  {/* Expanded content */}
+                  {isExpanded && (
+                    <div className="px-3 pb-3 space-y-3 border-t border-border">
+                      {/* Metrics */}
+                      {(() => {
+                        const w = group.workouts;
+                        const withBpm = w.filter(x => x.avg_bpm && x.avg_bpm > 0);
+                        const totalWeighted = withBpm.reduce((s, x) => s + (x.avg_bpm || 0) * (x.duration_seconds || 1), 0);
+                        const totalW = withBpm.reduce((s, x) => s + (x.duration_seconds || 1), 0);
+                        const avg = totalW > 0 ? Math.round(totalWeighted / totalW) : 0;
+                        const low = withBpm.length > 0 ? Math.min(...withBpm.map(x => x.avg_bpm!)) : 0;
+                        const high = withBpm.length > 0 ? Math.max(...withBpm.map(x => x.avg_bpm!)) : 0;
+
+                        return (
+                          <>
+                            {/* HR card */}
+                            <Card className="p-3 border-pink-500/30 mt-3">
+                              <div className="grid grid-cols-3 gap-2 text-center">
+                                <div>
+                                  <ArrowDown className="w-3.5 h-3.5 mx-auto mb-0.5 text-cyan-400" />
+                                  <div className="text-lg font-bold text-cyan-400">{low || '--'}</div>
+                                  <div className="text-[9px] text-muted-foreground">Lowest</div>
+                                </div>
+                                <div>
+                                  <Heart className="w-3.5 h-3.5 mx-auto mb-0.5 text-purple-400" fill="currentColor" />
+                                  <div className="text-xl font-bold text-purple-400">{avg || '--'}</div>
+                                  <div className="text-[9px] text-muted-foreground">bpm</div>
+                                </div>
+                                <div>
+                                  <ArrowUp className="w-3.5 h-3.5 mx-auto mb-0.5 text-red-400" />
+                                  <div className="text-lg font-bold text-red-400">{high || '--'}</div>
+                                  <div className="text-[9px] text-muted-foreground">Highest</div>
+                                </div>
+                              </div>
+                            </Card>
+
+                            {/* Zone breakdown */}
+                            <Card className="p-3">
+                              <h3 className="text-xs font-semibold mb-2">Time in Zones</h3>
+                              <div className="space-y-1.5">
+                                {[
+                                  { label: 'Z1 Recovery', secs: w.reduce((s, x) => s + (x.zone_1_seconds || 0), 0), color: zoneColors.z1 },
+                                  { label: 'Z2 Fat Burn', secs: w.reduce((s, x) => s + (x.zone_2_seconds || 0), 0), color: zoneColors.z2 },
+                                  { label: 'Z3 Aerobic', secs: w.reduce((s, x) => s + (x.zone_3_seconds || 0), 0), color: zoneColors.z3 },
+                                  { label: 'Z4 Cardio', secs: w.reduce((s, x) => s + (x.zone_4_seconds || 0), 0), color: zoneColors.z4 },
+                                  { label: 'Z5 Max Effort', secs: w.reduce((s, x) => s + (x.zone_5_seconds || 0), 0), color: zoneColors.z5 },
+                                ].map(z => (
+                                  <div key={z.label} className="flex items-center justify-between">
+                                    <span className="text-xs font-medium" style={{ color: z.color }}>{z.label}</span>
+                                    <span className="text-xs text-muted-foreground">{formatDuration(z.secs)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </Card>
+
+                            {/* Sessions list */}
+                            <Card className="p-3">
+                              <h3 className="text-xs font-semibold mb-2">All Sessions ({w.length})</h3>
+                              <div className="space-y-1">
+                                {w.map(s => (
+                                  <div key={s.id} className="flex items-center justify-between text-xs py-1.5 border-b border-border last:border-0">
+                                    <span className="font-medium">{format(new Date(s.started_at), 'MMM d, HH:mm')}</span>
+                                    <div className="flex items-center gap-3 text-muted-foreground">
+                                      <span>{formatDuration(s.duration_seconds || 0)}</span>
+                                      <span>{Math.round(s.total_calories || 0)} kcal</span>
+                                      <span>⌀ {s.avg_bpm || '--'}</span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </Card>
+                          </>
+                        );
+                      })()}
                     </div>
-                  ))}
+                  )}
                 </div>
-              </Card>
-            </>
+              );
+            })
           )}
         </TabsContent>
 
