@@ -17,7 +17,7 @@ import {
   TrendingUp, TrendingDown, Flame, Clock, Activity, ChevronRight, Zap,
   BarChart3, Calendar,
 } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, startOfWeek, getISOWeek } from 'date-fns';
+import { format, startOfMonth, endOfMonth, getISOWeek, eachWeekOfInterval } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
 
 interface Profile {
