@@ -27,19 +27,11 @@ Deno.serve(async (req) => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, serviceKey);
 
-  // Get test profiles (user_id = null) and specific real profiles to include in simulation
-  const { data: testProfiles, error: testErr } = await supabase
+  // Get test profiles only (user_id = null) — real users use their own devices
+  const { data: profiles, error: profilesError } = await supabase
     .from("profiles")
     .select("id, max_hr")
     .is("user_id", null);
-
-  const { data: extraProfiles, error: extraErr } = await supabase
-    .from("profiles")
-    .select("id, max_hr")
-    .in("id", ["f70a8be1-5421-4940-b285-493a970cf88a", "f2a7c490-8ee1-4f0e-95e0-ed3e22648e27"]);
-
-  const profilesError = testErr || extraErr;
-  const profiles = [...(testProfiles || []), ...(extraProfiles || [])];
 
   if (profilesError || !profiles?.length) {
     return new Response(
