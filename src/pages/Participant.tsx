@@ -612,9 +612,9 @@ export default function Participant() {
             const zi = zone > 0 ? getZoneInfo(zone) : null;
             return (
               <div className="rounded-2xl p-4 mt-2 flex items-center gap-4" style={{
-                background: zi ? `${zi.color}15` : 'hsl(var(--muted))',
-                border: `1px solid ${zi ? zi.color + '30' : 'hsl(var(--border))'}`,
-                transition: 'background 0.8s ease, border-color 0.8s ease',
+                background: zi ? `${zi.color}12` : 'rgba(255,255,255,0.04)',
+                border: `1px solid ${zi ? zi.color + '35' : 'rgba(255,255,255,0.1)'}`,
+                transition: 'background 1s ease, border-color 1s ease',
               }}>
                 {/* Left: label + zone */}
                 <div className="flex flex-col items-start gap-1">
