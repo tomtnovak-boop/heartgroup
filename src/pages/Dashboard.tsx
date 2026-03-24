@@ -72,6 +72,7 @@ export default function Dashboard() {
             avg_bpm: w.avg_bpm || 0,
             max_bpm: w.max_bpm || 0,
             duration_seconds: w.duration_seconds || 0,
+            total_calories: Number(w.total_calories) || 0,
           }));
 
           const maxDuration = Math.max(...entries.map(e => e.duration_seconds), 0);
