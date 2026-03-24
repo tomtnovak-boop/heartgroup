@@ -37,6 +37,8 @@ const LEFT_BORDER_COLORS: Record<number, string> = {
 };
 
 
+const ZONE_LABELS = ['Z1 Recovery', 'Z2 Fat Burn', 'Z3 Aerobic', 'Z4 Anaerobic', 'Z5 Max'];
+
 export function NeutralDashboard({ participants, allProfiles, isLoading, isSessionActive }: NeutralDashboardProps) {
   const rows = useMemo(() => {
     const sorted = [...allProfiles].sort(
