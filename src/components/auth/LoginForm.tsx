@@ -29,7 +29,7 @@ export function LoginForm({ onSwitchToRegister, onSwitchToForgotPassword }: Logi
 
     if (error) {
       toast({
-        title: 'Anmeldung fehlgeschlagen',
+        title: 'Login failed',
         description: error.message,
         variant: 'destructive',
       });
@@ -38,8 +38,8 @@ export function LoginForm({ onSwitchToRegister, onSwitchToForgotPassword }: Logi
     }
 
     toast({
-      title: 'Willkommen zurück!',
-      description: 'Du wurdest erfolgreich angemeldet.',
+      title: 'Welcome back!',
+      description: 'You have been successfully logged in.',
     });
 
     navigate('/participant');
@@ -48,21 +48,21 @@ export function LoginForm({ onSwitchToRegister, onSwitchToForgotPassword }: Logi
   return (
     <Card className="w-full max-w-md mx-auto bg-card border-border">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Anmelden</CardTitle>
+        <CardTitle className="text-2xl">Sign In</CardTitle>
         <CardDescription>
-          Melde dich an, um dein Training zu starten
+          Sign in to start your training
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">E-Mail</Label>
+            <Label htmlFor="email">Email</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 id="email"
                 type="email"
-                placeholder="deine@email.de"
+                placeholder="your@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="pl-10"
@@ -72,7 +72,7 @@ export function LoginForm({ onSwitchToRegister, onSwitchToForgotPassword }: Logi
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="password">Passwort</Label>
+            <Label htmlFor="password">Password</Label>
             <div className="relative">
               <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -93,7 +93,7 @@ export function LoginForm({ onSwitchToRegister, onSwitchToForgotPassword }: Logi
               onClick={onSwitchToForgotPassword}
               className="text-xs text-muted-foreground hover:text-primary hover:underline"
             >
-              Passwort vergessen?
+              Forgot password?
             </button>
           </div>
 
@@ -101,23 +101,23 @@ export function LoginForm({ onSwitchToRegister, onSwitchToForgotPassword }: Logi
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Anmelden...
+                Signing in...
               </>
             ) : (
-              'Anmelden'
+              'Sign In'
             )}
           </Button>
         </form>
 
         <div className="mt-6 text-center">
           <p className="text-sm text-muted-foreground">
-            Noch kein Konto?{' '}
+            Don't have an account?{' '}
             <button
               type="button"
               onClick={onSwitchToRegister}
               className="text-primary hover:underline font-medium"
             >
-              Jetzt registrieren
+              Register now
             </button>
           </p>
         </div>

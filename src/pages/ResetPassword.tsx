@@ -17,62 +17,32 @@ export default function ResetPassword() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check for recovery token in URL hash
     const hash = window.location.hash;
-    if (hash.includes('type=recovery')) {
-      setIsValid(true);
-    }
-
-    // Also listen for auth state change with recovery event
+    if (hash.includes('type=recovery')) setIsValid(true);
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        setIsValid(true);
-      }
+      if (event === 'PASSWORD_RECOVERY') setIsValid(true);
     });
-
     return () => subscription.unsubscribe();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (password !== confirmPassword) {
-      toast({
-        title: 'Fehler',
-        description: 'Die Passwörter stimmen nicht überein.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Passwords do not match.', variant: 'destructive' });
       return;
     }
-
     if (password.length < 6) {
-      toast({
-        title: 'Fehler',
-        description: 'Das Passwort muss mindestens 6 Zeichen lang sein.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Password must be at least 6 characters long.', variant: 'destructive' });
       return;
     }
-
     setIsLoading(true);
     const { error } = await supabase.auth.updateUser({ password });
     setIsLoading(false);
-
     if (error) {
-      toast({
-        title: 'Fehler',
-        description: error.message,
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
       return;
     }
-
-    toast({
-      title: 'Passwort geändert',
-      description: 'Dein Passwort wurde erfolgreich zurückgesetzt.',
-    });
-
-    // Sign out so user logs in with new password
+    toast({ title: 'Password changed', description: 'Your password has been successfully reset.' });
     await supabase.auth.signOut();
     navigate('/auth');
   };
@@ -86,7 +56,7 @@ export default function ResetPassword() {
           </div>
           <div>
             <h1 className="text-lg font-bold">HR Training</h1>
-            <p className="text-xs text-muted-foreground">Passwort zurücksetzen</p>
+            <p className="text-xs text-muted-foreground">Reset Password</p>
           </div>
         </div>
       </header>
@@ -94,68 +64,37 @@ export default function ResetPassword() {
       <main className="flex-1 flex items-center justify-center p-6">
         <Card className="w-full max-w-md mx-auto bg-card border-border">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Neues Passwort</CardTitle>
+            <CardTitle className="text-2xl">New Password</CardTitle>
             <CardDescription>
-              {isValid
-                ? 'Gib dein neues Passwort ein.'
-                : 'Ungültiger oder abgelaufener Link. Bitte fordere einen neuen an.'}
+              {isValid ? 'Enter your new password.' : 'Invalid or expired link. Please request a new one.'}
             </CardDescription>
           </CardHeader>
           {isValid && (
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="new-password">Neues Passwort</Label>
+                  <Label htmlFor="new-password">New Password</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="new-password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10"
-                      required
-                      minLength={6}
-                    />
+                    <Input id="new-password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10" required minLength={6} />
                   </div>
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Passwort bestätigen</Label>
+                  <Label htmlFor="confirm-password">Confirm Password</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="confirm-password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="pl-10"
-                      required
-                      minLength={6}
-                    />
+                    <Input id="confirm-password" type="password" placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="pl-10" required minLength={6} />
                   </div>
                 </div>
-
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Speichern...
-                    </>
-                  ) : (
-                    'Passwort speichern'
-                  )}
+                  {isLoading ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving...</>) : 'Save Password'}
                 </Button>
               </form>
             </CardContent>
           )}
           {!isValid && (
             <CardContent className="text-center">
-              <Button variant="outline" onClick={() => navigate('/auth')}>
-                Zurück zum Login
-              </Button>
+              <Button variant="outline" onClick={() => navigate('/auth')}>Back to Login</Button>
             </CardContent>
           )}
         </Card>
