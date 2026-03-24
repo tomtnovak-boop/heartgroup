@@ -12,7 +12,7 @@ import { SessionLeaderboard } from '@/components/dashboard/SessionLeaderboard';
 import { useBluetoothHR } from '@/hooks/useBluetoothHR';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { enableNoSleep, isIOS } from '@/lib/noSleep';
-import { calculateZone, calculateHRPercentage } from '@/lib/heartRateUtils';
+import { calculateZone, calculateHRPercentage, getZoneInfo, calculateCaloriesPerMinute } from '@/lib/heartRateUtils';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -574,43 +574,7 @@ export default function Participant() {
         )}
       </div>
 
-      {/* Live BPM Display (visible as soon as connected, before coach starts) */}
-      {isConnected && bpm > 0 && (() => {
-        const hrPct = calculateHRPercentage(bpm, effectiveMaxHr);
-        const zoneInfo = zone > 0 ? { name: zoneLabels[zone], color: zoneColorArr[zone] } : null;
-        return (
-          <div className="px-4 pt-3">
-            <div className="rounded-2xl p-4 flex items-center gap-4" style={{
-              background: zoneInfo ? `${zoneInfo.color}15` : 'hsl(var(--muted))',
-              border: `1px solid ${zoneInfo ? zoneInfo.color + '30' : 'hsl(var(--border))'}`,
-              transition: 'background 0.8s ease, border-color 0.8s ease',
-            }}>
-              <div className="relative">
-                <Heart
-                  className="w-12 h-12 animate-pulse"
-                  style={{ color: zoneInfo?.color || 'hsl(var(--primary))' }}
-                  fill="currentColor"
-                />
-                <span className="absolute inset-0 flex items-center justify-center text-xs font-bold" style={{ color: 'hsl(var(--background))' }}>
-                  {bpm}
-                </span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-bold" style={{ color: zoneInfo?.color || 'hsl(var(--foreground))' }}>{bpm}</span>
-                  <span className="text-sm text-muted-foreground">bpm</span>
-                  <span className="text-sm text-muted-foreground ml-auto">{hrPct}% HRmax</span>
-                </div>
-                {zoneInfo && (
-                  <div className="text-sm font-medium mt-0.5" style={{ color: zoneInfo.color }}>
-                    Zone {zone} · {zoneInfo.name}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-      })()}
+
 
       {/* Session Join Dialog */}
       <Dialog open={showJoinDialog} onOpenChange={setShowJoinDialog}>
@@ -643,6 +607,57 @@ export default function Participant() {
 
         {/* OVERVIEW TAB */}
         <TabsContent value="overview" className="flex-1 overflow-y-auto pb-4 space-y-4">
+          {/* Live BPM Card */}
+          {isConnected && (() => {
+            const zi = zone > 0 ? getZoneInfo(zone) : null;
+            return (
+              <div className="rounded-2xl p-4 mt-2 flex items-center gap-4" style={{
+                background: zi ? `${zi.color}15` : 'hsl(var(--muted))',
+                border: `1px solid ${zi ? zi.color + '30' : 'hsl(var(--border))'}`,
+                transition: 'background 0.8s ease, border-color 0.8s ease',
+              }}>
+                {/* Left: label + zone */}
+                <div className="flex flex-col items-start gap-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: zi?.color || 'hsl(var(--primary))' }} />
+                      <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: zi?.color || 'hsl(var(--primary))' }} />
+                    </span>
+                    <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: zi?.color || 'hsl(var(--foreground))' }}>Live</span>
+                  </div>
+                  {bpm > 0 && zi && (
+                    <span className="text-[10px] font-medium" style={{ color: zi.color, opacity: 0.8 }}>
+                      Zone {zone} · {zi.name}
+                    </span>
+                  )}
+                </div>
+
+                {/* Center: BPM */}
+                <div className="flex-1 text-center">
+                  <span className="text-4xl font-black" style={{ color: bpm > 0 && zi ? zi.color : 'white' }}>
+                    {bpm > 0 ? bpm : '--'}
+                  </span>
+                  <span className="text-xs text-muted-foreground ml-1">bpm</span>
+                </div>
+
+                {/* Right: HR% + calories */}
+                <div className="flex flex-col items-end gap-0.5 text-right">
+                  {bpm > 0 && (
+                    <span className="text-xs font-semibold text-muted-foreground">
+                      {calculateHRPercentage(bpm, effectiveMaxHr)}% HRmax
+                    </span>
+                  )}
+                  {bpm > 0 && profile.weight && profile.gender && (profile.gender === 'male' || profile.gender === 'female') && (
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                      <Flame className="w-3 h-3 text-orange-400" />
+                      {Math.round(calculateCaloriesPerMinute(bpm, profile.weight, profile.age, profile.gender))} kcal/min
+                    </span>
+                  )}
+                  <span className="text-[10px] text-muted-foreground truncate max-w-[80px]">{deviceName}</span>
+                </div>
+              </div>
+            );
+          })()}
           <h2 className="text-sm font-semibold text-muted-foreground pt-2">
             {monthLabel} — Monthly Report
           </h2>
