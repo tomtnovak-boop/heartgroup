@@ -1,4 +1,3 @@
-import { HexTile } from './HexTile';
 import { LiveHRData } from '@/hooks/useLiveHR';
 
 const ZONE_CONFIG: Record<number, { label: string; color: string }> = {
@@ -9,8 +8,9 @@ const ZONE_CONFIG: Record<number, { label: string; color: string }> = {
   5: { label: 'MAX EFFORT', color: '#e53935' },
 };
 
-const FIXED_TILE_SIZE = 64;
-const FIXED_GAP = 6;
+export const FIXED_TILE_SIZE = 64;
+export const FIXED_GAP = 6;
+export const ZONE_HEADER_HEIGHT = 48;
 
 interface ZoneColumnProps {
   zone: number;
@@ -18,12 +18,11 @@ interface ZoneColumnProps {
   selectedProfileId?: string;
 }
 
-export function ZoneColumn({ zone, participants, selectedProfileId }: ZoneColumnProps) {
+export function ZoneColumn({ zone, participants }: ZoneColumnProps) {
   const config = ZONE_CONFIG[zone];
-  const sorted = [...participants].sort((a, b) => b.hr_percentage - a.hr_percentage);
 
   return (
-    <div className="flex flex-col items-center min-w-0 h-full">
+    <div data-zone-col={zone} className="flex flex-col items-center min-w-0 h-full">
       {/* Header */}
       <div className="text-center mb-1.5 flex-shrink-0">
         <h2
@@ -48,43 +47,21 @@ export function ZoneColumn({ zone, participants, selectedProfileId }: ZoneColumn
         }}
       />
 
-      {/* Tiles grid */}
-      <div
-        className="flex-1 min-h-0"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: `${FIXED_GAP}px`,
-          justifyItems: 'center',
-          alignContent: 'start',
-          overflowY: 'auto',
-          overflowX: 'hidden',
-        }}
-      >
-        {sorted.length === 0 ? (
-          <div className="col-span-full flex items-center justify-center py-6">
-            <div
-              className="hex-breathe"
-              style={{
-                width: 48,
-                height: 55,
-                clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                background: `linear-gradient(135deg, ${config.color}18, ${config.color}08)`,
-                boxShadow: `0 0 6px ${config.color}22`,
-              }}
-            />
-          </div>
-        ) : (
-          sorted.map((p) => (
-            <HexTile
-              key={p.profile_id}
-              data={p}
-              isSelected={p.profile_id === selectedProfileId}
-              tileSize={FIXED_TILE_SIZE}
-            />
-          ))
-        )}
-      </div>
+      {/* Empty placeholder when no participants */}
+      {participants.length === 0 && (
+        <div className="flex-1 flex items-start justify-center py-6">
+          <div
+            className="hex-breathe"
+            style={{
+              width: 48,
+              height: 55,
+              clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+              background: `linear-gradient(135deg, ${config.color}18, ${config.color}08)`,
+              boxShadow: `0 0 6px ${config.color}22`,
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }
