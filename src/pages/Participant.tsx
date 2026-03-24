@@ -444,24 +444,33 @@ export default function Participant() {
           )}
 
           {/* Weekly sessions chart */}
-          {monthStats.weekData.length > 0 && (
-            <Card className="p-3">
-              <h3 className="text-xs font-semibold mb-2">Weekly Sessions</h3>
-              <div className="h-20">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={monthStats.weekData}>
-                    <XAxis dataKey="week" tick={{ fill: 'hsl(215 20% 55%)', fontSize: 10 }} axisLine={false} tickLine={false} />
-                    <YAxis hide allowDecimals={false} />
-                    <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                      {monthStats.weekData.map((_, i) => (
-                        <Cell key={i} fill="hsl(280 100% 65%)" />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </Card>
-          )}
+          <Card className="p-3">
+            <h3 className="text-xs font-semibold mb-2">Weekly Sessions</h3>
+            <div className="h-24">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthStats.weekData} barCategoryGap="20%">
+                  <XAxis dataKey="week" tick={{ fill: 'hsl(215 20% 55%)', fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis hide domain={[0, 5]} allowDecimals={false} />
+                  <Bar
+                    dataKey="count"
+                    radius={[4, 4, 0, 0]}
+                    minPointSize={3}
+                    label={({ x, y, width, value }: any) =>
+                      value > 0 ? (
+                        <text x={x + width / 2} y={y - 4} textAnchor="middle" fill="hsl(215 20% 65%)" fontSize={10}>
+                          {value}
+                        </text>
+                      ) : null
+                    }
+                  >
+                    {monthStats.weekData.map((entry, i) => (
+                      <Cell key={i} fill={entry.count > 0 ? 'hsl(280 100% 65%)' : 'hsl(215 20% 20%)'} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
 
           {/* Streak cards */}
           <div className="grid grid-cols-3 gap-2">
