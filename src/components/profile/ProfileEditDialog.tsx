@@ -164,6 +164,7 @@ export function ProfileEditDialog({
     const maxHr = calculateMaxHR(age);
 
     const parsedWeight = weight ? parseInt(weight, 10) : null;
+    const parsedHeight = height ? parseInt(height, 10) : null;
 
     const { data, error } = await supabase
       .from('profiles')
@@ -175,6 +176,7 @@ export function ProfileEditDialog({
         max_hr: maxHr,
         custom_max_hr: parsedCustomMaxHr,
         weight: parsedWeight,
+        height: parsedHeight,
         gender: gender || null,
       })
       .eq('id', profile.id)
