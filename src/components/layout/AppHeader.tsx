@@ -1,4 +1,4 @@
-import { Heart, Monitor, Users, LogOut, Activity, RefreshCw } from 'lucide-react';
+import { Heart, Monitor, Users, LogOut, Activity, RefreshCw, Play, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { useNavigate } from 'react-router-dom';
@@ -21,6 +21,20 @@ interface AppHeaderProps {
   onTabChange?: (tab: string) => void;
   onRefresh?: () => void;
   stats?: StatsData;
+  sessionActive?: boolean;
+  sessionElapsed?: number;
+  onStartSession?: () => void;
+  onStopSession?: () => void;
+}
+
+function formatElapsed(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  const mm = String(m).padStart(2, '0');
+  const ss = String(s).padStart(2, '0');
+  if (h > 0) return `${String(h).padStart(2, '0')}:${mm}:${ss}`;
+  return `${mm}:${ss}`;
 }
 
 export function AppHeader({
@@ -31,6 +45,10 @@ export function AppHeader({
   onTabChange,
   onRefresh,
   stats,
+  sessionActive = false,
+  sessionElapsed = 0,
+  onStartSession,
+  onStopSession,
 }: AppHeaderProps) {
   const { user, isAuthenticated, signOut } = useAuthContext();
   const navigate = useNavigate();
@@ -120,8 +138,46 @@ export function AppHeader({
         </div>
       )}
 
-      {/* Right: View Switcher + Refresh + Logout */}
-      <div className="flex items-center gap-1 flex-shrink-0">
+      {/* Right: Session Button + Refresh + View Switcher + Logout */}
+      <div className="flex items-center gap-1.5 flex-shrink-0">
+        {/* Session Controls - only show on live tab in coach view */}
+        {currentView === 'coach' && activeTab === 'live' && (
+          <>
+            {sessionActive ? (
+              <div className="flex items-center gap-1.5">
+                {/* Pulsing red dot */}
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-destructive" />
+                </span>
+                {/* Timer */}
+                <span className="text-xs font-mono font-bold text-destructive tabular-nums">
+                  {formatElapsed(sessionElapsed)}
+                </span>
+                {/* Stop button */}
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="h-7 px-2.5 text-xs gap-1"
+                  onClick={onStopSession}
+                >
+                  <Square className="w-3 h-3" fill="currentColor" />
+                  Stop
+                </Button>
+              </div>
+            ) : (
+              <Button
+                size="sm"
+                className="h-7 px-2.5 text-xs gap-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                onClick={onStartSession}
+              >
+                <Play className="w-3 h-3" fill="currentColor" />
+                Session starten
+              </Button>
+            )}
+          </>
+        )}
+
         {activeTab === 'live' && onRefresh && (
           <Button variant="ghost" size="icon" onClick={onRefresh} className="h-7 w-7">
             <RefreshCw className="w-3.5 h-3.5" />
