@@ -58,7 +58,6 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
     if (!col) return { left: 0, top: 0 };
 
     const tilesPerRow = 2;
-    const tileHeight = FIXED_TILE_SIZE * 1.15;
     const row = Math.floor(rankInZone / tilesPerRow);
     const colInGroup = rankInZone % tilesPerRow;
 
@@ -66,7 +65,7 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
     const startX = col.left + (col.width - totalTileWidth) / 2;
 
     const left = startX + colInGroup * (FIXED_TILE_SIZE + FIXED_GAP);
-    const top = ZONE_HEADER_HEIGHT + row * (tileHeight + FIXED_GAP);
+    const top = ZONE_HEADER_HEIGHT + row * (TILE_TOTAL_HEIGHT + FIXED_GAP);
 
     return { left, top };
   }, [columnOffsets]);
