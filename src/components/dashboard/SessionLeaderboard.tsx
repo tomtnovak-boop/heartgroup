@@ -235,7 +235,7 @@ function ParticipantResult({
           <ArrowLeft className="w-3.5 h-3.5" />
           Back to my Dashboard
         </button>
-        <p className="text-center text-[10px] text-white/25 mt-1.5">
+        <p className="text-center text-[10px] text-white/60 mt-1.5">
           Automatically closes in {Math.floor(Math.max(0, 300 - elapsed) / 60)}:{String(Math.max(0, 300 - elapsed) % 60).padStart(2, '0')}
         </p>
       </div>
