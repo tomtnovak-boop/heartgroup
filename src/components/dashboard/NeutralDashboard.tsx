@@ -208,7 +208,7 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
                       zIndex: 10,
                     }}
                   >
-                    <span style={{ color: 'white', fontWeight: 'bold', fontSize: 'clamp(9px, 1.1vh, 14px)' }}>{row.number}</span>
+                    <span style={{ color: 'white', fontWeight: 900, fontSize: 'clamp(10px, 1.3vh, 15px)', textShadow: '0 1px 3px rgba(0,0,0,0.8)', lineHeight: 1, userSelect: 'none' }}>{row.number}</span>
                   </div>
                 )}
               </div>
