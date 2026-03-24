@@ -175,7 +175,7 @@ function ParticipantResult({
         {/* Header */}
         <Trophy className="w-8 h-8 text-yellow-400 mb-2" />
         <h1 className="text-[20px] font-bold text-white mb-1">Great work!</h1>
-        <p className="text-[11px] text-white/50 mb-6">
+        <p className="text-[11px] text-white mb-6">
           {format(sessionDate, 'MMM d, yyyy')} · {formatDur(sessionDuration)}
         </p>
 
