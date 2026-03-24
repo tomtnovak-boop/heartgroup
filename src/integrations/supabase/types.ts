@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      active_sessions: {
+        Row: {
+          created_at: string
+          created_by: string
+          ended_at: string | null
+          id: string
+          session_code: string
+          started_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          ended_at?: string | null
+          id?: string
+          session_code: string
+          started_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          ended_at?: string | null
+          id?: string
+          session_code?: string
+          started_at?: string
+        }
+        Relationships: []
+      }
       live_hr: {
         Row: {
           bpm: number
@@ -96,6 +123,35 @@ export type Database = {
           weight?: number | null
         }
         Relationships: []
+      }
+      session_lobby: {
+        Row: {
+          id: string
+          joined_at: string
+          profile_id: string
+          session_code: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          profile_id: string
+          session_code: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          profile_id?: string
+          session_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_lobby_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
