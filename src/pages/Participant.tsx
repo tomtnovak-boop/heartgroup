@@ -15,7 +15,7 @@ import { calculateZone, calculateHRPercentage } from '@/lib/heartRateUtils';
 import {
   Heart, Loader2, Bluetooth, BluetoothOff, LogOut, Settings, User,
   TrendingUp, TrendingDown, Flame, Clock, Activity, ChevronRight, Zap,
-  BarChart3, Calendar, ArrowDown, ArrowUp, ChevronDown,
+  BarChart3, Calendar, ArrowDown, ArrowUp, ChevronDown, ArrowLeft,
 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, getISOWeek, eachWeekOfInterval, subMonths } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
@@ -58,7 +58,7 @@ export default function Participant() {
   const [activeSession, setActiveSession] = useState(false);
   const [expandedMonth, setExpandedMonth] = useState<string>('');
   const navigate = useNavigate();
-  const { user, signOut } = useAuthContext();
+  const { user, signOut, isCoach } = useAuthContext();
 
   const {
     isConnected, isConnecting, bpm, connect, disconnect, deviceName,
@@ -356,6 +356,11 @@ export default function Participant() {
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 border-b border-border">
         <div className="flex items-center gap-2">
+          {isCoach && (
+            <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')} className="h-8 w-8 text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+          )}
           <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
             <Heart className="w-4 h-4 text-primary" fill="currentColor" />
           </div>
