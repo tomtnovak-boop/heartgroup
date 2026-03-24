@@ -81,17 +81,6 @@ export function ZoneColumn({ zone, participants, selectedProfileId }: ZoneColumn
         )}
       </div>
 
-      {/* Count */}
-      <div
-        className="text-[10px] font-bold rounded-full px-2 py-0.5 mt-auto flex-shrink-0"
-        style={{
-          color: config.color,
-          background: `${config.color}12`,
-          border: `1px solid ${config.color}22`,
-        }}
-      >
-        {sorted.length}
-      </div>
     </div>
   );
 }
