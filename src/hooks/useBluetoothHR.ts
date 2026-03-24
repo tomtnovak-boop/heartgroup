@@ -79,7 +79,8 @@ export function useBluetoothHR() {
     isManualDisconnectRef.current = false;
     setState(prev => ({ ...prev, isConnecting: true, error: null, connectionLost: false }));
     try {
-      const device = await navigator.bluetooth.requestDevice({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const device = await (navigator.bluetooth as any).requestDevice({
         filters: [
           { services: ['heart_rate'] },
           { namePrefix: 'Garmin' }, { namePrefix: 'Fenix' }, { namePrefix: 'Forerunner' },
@@ -105,7 +106,7 @@ export function useBluetoothHR() {
           { namePrefix: 'HR Monitor' }, { namePrefix: 'BLE HR' }, { namePrefix: 'Smart HR' },
         ],
         optionalServices: ['heart_rate', '0000180d-0000-1000-8000-00805f9b34fb'],
-      });
+      }) as BluetoothDevice;
       deviceRef.current = device;
       device.addEventListener('gattserverdisconnected', handleDisconnect);
       const success = await connectToDevice(device);
