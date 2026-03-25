@@ -873,7 +873,7 @@ export default function Participant() {
                     }
                   >
                     {monthStats.weekData.map((entry, i) => (
-                      <Cell key={i} fill={entry.count > 0 ? 'hsl(280 100% 65%)' : 'hsl(215 20% 20%)'} />
+                      <Cell key={i} fill={entry.count > 0 ? 'hsl(8 100% 57%)' : 'hsl(215 20% 20%)'} />
                     ))}
                   </Bar>
                 </BarChart>
