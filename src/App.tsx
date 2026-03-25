@@ -53,6 +53,14 @@ const App = () => (
             />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/display" element={<Display />} />
+            <Route 
+              path="/profile/edit" 
+              element={
+                <ProtectedRoute>
+                  <ProfileEdit />
+                </ProtectedRoute>
+              } 
+            />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

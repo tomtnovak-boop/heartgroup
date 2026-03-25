@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { HeartRateDisplay } from '@/components/participant/HeartRateDisplay';
 import { WorkoutHistory } from '@/components/participant/WorkoutHistory';
-import { WorkoutHistory } from '@/components/participant/WorkoutHistory';
+import { SessionLeaderboard } from '@/components/dashboard/SessionLeaderboard';
 import { SessionLeaderboard } from '@/components/dashboard/SessionLeaderboard';
 import { useBluetoothHR } from '@/hooks/useBluetoothHR';
 import { useWakeLock } from '@/hooks/useWakeLock';
