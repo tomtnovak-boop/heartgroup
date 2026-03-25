@@ -511,7 +511,7 @@ export default function Participant() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+      <div className="participant-theme min-h-screen bg-background flex flex-col items-center justify-center gap-4">
         <Heart className="w-12 h-12 text-primary animate-pulse" fill="currentColor" />
         <div className="flex items-center gap-2 text-muted-foreground">
           <Loader2 className="w-4 h-4 animate-spin" />
