@@ -9,7 +9,6 @@ import { Input } from '@/components/ui/input';
 import { HeartRateDisplay } from '@/components/participant/HeartRateDisplay';
 import { WorkoutHistory } from '@/components/participant/WorkoutHistory';
 import { SessionLeaderboard } from '@/components/dashboard/SessionLeaderboard';
-import { SessionLeaderboard } from '@/components/dashboard/SessionLeaderboard';
 import { useBluetoothHR } from '@/hooks/useBluetoothHR';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { enableNoSleep, isIOS } from '@/lib/noSleep';
