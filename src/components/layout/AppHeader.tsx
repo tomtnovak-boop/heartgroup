@@ -196,6 +196,8 @@ export function AppHeader({
           )
         )}
 
+        {children}
+
         {/* Refresh */}
         {activeTab === 'live' && onRefresh && (
           <Button variant="ghost" size="icon" onClick={onRefresh} className="h-7 w-7">
