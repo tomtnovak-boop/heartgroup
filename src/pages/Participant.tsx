@@ -543,7 +543,7 @@ export default function Participant() {
   const zone = bpm > 0 ? calculateZone(bpm, effectiveMaxHr) : 0;
 
   const zoneColors: Record<string, string> = {
-    z1: '#00bcd4', z2: '#4caf50', z3: '#ffc107', z4: '#ff9800', z5: '#f44336',
+    z1: '#9CA3AF', z2: '#00BFFF', z3: '#22C55E', z4: '#F59E0B', z5: '#EF4444',
   };
 
   const dominantZone = (w: Workout) => {
