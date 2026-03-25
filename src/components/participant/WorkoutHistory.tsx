@@ -230,7 +230,7 @@ export function WorkoutHistory({ profileId, onClose }: WorkoutHistoryProps) {
                     </div>
                     {workout.rank_avg_bpm != null && workout.session_participant_count != null && (
                       <div className="text-[11px] mt-0.5">
-                        <span className="text-purple-400">Avg #{workout.rank_avg_bpm}/{workout.session_participant_count}</span>
+                        <span className="text-primary">Avg #{workout.rank_avg_bpm}/{workout.session_participant_count}</span>
                         <span className="text-muted-foreground"> · </span>
                         <span className="text-red-400">Peak #{workout.rank_peak_bpm}/{workout.session_participant_count}</span>
                       </div>

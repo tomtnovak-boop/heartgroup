@@ -1156,15 +1156,6 @@ export default function Participant() {
         </TabsContent>
       </Tabs>
 
-      {/* Profile Edit Dialog */}
-      {profile && (
-        <ProfileEditDialog
-          profile={profile}
-          open={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
-          onProfileUpdated={(p) => setProfile(p)}
-        />
-      )}
 
       {showLeaderboard && leaderboardData.length > 0 && (
         <SessionLeaderboard
