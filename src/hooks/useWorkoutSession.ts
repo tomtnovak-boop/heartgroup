@@ -158,18 +158,8 @@ export function useWorkoutSession() {
     return () => { supabase.removeChannel(sub); };
   }, [sessionCode]);
 
-  // Create a new session code (called before starting)
-  const createSessionCode = useCallback(async () => {
-    const code = generateSessionCode();
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) return;
-
-    await supabase.from('active_sessions').insert({
-      session_code: code,
-      created_by: userData.user.id,
-    });
-    setSessionCode(code);
-  }, []);
+  // createSessionCode is no longer needed — codes are auto-managed
+  const createSessionCode = ensureSessionCode;
 
   const startSession = useCallback(async (participants: LiveHRData[]) => {
     const code = sessionCodeRef.current;
