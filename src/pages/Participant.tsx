@@ -1133,7 +1133,7 @@ export default function Participant() {
               </div>
             </div>
 
-            <Button className="w-full" onClick={() => setIsEditDialogOpen(true)}>
+            <Button className="w-full" onClick={() => navigate('/profile/edit')}>
               <Settings className="w-4 h-4 mr-2" />
               Edit Profile
             </Button>
