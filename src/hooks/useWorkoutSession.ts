@@ -57,7 +57,21 @@ export function useWorkoutSession() {
     };
   }, [session.isActive, session.startedAt]);
 
-  // Restore session on mount
+  // Helper: create a new active_sessions record and set sessionCode
+  const ensureSessionCode = useCallback(async () => {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) return;
+
+    const code = generateSessionCode();
+    await supabase.from('active_sessions').insert({
+      session_code: code,
+      created_by: userData.user.id,
+    });
+    setSessionCode(code);
+    return code;
+  }, []);
+
+  // Restore session on mount — or auto-create a code if none exists
   useEffect(() => {
     const restoreSession = async () => {
       try {
@@ -72,6 +86,9 @@ export function useWorkoutSession() {
 
         if (activeSession) {
           setSessionCode(activeSession.session_code);
+        } else {
+          // No active session — auto-create one
+          await ensureSessionCode();
         }
 
         const { data: openWorkouts, error } = await supabase
@@ -106,7 +123,7 @@ export function useWorkoutSession() {
     };
 
     restoreSession();
-  }, []);
+  }, [ensureSessionCode]);
 
   // Subscribe to lobby for current session code
   useEffect(() => {
@@ -141,18 +158,8 @@ export function useWorkoutSession() {
     return () => { supabase.removeChannel(sub); };
   }, [sessionCode]);
 
-  // Create a new session code (called before starting)
-  const createSessionCode = useCallback(async () => {
-    const code = generateSessionCode();
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) return;
-
-    await supabase.from('active_sessions').insert({
-      session_code: code,
-      created_by: userData.user.id,
-    });
-    setSessionCode(code);
-  }, []);
+  // createSessionCode is no longer needed — codes are auto-managed
+  const createSessionCode = ensureSessionCode;
 
   const startSession = useCallback(async (participants: LiveHRData[]) => {
     const code = sessionCodeRef.current;
@@ -231,15 +238,16 @@ export function useWorkoutSession() {
       activeWorkouts: new Map(),
     });
 
-    // End the active session record
+    // End the active session record and immediately create a new one
     if (code) {
       await supabase.from('active_sessions')
         .update({ ended_at: new Date().toISOString() })
         .eq('session_code', code)
         .is('ended_at', null);
-      // Clean up lobby
+      // Clean up lobby for old code
       await supabase.from('session_lobby').delete().eq('session_code', code);
-      setSessionCode(null);
+      // Auto-create new session code for next session
+      await ensureSessionCode();
     }
 
     if (workouts.size === 0) return;
