@@ -115,7 +115,7 @@ export function WorkoutHistory({ profileId, onClose }: WorkoutHistoryProps) {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const zoneColors = ['hsl(220 15% 45%)', 'hsl(200 100% 50%)', 'hsl(145 80% 45%)', 'hsl(45 100% 50%)', 'hsl(0 100% 55%)'];
+  const zoneColors = ['#9CA3AF', '#00BFFF', '#22C55E', '#F59E0B', '#EF4444'];
   const incompleteCount = workouts.filter(isIncomplete).length;
 
   if (selectedWorkout) {

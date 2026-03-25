@@ -28,11 +28,11 @@ export function WorkoutSummary({ workout, hrHistory, onClose }: WorkoutSummaryPr
   };
 
   const zoneData = [
-    { zone: 'Z1', seconds: workout.zone_1_seconds, color: 'hsl(220 15% 45%)' },
-    { zone: 'Z2', seconds: workout.zone_2_seconds, color: 'hsl(200 100% 50%)' },
-    { zone: 'Z3', seconds: workout.zone_3_seconds, color: 'hsl(145 80% 45%)' },
-    { zone: 'Z4', seconds: workout.zone_4_seconds, color: 'hsl(45 100% 50%)' },
-    { zone: 'Z5', seconds: workout.zone_5_seconds, color: 'hsl(0 100% 55%)' },
+    { zone: 'Z1', seconds: workout.zone_1_seconds, color: '#9CA3AF' },
+    { zone: 'Z2', seconds: workout.zone_2_seconds, color: '#00BFFF' },
+    { zone: 'Z3', seconds: workout.zone_3_seconds, color: '#22C55E' },
+    { zone: 'Z4', seconds: workout.zone_4_seconds, color: '#F59E0B' },
+    { zone: 'Z5', seconds: workout.zone_5_seconds, color: '#EF4444' },
   ];
 
   const sampleInterval = Math.max(1, Math.floor(hrHistory.length / 60));

@@ -543,7 +543,7 @@ export default function Participant() {
   const zone = bpm > 0 ? calculateZone(bpm, effectiveMaxHr) : 0;
 
   const zoneColors: Record<string, string> = {
-    z1: '#00bcd4', z2: '#4caf50', z3: '#ffc107', z4: '#ff9800', z5: '#f44336',
+    z1: '#9CA3AF', z2: '#00BFFF', z3: '#22C55E', z4: '#F59E0B', z5: '#EF4444',
   };
 
   const dominantZone = (w: Workout) => {
@@ -553,7 +553,7 @@ export default function Participant() {
   };
 
   const zoneLabels = ['', 'Recovery', 'Fat Burn', 'Aerobic', 'Cardio', 'Max Effort'];
-  const zoneColorArr = ['', '#00bcd4', '#4caf50', '#ffc107', '#ff9800', '#f44336'];
+  const zoneColorArr = ['', '#9CA3AF', '#00BFFF', '#22C55E', '#F59E0B', '#EF4444'];
 
   const initials = profile.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   const now = new Date();
