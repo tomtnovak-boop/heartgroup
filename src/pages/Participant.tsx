@@ -61,7 +61,7 @@ interface Workout {
 export default function Participant() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  
   const [showHistory, setShowHistory] = useState(false);
   const [isTrainingActive, setIsTrainingActive] = useState(false);
   const [monthlyWorkouts, setMonthlyWorkouts] = useState<Workout[]>([]);
