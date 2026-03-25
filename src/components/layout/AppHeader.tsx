@@ -29,6 +29,7 @@ interface AppHeaderProps {
   sessionCode?: string | null;
   lobbyCount?: number;
   onCreateSessionCode?: () => void;
+  children?: React.ReactNode;
 }
 
 function formatElapsed(seconds: number): string {
