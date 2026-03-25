@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { HeartRateDisplay } from '@/components/participant/HeartRateDisplay';
-import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
 import { WorkoutHistory } from '@/components/participant/WorkoutHistory';
 import { SessionLeaderboard } from '@/components/dashboard/SessionLeaderboard';
 import { useBluetoothHR } from '@/hooks/useBluetoothHR';
@@ -62,7 +61,7 @@ interface Workout {
 export default function Participant() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  
   const [showHistory, setShowHistory] = useState(false);
   const [isTrainingActive, setIsTrainingActive] = useState(false);
   const [monthlyWorkouts, setMonthlyWorkouts] = useState<Workout[]>([]);
@@ -873,7 +872,7 @@ export default function Participant() {
                     }
                   >
                     {monthStats.weekData.map((entry, i) => (
-                      <Cell key={i} fill={entry.count > 0 ? 'hsl(280 100% 65%)' : 'hsl(215 20% 20%)'} />
+                      <Cell key={i} fill={entry.count > 0 ? 'hsl(8 100% 57%)' : 'hsl(215 20% 20%)'} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -1133,7 +1132,7 @@ export default function Participant() {
               </div>
             </div>
 
-            <Button className="w-full" onClick={() => setIsEditDialogOpen(true)}>
+            <Button className="w-full" onClick={() => navigate('/profile/edit')}>
               <Settings className="w-4 h-4 mr-2" />
               Edit Profile
             </Button>
@@ -1156,15 +1155,6 @@ export default function Participant() {
         </TabsContent>
       </Tabs>
 
-      {/* Profile Edit Dialog */}
-      {profile && (
-        <ProfileEditDialog
-          profile={profile}
-          open={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
-          onProfileUpdated={(p) => setProfile(p)}
-        />
-      )}
 
       {showLeaderboard && leaderboardData.length > 0 && (
         <SessionLeaderboard

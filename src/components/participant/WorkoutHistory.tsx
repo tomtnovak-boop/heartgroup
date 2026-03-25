@@ -153,10 +153,10 @@ export function WorkoutHistory({ profileId, onClose }: WorkoutHistoryProps) {
                 <Card className="p-4">
                   <h3 className="text-sm font-semibold mb-3">Your Ranking in This Session</h3>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="text-center p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                      <div className="text-2xl font-bold text-purple-400">#{selectedWorkout.rank_avg_bpm}</div>
+                    <div className="text-center p-3 rounded-lg bg-primary/10 border border-primary/20">
+                      <div className="text-2xl font-bold text-primary">#{selectedWorkout.rank_avg_bpm}</div>
                       <div className="text-xs text-muted-foreground">of {selectedWorkout.session_participant_count}</div>
-                      <div className="text-[11px] text-purple-400 mt-1">Avg BPM Rank</div>
+                      <div className="text-[11px] text-primary mt-1">Avg BPM Rank</div>
                     </div>
                     <div className="text-center p-3 rounded-lg bg-red-500/10 border border-red-500/20">
                       <div className="text-2xl font-bold text-red-400">#{selectedWorkout.rank_peak_bpm}</div>
@@ -230,7 +230,7 @@ export function WorkoutHistory({ profileId, onClose }: WorkoutHistoryProps) {
                     </div>
                     {workout.rank_avg_bpm != null && workout.session_participant_count != null && (
                       <div className="text-[11px] mt-0.5">
-                        <span className="text-purple-400">Avg #{workout.rank_avg_bpm}/{workout.session_participant_count}</span>
+                        <span className="text-primary">Avg #{workout.rank_avg_bpm}/{workout.session_participant_count}</span>
                         <span className="text-muted-foreground"> · </span>
                         <span className="text-red-400">Peak #{workout.rank_peak_bpm}/{workout.session_participant_count}</span>
                       </div>
