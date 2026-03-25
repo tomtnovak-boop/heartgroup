@@ -511,7 +511,7 @@ export default function Participant() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+      <div className="participant-theme min-h-screen bg-background flex flex-col items-center justify-center gap-4">
         <Heart className="w-12 h-12 text-primary animate-pulse" fill="currentColor" />
         <div className="flex items-center gap-2 text-muted-foreground">
           <Loader2 className="w-4 h-4 animate-spin" />
@@ -562,7 +562,7 @@ export default function Participant() {
   const prevMonthName = format(new Date(now.getFullYear(), now.getMonth() - 1, 1), 'MMMM');
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="participant-theme min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 border-b border-border">
         <div className="flex items-center gap-2">
@@ -776,8 +776,8 @@ export default function Participant() {
                 <div className="text-[10px] text-muted-foreground">Lowest</div>
               </div>
               <div>
-                <Heart className="w-4 h-4 mx-auto mb-1 text-purple-400" fill="currentColor" />
-                <div className="text-2xl font-bold text-purple-400">{monthStats.avgBpm || '--'}</div>
+                <Heart className="w-4 h-4 mx-auto mb-1 text-primary" fill="currentColor" />
+                <div className="text-2xl font-bold text-primary">{monthStats.avgBpm || '--'}</div>
                 <div className="text-[10px] text-muted-foreground">Average</div>
               </div>
               <div>
@@ -896,7 +896,7 @@ export default function Participant() {
               <div className="text-[10px] text-muted-foreground">Z3+ Share</div>
             </Card>
             <Card className="p-3 text-center">
-              <div className="text-xl font-bold text-purple-400">
+              <div className="text-xl font-bold text-primary">
                 {(() => {
                   const ranked = monthlyWorkouts.filter(w => w.rank_avg_bpm != null);
                   if (ranked.length === 0) return '--';
@@ -931,7 +931,7 @@ export default function Participant() {
                           </div>
                           {w.rank_avg_bpm != null && w.session_participant_count != null && (
                             <div className="text-[11px] mt-0.5 flex items-center gap-2">
-                              <span className="text-purple-400">Avg #{w.rank_avg_bpm}/{w.session_participant_count}</span>
+                              <span className="text-primary">Avg #{w.rank_avg_bpm}/{w.session_participant_count}</span>
                               <span className="text-muted-foreground">·</span>
                               <span className="text-red-400">Peak #{w.rank_peak_bpm}/{w.session_participant_count}</span>
                             </div>
@@ -1014,8 +1014,8 @@ export default function Participant() {
                                   <div className="text-[9px] text-muted-foreground">Lowest</div>
                                 </div>
                                 <div>
-                                  <Heart className="w-3.5 h-3.5 mx-auto mb-0.5 text-purple-400" fill="currentColor" />
-                                  <div className="text-xl font-bold text-purple-400">{avg || '--'}</div>
+                                  <Heart className="w-3.5 h-3.5 mx-auto mb-0.5 text-primary" fill="currentColor" />
+                                  <div className="text-xl font-bold text-primary">{avg || '--'}</div>
                                   <div className="text-[9px] text-muted-foreground">Average</div>
                                 </div>
                                 <div>
@@ -1061,7 +1061,7 @@ export default function Participant() {
                                       <span className="font-medium">{format(new Date(s.started_at), 'MMM d, HH:mm')}</span>
                                       {s.rank_avg_bpm != null && s.session_participant_count != null && (
                                         <span className="text-[11px] mt-0.5">
-                                          <span className="text-purple-400">Avg #{s.rank_avg_bpm}/{s.session_participant_count}</span>
+                                          <span className="text-primary">Avg #{s.rank_avg_bpm}/{s.session_participant_count}</span>
                                           <span className="text-muted-foreground"> · </span>
                                           <span className="text-red-400">Peak #{s.rank_peak_bpm}/{s.session_participant_count}</span>
                                         </span>

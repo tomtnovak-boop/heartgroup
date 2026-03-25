@@ -18,7 +18,7 @@ export default function Auth() {
   }, [isAuthenticated, isLoading, navigate]);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="participant-theme min-h-screen bg-background flex flex-col">
       <header className="flex items-center justify-center p-6 border-b border-border">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
