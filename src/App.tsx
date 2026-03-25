@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import DashboardNeutral from "./pages/DashboardNeutral";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
+import Display from "./pages/Display";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const App = () => (
               } 
             />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/display" element={<Display />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

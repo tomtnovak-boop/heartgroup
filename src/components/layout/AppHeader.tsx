@@ -29,6 +29,7 @@ interface AppHeaderProps {
   sessionCode?: string | null;
   lobbyCount?: number;
   onCreateSessionCode?: () => void;
+  children?: React.ReactNode;
 }
 
 function formatElapsed(seconds: number): string {
@@ -47,6 +48,7 @@ export function AppHeader({
   sessionActive = false, sessionElapsed = 0,
   onStartSession, onStopSession,
   sessionCode, lobbyCount = 0, onCreateSessionCode,
+  children,
 }: AppHeaderProps) {
   const { isAuthenticated, isAdmin, signOut, user } = useAuthContext();
   const navigate = useNavigate();
@@ -193,6 +195,8 @@ export function AppHeader({
             </button>
           )
         )}
+
+        {children}
 
         {/* Refresh */}
         {activeTab === 'live' && onRefresh && (

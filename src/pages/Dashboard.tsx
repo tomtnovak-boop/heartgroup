@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { Monitor } from 'lucide-react';
 import { CoachDashboard } from '@/components/dashboard/CoachDashboard';
 import { SessionLeaderboard } from '@/components/dashboard/SessionLeaderboard';
 import { AppHeader } from '@/components/layout/AppHeader';
@@ -120,7 +121,17 @@ export default function Dashboard() {
         sessionCode={sessionCode}
         lobbyCount={lobbyCount}
         onCreateSessionCode={createSessionCode}
-      />
+      >
+        {activeTab === 'live' && (
+          <button
+            onClick={() => window.open('/display', '_blank', 'noopener')}
+            className="w-8 h-8 rounded-full flex items-center justify-center bg-muted hover:bg-muted/80 transition-colors"
+            title="Open TV Display"
+          >
+            <Monitor className="w-3.5 h-3.5 text-muted-foreground" />
+          </button>
+        )}
+      </AppHeader>
       <div className="flex-1 min-h-0 overflow-hidden">
         <CoachDashboard
           participants={participants}
