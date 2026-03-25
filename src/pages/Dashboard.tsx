@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { Monitor } from 'lucide-react';
 import { CoachDashboard } from '@/components/dashboard/CoachDashboard';
 import { SessionLeaderboard } from '@/components/dashboard/SessionLeaderboard';
 import { AppHeader } from '@/components/layout/AppHeader';
