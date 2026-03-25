@@ -562,7 +562,7 @@ export default function Participant() {
   const prevMonthName = format(new Date(now.getFullYear(), now.getMonth() - 1, 1), 'MMMM');
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="participant-theme min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 border-b border-border">
         <div className="flex items-center gap-2">

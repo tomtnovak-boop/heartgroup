@@ -4,6 +4,13 @@
 
 /* Heart Rate Training App - Dark Gym Design with Neon Accents */
 
+/* Participant-facing theme override (red accent instead of purple) */
+.participant-theme {
+  --primary: 8 100% 57%;
+  --accent: 8 100% 57%;
+  --ring: 8 100% 57%;
+}
+
 @layer base {
   :root {
     --background: 220 20% 8%;
