@@ -12,6 +12,7 @@ import DashboardNeutral from "./pages/DashboardNeutral";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Display from "./pages/Display";
+import ProfileEdit from "./pages/ProfileEdit";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
