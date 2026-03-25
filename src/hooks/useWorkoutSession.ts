@@ -238,15 +238,16 @@ export function useWorkoutSession() {
       activeWorkouts: new Map(),
     });
 
-    // End the active session record
+    // End the active session record and immediately create a new one
     if (code) {
       await supabase.from('active_sessions')
         .update({ ended_at: new Date().toISOString() })
         .eq('session_code', code)
         .is('ended_at', null);
-      // Clean up lobby
+      // Clean up lobby for old code
       await supabase.from('session_lobby').delete().eq('session_code', code);
-      setSessionCode(null);
+      // Auto-create new session code for next session
+      await ensureSessionCode();
     }
 
     if (workouts.size === 0) return;
