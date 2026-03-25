@@ -57,7 +57,21 @@ export function useWorkoutSession() {
     };
   }, [session.isActive, session.startedAt]);
 
-  // Restore session on mount
+  // Helper: create a new active_sessions record and set sessionCode
+  const ensureSessionCode = useCallback(async () => {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) return;
+
+    const code = generateSessionCode();
+    await supabase.from('active_sessions').insert({
+      session_code: code,
+      created_by: userData.user.id,
+    });
+    setSessionCode(code);
+    return code;
+  }, []);
+
+  // Restore session on mount — or auto-create a code if none exists
   useEffect(() => {
     const restoreSession = async () => {
       try {
@@ -72,6 +86,9 @@ export function useWorkoutSession() {
 
         if (activeSession) {
           setSessionCode(activeSession.session_code);
+        } else {
+          // No active session — auto-create one
+          await ensureSessionCode();
         }
 
         const { data: openWorkouts, error } = await supabase
@@ -106,7 +123,7 @@ export function useWorkoutSession() {
     };
 
     restoreSession();
-  }, []);
+  }, [ensureSessionCode]);
 
   // Subscribe to lobby for current session code
   useEffect(() => {
