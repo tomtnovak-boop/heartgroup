@@ -1,10 +1,13 @@
 import { useMemo } from 'react';
 import { LiveHRData } from '@/hooks/useLiveHR';
 import { calculateZone, getEffectiveMaxHR } from '@/lib/heartRateUtils';
+import { Users } from 'lucide-react';
 
 interface NeutralDashboardProps {
   participants: LiveHRData[];
   allProfiles: { id: string; name: string; nickname?: string | null; created_at: string }[];
+  lobbyProfileIds: string[];
+  sessionCode: string | null;
   isLoading: boolean;
   isSessionActive?: boolean;
 }
@@ -20,7 +23,6 @@ const ZONE_COLORS: Record<number, string> = {
 const SEGMENT_OPACITY: Record<number, number> = {
   1: 0.18, 2: 0.22, 3: 0.28, 4: 0.35, 5: 0.42,
 };
-
 
 const LEFT_BORDER_COLORS: Record<number, string> = {
   1: 'hsl(220 15% 45% / 0.35)',
@@ -54,16 +56,18 @@ const ZONE_GLOWS = [
   { left: '90%', color: '#f44336' },
 ];
 
-export function NeutralDashboard({ participants, allProfiles, isLoading, isSessionActive }: NeutralDashboardProps) {
+export function NeutralDashboard({ participants, allProfiles, lobbyProfileIds, sessionCode, isLoading, isSessionActive }: NeutralDashboardProps) {
+  // Build rows from lobby participants only (not all profiles)
   const rows = useMemo(() => {
-    const sorted = [...allProfiles].sort(
-      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-    );
-    const liveMap = new Map(participants.map(p => [p.profile_id, p]));
+    if (lobbyProfileIds.length === 0) return [];
 
-    return sorted.map((profile, idx) => {
-      const live = liveMap.get(profile.id);
-      const firstName = profile.name.split(' ')[0];
+    const liveMap = new Map(participants.map(p => [p.profile_id, p]));
+    const profileMap = new Map(allProfiles.map(p => [p.id, p]));
+
+    return lobbyProfileIds.map((profileId, idx) => {
+      const profile = profileMap.get(profileId);
+      const live = liveMap.get(profileId);
+      const firstName = profile?.name?.split(' ')[0] || '???';
       const effectiveMaxHR = live?.profile
         ? getEffectiveMaxHR(live.profile.age, live.profile.custom_max_hr)
         : 170;
@@ -75,15 +79,15 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
         : null;
       return {
         number: idx + 1,
-        profileId: profile.id,
-        name: profile.nickname || firstName,
+        profileId,
+        name: profile?.nickname || firstName,
         bpm: live?.bpm ?? null,
         hrPercentage: realHRPercent,
         zone: realZone,
-        isLive: !!live,
+        isLive: !!live && live.bpm > 0,
       };
     });
-  }, [allProfiles, participants]);
+  }, [lobbyProfileIds, allProfiles, participants]);
 
   const connectedRows = rows.filter(r => r.isLive && r.bpm);
   const avgBpm = connectedRows.length > 0
@@ -98,10 +102,71 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
     );
   }
 
-  if (allProfiles.length === 0) {
+  // Empty state: no participants in lobby
+  if (lobbyProfileIds.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center" style={{ background: '#0a0a0a' }}>
-        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '16px' }}>Waiting for participants...</p>
+      <div className="flex-1 flex items-center justify-center" style={{ background: '#0a0a0a', height: 'calc(100dvh - 56px)' }}>
+        <div className="relative" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
+          {/* Zone glow blobs behind */}
+          {ZONE_GLOWS.map((g, i) => (
+            <div key={i} className="absolute pointer-events-none" style={{
+              left: `${20 + i * 15}%`,
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '200px',
+              height: '200px',
+              borderRadius: '50%',
+              background: g.color,
+              opacity: 0.12,
+              filter: 'blur(80px)',
+            }} />
+          ))}
+
+          <div style={{
+            width: '80px',
+            height: '80px',
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.05)',
+            border: '2px solid rgba(255,255,255,0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <Users style={{ width: '36px', height: '36px', color: 'rgba(255,255,255,0.3)' }} />
+          </div>
+
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>
+              Waiting for participants...
+            </p>
+            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '14px' }}>
+              Share the session code so participants can join
+            </p>
+          </div>
+
+          {sessionCode && (
+            <div style={{
+              background: 'rgba(255,255,255,0.06)',
+              border: '2px solid rgba(255,255,255,0.12)',
+              borderRadius: '16px',
+              padding: '16px 40px',
+              textAlign: 'center',
+            }}>
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                Session Code
+              </p>
+              <p style={{
+                color: 'white',
+                fontSize: '48px',
+                fontWeight: 900,
+                letterSpacing: '0.2em',
+                textShadow: '0 0 30px rgba(255,255,255,0.2)',
+              }}>
+                {sessionCode}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
@@ -178,11 +243,8 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
         position: 'relative',
         zIndex: 1,
       }}>
-        {/* Nr col spacer */}
         <div style={{ width: 28 }} />
-        {/* Name col spacer */}
         <div style={{ width: 110 }} />
-        {/* Zone labels aligned to bar */}
         <div style={{ flex: 1, display: 'flex' }}>
           {ZONE_SEGMENTS.map(seg => (
             <div key={seg.zone} style={{
@@ -202,7 +264,6 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
             </div>
           ))}
         </div>
-        {/* BPM col spacer */}
         <div style={{ width: 56 }} />
       </div>
 
@@ -210,6 +271,7 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
       <div style={{ flex: 1, overflow: 'hidden', position: 'relative', zIndex: 1 }}>
         {rows.map((row) => {
           const isHighZone = row.zone && row.zone >= 4;
+          const isReady = !row.isLive; // In lobby but no live HR yet
           return (
             <div
               key={row.profileId}
@@ -223,9 +285,9 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
                 borderBottom: '1px solid rgba(255,255,255,0.04)',
                 background: 'transparent',
                 borderLeft: row.isLive && row.zone ? `3px solid ${LEFT_BORDER_COLORS[row.zone]}` : '3px solid transparent',
-                opacity: row.isLive ? 1 : 0.35,
+                opacity: row.isLive ? 1 : 0.5,
                 overflow: 'hidden',
-                transition: 'background-color 1s ease, border-left 1s ease',
+                transition: 'background-color 1s ease, border-left 1s ease, opacity 0.5s ease',
               }}
             >
               {/* Number */}
@@ -286,7 +348,6 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
                       height: 'clamp(16px, 2.2vh, 30px)',
                       borderRadius: '4px',
                       background: ZONE_COLORS[row.zone],
-                      // no box-shadow on slider
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -299,19 +360,23 @@ export function NeutralDashboard({ participants, allProfiles, isLoading, isSessi
                 )}
               </div>
 
-              {/* BPM */}
+              {/* BPM or Ready badge */}
               <div
                 style={{
                   width: 56,
                   textAlign: 'right',
-                  fontWeight: 800,
-                  fontSize: 'clamp(16px, 2.8vh, 36px)',
+                  fontWeight: isReady ? 600 : 800,
+                  fontSize: isReady ? 'clamp(10px, 1.4vh, 13px)' : 'clamp(16px, 2.8vh, 36px)',
                   fontVariantNumeric: 'tabular-nums',
-                  color: row.isLive && row.zone ? ZONE_COLORS[row.zone] : 'rgba(255,255,255,0.2)',
+                  color: isReady
+                    ? 'rgba(255,255,255,0.35)'
+                    : (row.zone ? ZONE_COLORS[row.zone] : 'rgba(255,255,255,0.2)'),
                   transition: 'color 1s ease',
+                  textTransform: isReady ? 'uppercase' : 'none',
+                  letterSpacing: isReady ? '0.05em' : undefined,
                 }}
               >
-                {row.isLive && row.bpm !== null ? row.bpm : '--'}
+                {isReady ? 'Ready' : (row.bpm !== null ? row.bpm : '--')}
               </div>
             </div>
           );
