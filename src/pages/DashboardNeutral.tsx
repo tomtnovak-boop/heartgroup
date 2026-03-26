@@ -26,6 +26,7 @@ export default function DashboardNeutral() {
     activeWorkoutProfileIds,
     sessionCode,
     lobbyCount,
+    lobbyProfileIds,
     createSessionCode,
     startSession,
     stopSession,
