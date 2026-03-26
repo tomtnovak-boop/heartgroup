@@ -135,6 +135,8 @@ export default function DashboardNeutral() {
           <NeutralDashboard
             participants={participants}
             allProfiles={allProfiles}
+            lobbyProfileIds={lobbyProfileIds}
+            sessionCode={sessionCode}
             isLoading={isLoading}
             isSessionActive={sessionActive}
           />
