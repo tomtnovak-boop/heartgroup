@@ -621,9 +621,8 @@ export default function Participant() {
     return <HeartRateDisplay profile={profile} onBack={() => setIsTrainingActive(false)} />;
   }
 
-  if (showHistory && profile) {
-    return <WorkoutHistory profileId={profile.id} onClose={() => setShowHistory(false)} />;
-  }
+
+
 
   if (isLoading) {
     return (
@@ -1356,18 +1355,13 @@ export default function Participant() {
           )}
         </TabsContent>
 
-        {/* HISTORY TAB */}
+        {/* SESSIONS TAB */}
         <TabsContent value="history" className="flex-1 overflow-y-auto pb-4">
-          <div className="pt-2">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => setShowHistory(true)}
-            >
-              <Clock className="w-4 h-4 mr-2" />
-              View Full Workout History
-            </Button>
-          </div>
+          {profile && (
+            <div className="pt-2">
+              <WorkoutHistory profileId={profile.id} onClose={() => {}} embedded />
+            </div>
+          )}
         </TabsContent>
 
         {/* PROFILE TAB */}

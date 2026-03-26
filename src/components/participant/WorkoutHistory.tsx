@@ -40,13 +40,14 @@ interface HRDataPoint {
 interface WorkoutHistoryProps {
   profileId: string;
   onClose: () => void;
+  embedded?: boolean;
 }
 
 function isIncomplete(w: Workout): boolean {
   return w.ended_at === null || (w.duration_seconds === 0 && w.avg_bpm === 0);
 }
 
-export function WorkoutHistory({ profileId, onClose }: WorkoutHistoryProps) {
+export function WorkoutHistory({ profileId, onClose, embedded = false }: WorkoutHistoryProps) {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
@@ -195,12 +196,14 @@ export function WorkoutHistory({ profileId, onClose }: WorkoutHistoryProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <div className="flex items-center gap-3 p-4 bg-card border-b border-border">
-        <Button variant="ghost" size="icon" onClick={onClose}><ArrowLeft className="w-5 h-5" /></Button>
-        <h1 className="text-xl font-bold">My Workouts</h1>
-      </div>
-      <div className="flex-1 overflow-y-auto p-4">
+    <div className={embedded ? 'flex flex-col' : 'min-h-screen bg-background flex flex-col'}>
+      {!embedded && (
+        <div className="flex items-center gap-3 p-4 bg-card border-b border-border">
+          <Button variant="ghost" size="icon" onClick={onClose}><ArrowLeft className="w-5 h-5" /></Button>
+          <h1 className="text-xl font-bold">My Workouts</h1>
+        </div>
+      )}
+      <div className={embedded ? '' : 'flex-1 overflow-y-auto p-4'}>
         {isLoading ? (
           <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
         ) : workouts.length === 0 ? (
