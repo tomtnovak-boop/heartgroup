@@ -192,12 +192,13 @@ export function useWorkoutSession() {
     }
 
     try {
-      // Mark session as started in active_sessions
-      await supabase
+      // Mark session as started in active_sessions — MUST run first
+      const { error: sessionStartError } = await supabase
         .from('active_sessions')
         .update({ started_at: new Date().toISOString() })
         .eq('session_code', code)
         .is('ended_at', null);
+      console.log('session start update:', sessionStartError);
 
       // Fetch lobby participants
       const { data: lobbyParticipants, error: lobbyError } = await supabase
