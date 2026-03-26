@@ -60,13 +60,35 @@ export function useWorkoutSession() {
   // Helper: create a new active_sessions record and set sessionCode
   const ensureSessionCode = useCallback(async () => {
     const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) return;
+    if (!userData.user) {
+      console.error('ensureSessionCode: No authenticated user');
+      return;
+    }
+
+    // Check if there's already an active session
+    const { data: existing } = await supabase
+      .from('active_sessions')
+      .select('session_code')
+      .is('ended_at', null)
+      .eq('created_by', userData.user.id)
+      .order('started_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (existing) {
+      setSessionCode(existing.session_code);
+      return existing.session_code;
+    }
 
     const code = generateSessionCode();
-    await supabase.from('active_sessions').insert({
+    const { error } = await supabase.from('active_sessions').insert({
       session_code: code,
       created_by: userData.user.id,
     });
+    if (error) {
+      console.error('ensureSessionCode: Insert failed', error);
+      return;
+    }
     setSessionCode(code);
     return code;
   }, []);
