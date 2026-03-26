@@ -1098,128 +1098,174 @@ export default function Participant() {
           </div>
 
           {monthYearToggle === 'month' ? (
-            <>
-              <h2 className="text-sm font-semibold text-muted-foreground">Monthly History</h2>
-              {monthGroups.length === 0 ? (
+            <div className="space-y-3">
+              {/* Month selector */}
+              <div className="flex items-center justify-center gap-4 pt-1">
+                <button
+                  onClick={() => setSelectedMonthDate(d => subMonths(d, 1))}
+                  className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <span className="text-lg font-bold min-w-[140px] text-center">
+                  {format(selectedMonthDate, 'MMMM yyyy')}
+                </span>
+                <button
+                  onClick={() => {
+                    const next = new Date(selectedMonthDate.getFullYear(), selectedMonthDate.getMonth() + 1, 1);
+                    if (next <= endOfMonth(new Date())) setSelectedMonthDate(next);
+                  }}
+                  className="p-1 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30"
+                  disabled={selectedMonthDate.getFullYear() === new Date().getFullYear() && selectedMonthDate.getMonth() === new Date().getMonth()}
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+
+              {selectedMonthStats.sessionCount === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <Calendar className="w-12 h-12 mx-auto mb-3 opacity-40" />
-                  <p className="text-sm">No workouts recorded yet.</p>
+                  <p className="text-sm">No workouts in {format(selectedMonthDate, 'MMMM yyyy')}.</p>
                 </div>
               ) : (
-                monthGroups.map(group => {
-                  const isExpanded = expandedMonth === group.key;
-                  return (
-                    <div key={group.key} className="border border-border rounded-lg overflow-hidden">
-                      <button
-                        className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-muted/50 transition-colors"
-                        onClick={() => setExpandedMonth(isExpanded ? '' : group.key)}
-                      >
-                        <div className="flex items-center gap-2 text-xs">
-                          <span className="font-semibold">{group.label}</span>
-                          <span className="text-muted-foreground">•</span>
-                          <span className="text-muted-foreground">{group.sessionCount} sessions</span>
-                          <span className="text-muted-foreground">•</span>
-                          <span className="text-muted-foreground">{formatDuration(group.totalSeconds)}</span>
-                          <span className="text-muted-foreground">•</span>
-                          <span className="text-muted-foreground">{group.totalCalories.toLocaleString()} kcal</span>
-                        </div>
-                        <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-                      </button>
-
-                      {isExpanded && (
-                        <div className="px-3 pb-3 space-y-3 border-t border-border">
-                          {(() => {
-                            const w = group.workouts;
-                            const withBpm = w.filter(x => x.avg_bpm && x.avg_bpm > 0);
-                            const totalWeighted = withBpm.reduce((s, x) => s + (x.avg_bpm || 0) * (x.duration_seconds || 1), 0);
-                            const totalW = withBpm.reduce((s, x) => s + (x.duration_seconds || 1), 0);
-                            const avg = totalW > 0 ? Math.round(totalWeighted / totalW) : 0;
-                            const low = withBpm.length > 0 ? Math.min(...withBpm.map(x => x.avg_bpm!)) : 0;
-                            const high = withBpm.length > 0 ? Math.max(...withBpm.map(x => x.avg_bpm!)) : 0;
-                            const peakBpm = w.reduce((max, x) => Math.max(max, x.max_bpm || 0), 0);
-                            const peakEntry = w.find(x => x.max_bpm === peakBpm);
-                            const peakDate = peakEntry ? format(new Date(peakEntry.started_at), 'MMM d') : '';
-
-                            return (
-                              <>
-                                <Card className="p-3 border-pink-500/30 mt-3">
-                                  <div className="grid grid-cols-4 gap-2 text-center">
-                                    <div>
-                                      <ArrowDown className="w-3.5 h-3.5 mx-auto mb-0.5 text-cyan-400" />
-                                      <div className="text-lg font-bold text-cyan-400">{low || '--'}</div>
-                                      <div className="text-[9px] text-muted-foreground">Lowest</div>
-                                    </div>
-                                    <div>
-                                      <Heart className="w-3.5 h-3.5 mx-auto mb-0.5 text-primary" fill="currentColor" />
-                                      <div className="text-xl font-bold text-primary">{avg || '--'}</div>
-                                      <div className="text-[9px] text-muted-foreground">Average</div>
-                                    </div>
-                                    <div>
-                                      <ArrowUp className="w-3.5 h-3.5 mx-auto mb-0.5 text-orange-400" />
-                                      <div className="text-lg font-bold text-orange-400">{high || '--'}</div>
-                                      <div className="text-[9px] text-muted-foreground">Highest avg</div>
-                                    </div>
-                                    <div>
-                                      <Zap className="w-3.5 h-3.5 mx-auto mb-0.5 text-red-500" />
-                                      <div className="text-lg font-bold text-red-500">{peakBpm || '--'}</div>
-                                      <div className="text-[9px] text-muted-foreground">Max</div>
-                                      {peakDate && <div className="text-[8px] text-muted-foreground">{peakDate}</div>}
-                                    </div>
-                                  </div>
-                                </Card>
-
-                                <Card className="p-3">
-                                  <h3 className="text-xs font-semibold mb-2">Time in Zones</h3>
-                                  <div className="space-y-1.5">
-                                    {[
-                                      { label: 'Z1 Recovery', secs: w.reduce((s, x) => s + (x.zone_1_seconds || 0), 0), color: zoneColors.z1 },
-                                      { label: 'Z2 Fat Burn', secs: w.reduce((s, x) => s + (x.zone_2_seconds || 0), 0), color: zoneColors.z2 },
-                                      { label: 'Z3 Aerobic', secs: w.reduce((s, x) => s + (x.zone_3_seconds || 0), 0), color: zoneColors.z3 },
-                                      { label: 'Z4 Cardio', secs: w.reduce((s, x) => s + (x.zone_4_seconds || 0), 0), color: zoneColors.z4 },
-                                      { label: 'Z5 Max Effort', secs: w.reduce((s, x) => s + (x.zone_5_seconds || 0), 0), color: zoneColors.z5 },
-                                    ].map(z => (
-                                      <div key={z.label} className="flex items-center justify-between">
-                                        <span className="text-xs font-medium" style={{ color: z.color }}>{z.label}</span>
-                                        <span className="text-xs text-muted-foreground">{formatDuration(z.secs)}</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </Card>
-
-                                <Card className="p-3">
-                                  <h3 className="text-xs font-semibold mb-2">All Sessions ({w.length})</h3>
-                                  <div className="space-y-1">
-                                    {w.map(s => (
-                                      <div key={s.id} className="flex items-center justify-between text-xs py-1.5 border-b border-border last:border-0">
-                                        <div className="flex flex-col">
-                                          <span className="font-medium">{format(new Date(s.started_at), 'MMM d, HH:mm')}</span>
-                                          {s.rank_avg_bpm != null && s.session_participant_count != null && (
-                                            <span className="text-[11px] mt-0.5">
-                                              <span className="text-primary">Avg #{s.rank_avg_bpm}/{s.session_participant_count}</span>
-                                              <span className="text-muted-foreground"> · </span>
-                                              <span className="text-red-400">Peak #{s.rank_peak_bpm}/{s.session_participant_count}</span>
-                                            </span>
-                                          )}
-                                        </div>
-                                        <div className="flex items-center gap-3 text-muted-foreground">
-                                          <span>{formatDuration(s.duration_seconds || 0)}</span>
-                                          <span>{Math.round(s.total_calories || 0)} kcal</span>
-                                          <span>⌀ {s.avg_bpm || '--'}</span>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </Card>
-                              </>
-                            );
-                          })()}
-                        </div>
-                      )}
+                <>
+                  {/* HR stat boxes */}
+                  <Card className="p-3 border-pink-500/30">
+                    <div className="grid grid-cols-4 gap-2 text-center">
+                      <div>
+                        <ArrowDown className="w-3.5 h-3.5 mx-auto mb-0.5 text-cyan-400" />
+                        <div className="text-lg font-bold text-cyan-400">{selectedMonthStats.lowestSessionBpm || '--'}</div>
+                        <div className="text-[9px] text-muted-foreground">Lowest</div>
+                      </div>
+                      <div>
+                        <Heart className="w-3.5 h-3.5 mx-auto mb-0.5 text-primary" fill="currentColor" />
+                        <div className="text-xl font-bold text-primary">{selectedMonthStats.avgBpm || '--'}</div>
+                        <div className="text-[9px] text-muted-foreground">Average</div>
+                      </div>
+                      <div>
+                        <ArrowUp className="w-3.5 h-3.5 mx-auto mb-0.5 text-orange-400" />
+                        <div className="text-lg font-bold text-orange-400">{selectedMonthStats.highestSessionBpm || '--'}</div>
+                        <div className="text-[9px] text-muted-foreground">Highest avg</div>
+                      </div>
+                      <div>
+                        <Zap className="w-3.5 h-3.5 mx-auto mb-0.5 text-red-500" />
+                        <div className="text-lg font-bold text-red-500">{selectedMonthStats.maxBpm || '--'}</div>
+                        <div className="text-[9px] text-muted-foreground">Max</div>
+                        {selectedMonthStats.maxBpmDate && <div className="text-[8px] text-muted-foreground">{selectedMonthStats.maxBpmDate}</div>}
+                      </div>
                     </div>
-                  );
-                })
+                  </Card>
+
+                  {/* Time + Calories */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <Card className="p-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Clock className="w-4 h-4 text-emerald-400" />
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Time</span>
+                      </div>
+                      <div className="text-xl font-bold">{formatDuration(selectedMonthStats.totalSeconds)}</div>
+                    </Card>
+                    <Card className="p-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Flame className="w-4 h-4 text-orange-400" />
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Calories</span>
+                      </div>
+                      <div className="text-xl font-bold">{selectedMonthStats.totalCalories || '--'} <span className="text-xs font-normal text-muted-foreground">kcal</span></div>
+                      {selectedMonthStats.maxSessionCal > 0 && (
+                        <div className="text-[10px] text-muted-foreground mt-0.5">Best: {selectedMonthStats.maxSessionCal} kcal</div>
+                      )}
+                    </Card>
+                  </div>
+
+                  {/* Zone distribution */}
+                  <Card className="p-3">
+                    <h3 className="text-xs font-semibold mb-2">Zone Distribution</h3>
+                    <div className="space-y-1.5">
+                      {([
+                        { label: 'Z1', key: 'z1' as const },
+                        { label: 'Z2', key: 'z2' as const },
+                        { label: 'Z3', key: 'z3' as const },
+                        { label: 'Z4', key: 'z4' as const },
+                        { label: 'Z5', key: 'z5' as const },
+                      ] as const).map(z => {
+                        const pct = selectedMonthStats.zonePercents[z.key];
+                        const mins = selectedMonthStats.zoneMinutes[z.key];
+                        return (
+                          <div key={z.label} className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold w-5 text-muted-foreground">{z.label}</span>
+                            <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden">
+                              <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: zoneColors[z.key] }} />
+                            </div>
+                            <span className="text-[10px] font-medium w-20 text-right text-muted-foreground">
+                              {mins > 0 ? `${mins} min` : '—'} · {pct}%
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="mt-2 text-[10px] text-muted-foreground text-right">
+                      Total: {Math.floor(selectedMonthStats.totalTrainingMinutes / 60) > 0 ? `${Math.floor(selectedMonthStats.totalTrainingMinutes / 60)} h ` : ''}{selectedMonthStats.totalTrainingMinutes % 60} min
+                    </div>
+                  </Card>
+
+                  {/* Weekly sessions chart */}
+                  <Card className="p-3">
+                    <h3 className="text-xs font-semibold mb-2">Weekly Sessions</h3>
+                    <div className="h-24">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={selectedMonthStats.weekData} barCategoryGap="20%">
+                          <XAxis dataKey="week" tick={{ fill: 'hsl(215 20% 55%)', fontSize: 10 }} axisLine={false} tickLine={false} />
+                          <YAxis hide domain={[0, 5]} allowDecimals={false} />
+                          <Bar dataKey="count" radius={[4, 4, 0, 0]} minPointSize={3}
+                            label={({ x, y, width, value }: any) =>
+                              value > 0 ? (
+                                <text x={x + width / 2} y={y - 4} textAnchor="middle" fill="hsl(215 20% 65%)" fontSize={10}>{value}</text>
+                              ) : null
+                            }
+                          >
+                            {selectedMonthStats.weekData.map((entry, i) => (
+                              <Cell key={i} fill={entry.count > 0 ? 'hsl(8 100% 57%)' : 'hsl(215 20% 20%)'} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </Card>
+
+                  {/* Sessions list */}
+                  <div>
+                    <h3 className="text-xs font-semibold mb-2">All Sessions ({selectedMonthStats.sessionCount})</h3>
+                    <div className="space-y-1.5">
+                      {selectedMonthStats.workouts.map(w => {
+                        const dz = dominantZone(w);
+                        return (
+                          <Card key={w.id} className="p-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: zoneColorArr[dz] }} />
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-medium">{format(new Date(w.started_at), 'EEE, MMM d · HH:mm')}</div>
+                                <div className="text-[10px] text-muted-foreground flex items-center gap-2">
+                                  <span>{formatDuration(w.duration_seconds || 0)}</span>
+                                  <span>{Math.round(w.total_calories || 0)} kcal</span>
+                                  <span>⌀ {w.avg_bpm || '--'} bpm</span>
+                                </div>
+                                {w.rank_avg_bpm != null && w.session_participant_count != null && (
+                                  <div className="text-[11px] mt-0.5 flex items-center gap-2">
+                                    <span className="text-primary">Avg #{w.rank_avg_bpm}/{w.session_participant_count}</span>
+                                    <span className="text-muted-foreground">·</span>
+                                    <span className="text-red-400">Peak #{w.rank_peak_bpm}/{w.session_participant_count}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
               )}
-            </>
+            </div>
           ) : (
             /* YEAR VIEW */
             <div className="space-y-3">
@@ -1231,7 +1277,7 @@ export default function Participant() {
                 <span className="text-lg font-bold min-w-[60px] text-center">{selectedYear}</span>
                 <button
                   onClick={() => setSelectedYear(y => Math.min(y + 1, new Date().getFullYear()))}
-                  className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                  className="p-1 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30"
                   disabled={selectedYear >= new Date().getFullYear()}
                 >
                   <ChevronRight className="w-5 h-5" />
@@ -1282,6 +1328,23 @@ export default function Participant() {
                   <div className="text-[10px] text-muted-foreground">Total Time</div>
                 </Card>
               </div>
+
+              {/* Time in Zones */}
+              {yearStats.sessionCount > 0 && (
+                <Card className="p-3">
+                  <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3">Time in Zones</h3>
+                  <div className="grid grid-cols-5 gap-1 text-center">
+                    {yearStats.zones.map(z => (
+                      <div key={z.label} className="flex flex-col items-center gap-1">
+                        <span className="text-[10px] font-bold" style={{ color: z.color }}>{z.label}</span>
+                        <span className="text-sm font-bold">{z.mins > 0 ? `${z.mins}` : '0'}</span>
+                        <span className="text-[9px] text-muted-foreground">min</span>
+                        <span className="text-[9px] text-muted-foreground">{z.pct}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
 
               {yearStats.sessionCount === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
