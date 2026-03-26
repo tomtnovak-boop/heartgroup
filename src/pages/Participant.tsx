@@ -25,9 +25,9 @@ import {
 import {
   Heart, Loader2, Bluetooth, BluetoothOff, LogOut, Settings, User, Home,
   TrendingUp, TrendingDown, Flame, Clock, Activity, ChevronRight, Zap,
-  BarChart3, Calendar, ArrowDown, ArrowUp, ChevronDown, ArrowLeft,
+  BarChart3, Calendar, ArrowDown, ArrowUp, ChevronDown, ArrowLeft, ChevronLeft,
 } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, getISOWeek, eachWeekOfInterval, subMonths } from 'date-fns';
+import { format, startOfMonth, endOfMonth, startOfYear, endOfYear, getISOWeek, eachWeekOfInterval, subMonths } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
 
 interface Profile {
@@ -70,7 +70,10 @@ export default function Participant() {
   const [allHistoricalWorkouts, setAllHistoricalWorkouts] = useState<Workout[]>([]);
   const [activeSession, setActiveSession] = useState(false);
   const [expandedMonth, setExpandedMonth] = useState<string>('');
-  
+  const [monthYearToggle, setMonthYearToggle] = useState<'month' | 'year'>('month');
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [yearWorkouts, setYearWorkouts] = useState<Workout[]>([]);
+
   // Session join flow state
   const [showJoinDialog, setShowJoinDialog] = useState(false);
   const [currentWorkoutId, setCurrentWorkoutId] = useState<string | null>(null);
@@ -167,7 +170,36 @@ export default function Participant() {
       });
   }, [profile]);
 
-  // Check for coach-started active session (any open workout within last 3 hours)
+  // Fetch year workouts for Year view
+  useEffect(() => {
+    if (!profile) return;
+    const yearStart = startOfYear(new Date(selectedYear, 0, 1)).toISOString();
+    const yearEnd = endOfYear(new Date(selectedYear, 0, 1)).toISOString();
+    supabase.from('workouts').select('*')
+      .eq('profile_id', profile.id)
+      .not('ended_at', 'is', null)
+      .gte('started_at', yearStart)
+      .lte('started_at', yearEnd)
+      .order('started_at', { ascending: false })
+      .then(({ data }) => setYearWorkouts(data || []));
+  }, [profile, selectedYear]);
+
+  // Year stats
+  const yearStats = useMemo(() => {
+    const w = yearWorkouts;
+    const withBpm = w.filter(x => x.avg_bpm && x.avg_bpm > 0);
+    const totalWeightedBpm = withBpm.reduce((s, x) => s + (x.avg_bpm || 0) * (x.duration_seconds || 1), 0);
+    const totalWeight = withBpm.reduce((s, x) => s + (x.duration_seconds || 1), 0);
+    const avgBpm = totalWeight > 0 ? Math.round(totalWeightedBpm / totalWeight) : 0;
+    const lowestSessionBpm = withBpm.length > 0 ? Math.min(...withBpm.map(x => x.avg_bpm!)) : 0;
+    const highestSessionBpm = withBpm.length > 0 ? Math.max(...withBpm.map(x => x.avg_bpm!)) : 0;
+    const maxBpm = w.reduce((max, x) => Math.max(max, x.max_bpm || 0), 0);
+    const totalSeconds = w.reduce((s, x) => s + (x.duration_seconds || 0), 0);
+    const totalCalories = Math.round(w.reduce((s, x) => s + (x.total_calories || 0), 0));
+    return { avgBpm, lowestSessionBpm, highestSessionBpm, maxBpm, sessionCount: w.length, totalCalories, totalSeconds };
+  }, [yearWorkouts]);
+
+
   useEffect(() => {
     if (!profile) return;
     
@@ -956,133 +988,223 @@ export default function Participant() {
 
         {/* MONTH TAB */}
         <TabsContent value="month" className="flex-1 overflow-y-auto pb-4 space-y-2">
-          <h2 className="text-sm font-semibold text-muted-foreground pt-2">Monthly History</h2>
+          {/* Month/Year Toggle */}
+          <div className="flex gap-0 pt-2">
+            <button
+              className="flex-1 py-2 text-sm font-bold rounded-l-lg transition-colors"
+              style={{
+                backgroundColor: monthYearToggle === 'month' ? '#ff4425' : '#1a1a1a',
+                color: monthYearToggle === 'month' ? 'white' : '#666',
+              }}
+              onClick={() => setMonthYearToggle('month')}
+            >
+              Month
+            </button>
+            <button
+              className="flex-1 py-2 text-sm font-bold rounded-r-lg transition-colors"
+              style={{
+                backgroundColor: monthYearToggle === 'year' ? '#ff4425' : '#1a1a1a',
+                color: monthYearToggle === 'year' ? 'white' : '#666',
+              }}
+              onClick={() => setMonthYearToggle('year')}
+            >
+              Year
+            </button>
+          </div>
 
-          {monthGroups.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <Calendar className="w-12 h-12 mx-auto mb-3 opacity-40" />
-              <p className="text-sm">No workouts recorded yet.</p>
-            </div>
-          ) : (
-            monthGroups.map(group => {
-              const isExpanded = expandedMonth === group.key;
-              return (
-                <div key={group.key} className="border border-border rounded-lg overflow-hidden">
-                  {/* Collapsible header */}
-                  <button
-                    className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-muted/50 transition-colors"
-                    onClick={() => setExpandedMonth(isExpanded ? '' : group.key)}
-                  >
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="font-semibold">{group.label}</span>
-                      <span className="text-muted-foreground">•</span>
-                      <span className="text-muted-foreground">{group.sessionCount} sessions</span>
-                      <span className="text-muted-foreground">•</span>
-                      <span className="text-muted-foreground">{formatDuration(group.totalSeconds)}</span>
-                      <span className="text-muted-foreground">•</span>
-                      <span className="text-muted-foreground">{group.totalCalories.toLocaleString()} kcal</span>
-                    </div>
-                    <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {/* Expanded content */}
-                  {isExpanded && (
-                    <div className="px-3 pb-3 space-y-3 border-t border-border">
-                      {/* Metrics */}
-                      {(() => {
-                        const w = group.workouts;
-                        const withBpm = w.filter(x => x.avg_bpm && x.avg_bpm > 0);
-                        const totalWeighted = withBpm.reduce((s, x) => s + (x.avg_bpm || 0) * (x.duration_seconds || 1), 0);
-                        const totalW = withBpm.reduce((s, x) => s + (x.duration_seconds || 1), 0);
-                        const avg = totalW > 0 ? Math.round(totalWeighted / totalW) : 0;
-                        const low = withBpm.length > 0 ? Math.min(...withBpm.map(x => x.avg_bpm!)) : 0;
-                        const high = withBpm.length > 0 ? Math.max(...withBpm.map(x => x.avg_bpm!)) : 0;
-                        const peakBpm = w.reduce((max, x) => Math.max(max, x.max_bpm || 0), 0);
-                        const peakEntry = w.find(x => x.max_bpm === peakBpm);
-                        const peakDate = peakEntry ? format(new Date(peakEntry.started_at), 'MMM d') : '';
-                        const bestCal = Math.round(Math.max(...w.map(x => x.total_calories || 0), 0));
-
-                        return (
-                          <>
-                            {/* HR card */}
-                            <Card className="p-3 border-pink-500/30 mt-3">
-                              <div className="grid grid-cols-4 gap-2 text-center">
-                                <div>
-                                  <ArrowDown className="w-3.5 h-3.5 mx-auto mb-0.5 text-cyan-400" />
-                                  <div className="text-lg font-bold text-cyan-400">{low || '--'}</div>
-                                  <div className="text-[9px] text-muted-foreground">Lowest</div>
-                                </div>
-                                <div>
-                                  <Heart className="w-3.5 h-3.5 mx-auto mb-0.5 text-primary" fill="currentColor" />
-                                  <div className="text-xl font-bold text-primary">{avg || '--'}</div>
-                                  <div className="text-[9px] text-muted-foreground">Average</div>
-                                </div>
-                                <div>
-                                  <ArrowUp className="w-3.5 h-3.5 mx-auto mb-0.5 text-orange-400" />
-                                  <div className="text-lg font-bold text-orange-400">{high || '--'}</div>
-                                  <div className="text-[9px] text-muted-foreground">Highest avg</div>
-                                </div>
-                                <div>
-                                  <Zap className="w-3.5 h-3.5 mx-auto mb-0.5 text-red-500" />
-                                  <div className="text-lg font-bold text-red-500">{peakBpm || '--'}</div>
-                                  <div className="text-[9px] text-muted-foreground">Max</div>
-                                  {peakDate && <div className="text-[8px] text-muted-foreground">{peakDate}</div>}
-                                </div>
-                              </div>
-                            </Card>
-
-                            {/* Zone breakdown */}
-                            <Card className="p-3">
-                              <h3 className="text-xs font-semibold mb-2">Time in Zones</h3>
-                              <div className="space-y-1.5">
-                                {[
-                                  { label: 'Z1 Recovery', secs: w.reduce((s, x) => s + (x.zone_1_seconds || 0), 0), color: zoneColors.z1 },
-                                  { label: 'Z2 Fat Burn', secs: w.reduce((s, x) => s + (x.zone_2_seconds || 0), 0), color: zoneColors.z2 },
-                                  { label: 'Z3 Aerobic', secs: w.reduce((s, x) => s + (x.zone_3_seconds || 0), 0), color: zoneColors.z3 },
-                                  { label: 'Z4 Cardio', secs: w.reduce((s, x) => s + (x.zone_4_seconds || 0), 0), color: zoneColors.z4 },
-                                  { label: 'Z5 Max Effort', secs: w.reduce((s, x) => s + (x.zone_5_seconds || 0), 0), color: zoneColors.z5 },
-                                ].map(z => (
-                                  <div key={z.label} className="flex items-center justify-between">
-                                    <span className="text-xs font-medium" style={{ color: z.color }}>{z.label}</span>
-                                    <span className="text-xs text-muted-foreground">{formatDuration(z.secs)}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </Card>
-
-                            {/* Sessions list */}
-                            <Card className="p-3">
-                              <h3 className="text-xs font-semibold mb-2">All Sessions ({w.length})</h3>
-                              <div className="space-y-1">
-                                {w.map(s => (
-                                  <div key={s.id} className="flex items-center justify-between text-xs py-1.5 border-b border-border last:border-0">
-                                    <div className="flex flex-col">
-                                      <span className="font-medium">{format(new Date(s.started_at), 'MMM d, HH:mm')}</span>
-                                      {s.rank_avg_bpm != null && s.session_participant_count != null && (
-                                        <span className="text-[11px] mt-0.5">
-                                          <span className="text-primary">Avg #{s.rank_avg_bpm}/{s.session_participant_count}</span>
-                                          <span className="text-muted-foreground"> · </span>
-                                          <span className="text-red-400">Peak #{s.rank_peak_bpm}/{s.session_participant_count}</span>
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div className="flex items-center gap-3 text-muted-foreground">
-                                      <span>{formatDuration(s.duration_seconds || 0)}</span>
-                                      <span>{Math.round(s.total_calories || 0)} kcal</span>
-                                      <span>⌀ {s.avg_bpm || '--'}</span>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </Card>
-                          </>
-                        );
-                      })()}
-                    </div>
-                  )}
+          {monthYearToggle === 'month' ? (
+            <>
+              <h2 className="text-sm font-semibold text-muted-foreground">Monthly History</h2>
+              {monthGroups.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Calendar className="w-12 h-12 mx-auto mb-3 opacity-40" />
+                  <p className="text-sm">No workouts recorded yet.</p>
                 </div>
-              );
-            })
+              ) : (
+                monthGroups.map(group => {
+                  const isExpanded = expandedMonth === group.key;
+                  return (
+                    <div key={group.key} className="border border-border rounded-lg overflow-hidden">
+                      <button
+                        className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-muted/50 transition-colors"
+                        onClick={() => setExpandedMonth(isExpanded ? '' : group.key)}
+                      >
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="font-semibold">{group.label}</span>
+                          <span className="text-muted-foreground">•</span>
+                          <span className="text-muted-foreground">{group.sessionCount} sessions</span>
+                          <span className="text-muted-foreground">•</span>
+                          <span className="text-muted-foreground">{formatDuration(group.totalSeconds)}</span>
+                          <span className="text-muted-foreground">•</span>
+                          <span className="text-muted-foreground">{group.totalCalories.toLocaleString()} kcal</span>
+                        </div>
+                        <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      {isExpanded && (
+                        <div className="px-3 pb-3 space-y-3 border-t border-border">
+                          {(() => {
+                            const w = group.workouts;
+                            const withBpm = w.filter(x => x.avg_bpm && x.avg_bpm > 0);
+                            const totalWeighted = withBpm.reduce((s, x) => s + (x.avg_bpm || 0) * (x.duration_seconds || 1), 0);
+                            const totalW = withBpm.reduce((s, x) => s + (x.duration_seconds || 1), 0);
+                            const avg = totalW > 0 ? Math.round(totalWeighted / totalW) : 0;
+                            const low = withBpm.length > 0 ? Math.min(...withBpm.map(x => x.avg_bpm!)) : 0;
+                            const high = withBpm.length > 0 ? Math.max(...withBpm.map(x => x.avg_bpm!)) : 0;
+                            const peakBpm = w.reduce((max, x) => Math.max(max, x.max_bpm || 0), 0);
+                            const peakEntry = w.find(x => x.max_bpm === peakBpm);
+                            const peakDate = peakEntry ? format(new Date(peakEntry.started_at), 'MMM d') : '';
+
+                            return (
+                              <>
+                                <Card className="p-3 border-pink-500/30 mt-3">
+                                  <div className="grid grid-cols-4 gap-2 text-center">
+                                    <div>
+                                      <ArrowDown className="w-3.5 h-3.5 mx-auto mb-0.5 text-cyan-400" />
+                                      <div className="text-lg font-bold text-cyan-400">{low || '--'}</div>
+                                      <div className="text-[9px] text-muted-foreground">Lowest</div>
+                                    </div>
+                                    <div>
+                                      <Heart className="w-3.5 h-3.5 mx-auto mb-0.5 text-primary" fill="currentColor" />
+                                      <div className="text-xl font-bold text-primary">{avg || '--'}</div>
+                                      <div className="text-[9px] text-muted-foreground">Average</div>
+                                    </div>
+                                    <div>
+                                      <ArrowUp className="w-3.5 h-3.5 mx-auto mb-0.5 text-orange-400" />
+                                      <div className="text-lg font-bold text-orange-400">{high || '--'}</div>
+                                      <div className="text-[9px] text-muted-foreground">Highest avg</div>
+                                    </div>
+                                    <div>
+                                      <Zap className="w-3.5 h-3.5 mx-auto mb-0.5 text-red-500" />
+                                      <div className="text-lg font-bold text-red-500">{peakBpm || '--'}</div>
+                                      <div className="text-[9px] text-muted-foreground">Max</div>
+                                      {peakDate && <div className="text-[8px] text-muted-foreground">{peakDate}</div>}
+                                    </div>
+                                  </div>
+                                </Card>
+
+                                <Card className="p-3">
+                                  <h3 className="text-xs font-semibold mb-2">Time in Zones</h3>
+                                  <div className="space-y-1.5">
+                                    {[
+                                      { label: 'Z1 Recovery', secs: w.reduce((s, x) => s + (x.zone_1_seconds || 0), 0), color: zoneColors.z1 },
+                                      { label: 'Z2 Fat Burn', secs: w.reduce((s, x) => s + (x.zone_2_seconds || 0), 0), color: zoneColors.z2 },
+                                      { label: 'Z3 Aerobic', secs: w.reduce((s, x) => s + (x.zone_3_seconds || 0), 0), color: zoneColors.z3 },
+                                      { label: 'Z4 Cardio', secs: w.reduce((s, x) => s + (x.zone_4_seconds || 0), 0), color: zoneColors.z4 },
+                                      { label: 'Z5 Max Effort', secs: w.reduce((s, x) => s + (x.zone_5_seconds || 0), 0), color: zoneColors.z5 },
+                                    ].map(z => (
+                                      <div key={z.label} className="flex items-center justify-between">
+                                        <span className="text-xs font-medium" style={{ color: z.color }}>{z.label}</span>
+                                        <span className="text-xs text-muted-foreground">{formatDuration(z.secs)}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </Card>
+
+                                <Card className="p-3">
+                                  <h3 className="text-xs font-semibold mb-2">All Sessions ({w.length})</h3>
+                                  <div className="space-y-1">
+                                    {w.map(s => (
+                                      <div key={s.id} className="flex items-center justify-between text-xs py-1.5 border-b border-border last:border-0">
+                                        <div className="flex flex-col">
+                                          <span className="font-medium">{format(new Date(s.started_at), 'MMM d, HH:mm')}</span>
+                                          {s.rank_avg_bpm != null && s.session_participant_count != null && (
+                                            <span className="text-[11px] mt-0.5">
+                                              <span className="text-primary">Avg #{s.rank_avg_bpm}/{s.session_participant_count}</span>
+                                              <span className="text-muted-foreground"> · </span>
+                                              <span className="text-red-400">Peak #{s.rank_peak_bpm}/{s.session_participant_count}</span>
+                                            </span>
+                                          )}
+                                        </div>
+                                        <div className="flex items-center gap-3 text-muted-foreground">
+                                          <span>{formatDuration(s.duration_seconds || 0)}</span>
+                                          <span>{Math.round(s.total_calories || 0)} kcal</span>
+                                          <span>⌀ {s.avg_bpm || '--'}</span>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </Card>
+                              </>
+                            );
+                          })()}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </>
+          ) : (
+            /* YEAR VIEW */
+            <div className="space-y-3">
+              {/* Year selector */}
+              <div className="flex items-center justify-center gap-4 pt-1">
+                <button onClick={() => setSelectedYear(y => y - 1)} className="p-1 text-muted-foreground hover:text-foreground transition-colors">
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <span className="text-lg font-bold min-w-[60px] text-center">{selectedYear}</span>
+                <button
+                  onClick={() => setSelectedYear(y => Math.min(y + 1, new Date().getFullYear()))}
+                  className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                  disabled={selectedYear >= new Date().getFullYear()}
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* HR stat boxes */}
+              <Card className="p-3 border-pink-500/30">
+                <div className="grid grid-cols-4 gap-2 text-center">
+                  <div>
+                    <ArrowDown className="w-3.5 h-3.5 mx-auto mb-0.5 text-cyan-400" />
+                    <div className="text-lg font-bold text-cyan-400">{yearStats.lowestSessionBpm || '--'}</div>
+                    <div className="text-[9px] text-muted-foreground">Lowest</div>
+                  </div>
+                  <div>
+                    <Heart className="w-3.5 h-3.5 mx-auto mb-0.5 text-primary" fill="currentColor" />
+                    <div className="text-xl font-bold text-primary">{yearStats.avgBpm || '--'}</div>
+                    <div className="text-[9px] text-muted-foreground">Average</div>
+                  </div>
+                  <div>
+                    <ArrowUp className="w-3.5 h-3.5 mx-auto mb-0.5 text-orange-400" />
+                    <div className="text-lg font-bold text-orange-400">{yearStats.highestSessionBpm || '--'}</div>
+                    <div className="text-[9px] text-muted-foreground">Highest Avg</div>
+                  </div>
+                  <div>
+                    <Zap className="w-3.5 h-3.5 mx-auto mb-0.5 text-red-500" />
+                    <div className="text-lg font-bold text-red-500">{yearStats.maxBpm || '--'}</div>
+                    <div className="text-[9px] text-muted-foreground">Max BPM</div>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Summary cards */}
+              <div className="grid grid-cols-3 gap-2">
+                <Card className="p-3 text-center">
+                  <Activity className="w-4 h-4 mx-auto mb-1 text-primary" />
+                  <div className="text-xl font-bold">{yearStats.sessionCount}</div>
+                  <div className="text-[10px] text-muted-foreground">Sessions</div>
+                </Card>
+                <Card className="p-3 text-center">
+                  <Flame className="w-4 h-4 mx-auto mb-1 text-orange-400" />
+                  <div className="text-xl font-bold">{yearStats.totalCalories > 0 ? yearStats.totalCalories.toLocaleString() : '--'}</div>
+                  <div className="text-[10px] text-muted-foreground">Calories</div>
+                </Card>
+                <Card className="p-3 text-center">
+                  <Clock className="w-4 h-4 mx-auto mb-1 text-emerald-400" />
+                  <div className="text-xl font-bold">{yearStats.totalSeconds > 0 ? formatDuration(yearStats.totalSeconds) : '--'}</div>
+                  <div className="text-[10px] text-muted-foreground">Total Time</div>
+                </Card>
+              </div>
+
+              {yearStats.sessionCount === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Calendar className="w-12 h-12 mx-auto mb-3 opacity-40" />
+                  <p className="text-sm">No workouts recorded in {selectedYear}.</p>
+                </div>
+              )}
+            </div>
           )}
         </TabsContent>
 
