@@ -70,7 +70,10 @@ export default function Participant() {
   const [allHistoricalWorkouts, setAllHistoricalWorkouts] = useState<Workout[]>([]);
   const [activeSession, setActiveSession] = useState(false);
   const [expandedMonth, setExpandedMonth] = useState<string>('');
-  
+  const [monthYearToggle, setMonthYearToggle] = useState<'month' | 'year'>('month');
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [yearWorkouts, setYearWorkouts] = useState<Workout[]>([]);
+
   // Session join flow state
   const [showJoinDialog, setShowJoinDialog] = useState(false);
   const [currentWorkoutId, setCurrentWorkoutId] = useState<string | null>(null);
