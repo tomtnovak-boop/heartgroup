@@ -25,9 +25,9 @@ import {
 import {
   Heart, Loader2, Bluetooth, BluetoothOff, LogOut, Settings, User, Home,
   TrendingUp, TrendingDown, Flame, Clock, Activity, ChevronRight, Zap,
-  BarChart3, Calendar, ArrowDown, ArrowUp, ChevronDown, ArrowLeft,
+  BarChart3, Calendar, ArrowDown, ArrowUp, ChevronDown, ArrowLeft, ChevronLeft,
 } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, getISOWeek, eachWeekOfInterval, subMonths } from 'date-fns';
+import { format, startOfMonth, endOfMonth, startOfYear, endOfYear, getISOWeek, eachWeekOfInterval, subMonths } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
 
 interface Profile {
