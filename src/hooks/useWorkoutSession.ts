@@ -236,7 +236,6 @@ export function useWorkoutSession() {
     } catch (err) {
       console.error('Error starting session:', err);
     }
-    }
   }, []);
 
   const addLateJoiner = useCallback(async (profileId: string) => {
