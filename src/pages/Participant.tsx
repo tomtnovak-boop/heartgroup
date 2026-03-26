@@ -817,8 +817,8 @@ export default function Participant() {
       <Tabs defaultValue="overview" className="flex-1 flex flex-col px-4 pt-3">
         <TabsList className="w-full grid grid-cols-4 h-9">
           <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
-          <TabsTrigger value="month" className="text-xs">Month</TabsTrigger>
-          <TabsTrigger value="history" className="text-xs">History</TabsTrigger>
+          <TabsTrigger value="month" className="text-xs">Stats</TabsTrigger>
+          <TabsTrigger value="history" className="text-xs">Sessions</TabsTrigger>
           <TabsTrigger value="profile" className="text-xs">Profile</TabsTrigger>
         </TabsList>
 
