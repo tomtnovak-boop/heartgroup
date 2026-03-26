@@ -1356,7 +1356,7 @@ export default function Participant() {
           )}
         </TabsContent>
 
-        {/* HISTORY TAB */}
+        {/* SESSIONS TAB */}
         <TabsContent value="history" className="flex-1 overflow-y-auto pb-4">
           <div className="pt-2">
             <Button
@@ -1365,7 +1365,7 @@ export default function Participant() {
               onClick={() => setShowHistory(true)}
             >
               <Clock className="w-4 h-4 mr-2" />
-              View Full Workout History
+              View All Sessions
             </Button>
           </div>
         </TabsContent>
