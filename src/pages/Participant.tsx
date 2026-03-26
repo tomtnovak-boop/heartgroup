@@ -172,6 +172,20 @@ export default function Participant() {
       });
   }, [profile]);
 
+  // Fetch selected month workouts for Month view
+  useEffect(() => {
+    if (!profile) return;
+    const mStart = startOfMonth(selectedMonthDate).toISOString();
+    const mEnd = endOfMonth(selectedMonthDate).toISOString();
+    supabase.from('workouts').select('*')
+      .eq('profile_id', profile.id)
+      .not('ended_at', 'is', null)
+      .gte('started_at', mStart)
+      .lte('started_at', mEnd)
+      .order('started_at', { ascending: false })
+      .then(({ data }) => setSelectedMonthWorkouts(data || []));
+  }, [profile, selectedMonthDate]);
+
   // Fetch year workouts for Year view
   useEffect(() => {
     if (!profile) return;
@@ -186,7 +200,7 @@ export default function Participant() {
       .then(({ data }) => setYearWorkouts(data || []));
   }, [profile, selectedYear]);
 
-  // Year stats
+  // Year stats (with zones)
   const yearStats = useMemo(() => {
     const w = yearWorkouts;
     const withBpm = w.filter(x => x.avg_bpm && x.avg_bpm > 0);
@@ -198,8 +212,77 @@ export default function Participant() {
     const maxBpm = w.reduce((max, x) => Math.max(max, x.max_bpm || 0), 0);
     const totalSeconds = w.reduce((s, x) => s + (x.duration_seconds || 0), 0);
     const totalCalories = Math.round(w.reduce((s, x) => s + (x.total_calories || 0), 0));
-    return { avgBpm, lowestSessionBpm, highestSessionBpm, maxBpm, sessionCount: w.length, totalCalories, totalSeconds };
+    const z1 = w.reduce((s, x) => s + (x.zone_1_seconds || 0), 0);
+    const z2 = w.reduce((s, x) => s + (x.zone_2_seconds || 0), 0);
+    const z3 = w.reduce((s, x) => s + (x.zone_3_seconds || 0), 0);
+    const z4 = w.reduce((s, x) => s + (x.zone_4_seconds || 0), 0);
+    const z5 = w.reduce((s, x) => s + (x.zone_5_seconds || 0), 0);
+    const zTotal = z1 + z2 + z3 + z4 + z5 || 1;
+    return {
+      avgBpm, lowestSessionBpm, highestSessionBpm, maxBpm,
+      sessionCount: w.length, totalCalories, totalSeconds,
+      zones: [
+        { label: 'Z1', mins: Math.round(z1 / 60), pct: Math.round((z1 / zTotal) * 100), color: '#9CA3AF' },
+        { label: 'Z2', mins: Math.round(z2 / 60), pct: Math.round((z2 / zTotal) * 100), color: '#00BFFF' },
+        { label: 'Z3', mins: Math.round(z3 / 60), pct: Math.round((z3 / zTotal) * 100), color: '#22C55E' },
+        { label: 'Z4', mins: Math.round(z4 / 60), pct: Math.round((z4 / zTotal) * 100), color: '#F59E0B' },
+        { label: 'Z5', mins: Math.round(z5 / 60), pct: Math.round((z5 / zTotal) * 100), color: '#EF4444' },
+      ],
+    };
   }, [yearWorkouts]);
+
+  // Selected month stats
+  const selectedMonthStats = useMemo(() => {
+    const w = selectedMonthWorkouts;
+    const withBpm = w.filter(x => x.avg_bpm && x.avg_bpm > 0);
+    const totalWeightedBpm = withBpm.reduce((s, x) => s + (x.avg_bpm || 0) * (x.duration_seconds || 1), 0);
+    const totalWeight = withBpm.reduce((s, x) => s + (x.duration_seconds || 1), 0);
+    const avgBpm = totalWeight > 0 ? Math.round(totalWeightedBpm / totalWeight) : 0;
+    const lowestSessionBpm = withBpm.length > 0 ? Math.min(...withBpm.map(x => x.avg_bpm!)) : 0;
+    const highestSessionBpm = withBpm.length > 0 ? Math.max(...withBpm.map(x => x.avg_bpm!)) : 0;
+    const maxBpmEntry = w.reduce((max, x) => (x.max_bpm || 0) > (max?.max_bpm || 0) ? x : max, w[0]);
+    const maxBpm = maxBpmEntry?.max_bpm || 0;
+    const maxBpmDate = maxBpmEntry ? format(new Date(maxBpmEntry.started_at), 'MMM d') : '';
+    const totalSeconds = w.reduce((s, x) => s + (x.duration_seconds || 0), 0);
+    const totalCalories = Math.round(w.reduce((s, x) => s + (x.total_calories || 0), 0));
+    const maxSessionCal = Math.round(Math.max(...w.map(x => x.total_calories || 0), 0));
+    const z1 = w.reduce((s, x) => s + (x.zone_1_seconds || 0), 0);
+    const z2 = w.reduce((s, x) => s + (x.zone_2_seconds || 0), 0);
+    const z3 = w.reduce((s, x) => s + (x.zone_3_seconds || 0), 0);
+    const z4 = w.reduce((s, x) => s + (x.zone_4_seconds || 0), 0);
+    const z5 = w.reduce((s, x) => s + (x.zone_5_seconds || 0), 0);
+    const zTotal = z1 + z2 + z3 + z4 + z5 || 1;
+    const weekMap = new Map<number, number>();
+    w.forEach(x => {
+      const wk = getISOWeek(new Date(x.started_at));
+      weekMap.set(wk, (weekMap.get(wk) || 0) + 1);
+    });
+    const allWeekStarts = eachWeekOfInterval(
+      { start: startOfMonth(selectedMonthDate), end: endOfMonth(selectedMonthDate) },
+      { weekStartsOn: 1 }
+    );
+    const weekData = allWeekStarts.map(ws => {
+      const wk = getISOWeek(ws);
+      return { week: `W${wk}`, count: weekMap.get(wk) || 0 };
+    });
+    return {
+      avgBpm, lowestSessionBpm, highestSessionBpm, maxBpm, maxBpmDate,
+      totalSeconds, totalCalories, maxSessionCal,
+      sessionCount: w.length,
+      zonePercents: {
+        z1: Math.round((z1 / zTotal) * 100), z2: Math.round((z2 / zTotal) * 100),
+        z3: Math.round((z3 / zTotal) * 100), z4: Math.round((z4 / zTotal) * 100),
+        z5: Math.round((z5 / zTotal) * 100),
+      },
+      zoneMinutes: {
+        z1: Math.round(z1 / 60), z2: Math.round(z2 / 60), z3: Math.round(z3 / 60),
+        z4: Math.round(z4 / 60), z5: Math.round(z5 / 60),
+      },
+      totalTrainingMinutes: Math.round(zTotal / 60),
+      weekData,
+      workouts: w,
+    };
+  }, [selectedMonthWorkouts, selectedMonthDate]);
 
 
   useEffect(() => {
