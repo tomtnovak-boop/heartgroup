@@ -73,6 +73,8 @@ export default function Participant() {
   const [monthYearToggle, setMonthYearToggle] = useState<'month' | 'year'>('month');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [yearWorkouts, setYearWorkouts] = useState<Workout[]>([]);
+  const [selectedMonthDate, setSelectedMonthDate] = useState(new Date());
+  const [selectedMonthWorkouts, setSelectedMonthWorkouts] = useState<Workout[]>([]);
 
   // Session join flow state
   const [showJoinDialog, setShowJoinDialog] = useState(false);
