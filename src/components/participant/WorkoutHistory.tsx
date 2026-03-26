@@ -47,7 +47,7 @@ function isIncomplete(w: Workout): boolean {
   return w.ended_at === null || (w.duration_seconds === 0 && w.avg_bpm === 0);
 }
 
-export function WorkoutHistory({ profileId, onClose }: WorkoutHistoryProps) {
+export function WorkoutHistory({ profileId, onClose, embedded = false }: WorkoutHistoryProps) {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
