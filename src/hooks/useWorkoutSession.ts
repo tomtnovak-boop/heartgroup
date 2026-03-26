@@ -185,17 +185,26 @@ export function useWorkoutSession() {
 
   const startSession = useCallback(async (participants: LiveHRData[]) => {
     const code = sessionCodeRef.current;
-    if (!code) return;
+    console.log('startSession called, code:', code);
+    if (!code) {
+      console.error('startSession: No session code available');
+      return;
+    }
 
     try {
       // Fetch lobby participants
-      const { data: lobbyParticipants } = await supabase
+      const { data: lobbyParticipants, error: lobbyError } = await supabase
         .from('session_lobby')
         .select('profile_id')
         .eq('session_code', code);
 
+      console.log('startSession: lobby participants', lobbyParticipants, 'error:', lobbyError);
+
       const profileIds = lobbyParticipants?.map(p => p.profile_id) || [];
-      if (profileIds.length === 0) return;
+      if (profileIds.length === 0) {
+        console.warn('startSession: No participants in lobby');
+        return;
+      }
 
       const now = new Date().toISOString();
       const inserts = profileIds.map(profile_id => ({
@@ -208,7 +217,12 @@ export function useWorkoutSession() {
         .insert(inserts)
         .select('id, profile_id');
 
-      if (error) throw error;
+      if (error) {
+        console.error('startSession: Failed to insert workouts', error);
+        throw error;
+      }
+
+      console.log('startSession: Created workouts', data);
 
       const workoutMap = new Map<string, string>();
       data?.forEach(w => workoutMap.set(w.profile_id, w.id));
@@ -221,6 +235,7 @@ export function useWorkoutSession() {
       });
     } catch (err) {
       console.error('Error starting session:', err);
+    }
     }
   }, []);
 
