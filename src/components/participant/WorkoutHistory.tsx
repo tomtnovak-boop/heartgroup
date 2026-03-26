@@ -40,6 +40,7 @@ interface HRDataPoint {
 interface WorkoutHistoryProps {
   profileId: string;
   onClose: () => void;
+  embedded?: boolean;
 }
 
 function isIncomplete(w: Workout): boolean {
