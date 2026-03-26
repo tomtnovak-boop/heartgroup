@@ -95,6 +95,7 @@ export default function Dashboard() {
   };
 
   const handleStartSession = () => {
+    console.log('handleStartSession called, participants:', participants.length, 'sessionCode:', sessionCode);
     startSession(participants);
   };
 

@@ -60,13 +60,35 @@ export function useWorkoutSession() {
   // Helper: create a new active_sessions record and set sessionCode
   const ensureSessionCode = useCallback(async () => {
     const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) return;
+    if (!userData.user) {
+      console.error('ensureSessionCode: No authenticated user');
+      return;
+    }
+
+    // Check if there's already an active session
+    const { data: existing } = await supabase
+      .from('active_sessions')
+      .select('session_code')
+      .is('ended_at', null)
+      .eq('created_by', userData.user.id)
+      .order('started_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (existing) {
+      setSessionCode(existing.session_code);
+      return existing.session_code;
+    }
 
     const code = generateSessionCode();
-    await supabase.from('active_sessions').insert({
+    const { error } = await supabase.from('active_sessions').insert({
       session_code: code,
       created_by: userData.user.id,
     });
+    if (error) {
+      console.error('ensureSessionCode: Insert failed', error);
+      return;
+    }
     setSessionCode(code);
     return code;
   }, []);
@@ -163,17 +185,26 @@ export function useWorkoutSession() {
 
   const startSession = useCallback(async (participants: LiveHRData[]) => {
     const code = sessionCodeRef.current;
-    if (!code) return;
+    console.log('startSession called, code:', code);
+    if (!code) {
+      console.error('startSession: No session code available');
+      return;
+    }
 
     try {
       // Fetch lobby participants
-      const { data: lobbyParticipants } = await supabase
+      const { data: lobbyParticipants, error: lobbyError } = await supabase
         .from('session_lobby')
         .select('profile_id')
         .eq('session_code', code);
 
+      console.log('startSession: lobby participants', lobbyParticipants, 'error:', lobbyError);
+
       const profileIds = lobbyParticipants?.map(p => p.profile_id) || [];
-      if (profileIds.length === 0) return;
+      if (profileIds.length === 0) {
+        console.warn('startSession: No participants in lobby');
+        return;
+      }
 
       const now = new Date().toISOString();
       const inserts = profileIds.map(profile_id => ({
@@ -186,7 +217,12 @@ export function useWorkoutSession() {
         .insert(inserts)
         .select('id, profile_id');
 
-      if (error) throw error;
+      if (error) {
+        console.error('startSession: Failed to insert workouts', error);
+        throw error;
+      }
+
+      console.log('startSession: Created workouts', data);
 
       const workoutMap = new Map<string, string>();
       data?.forEach(w => workoutMap.set(w.profile_id, w.id));
