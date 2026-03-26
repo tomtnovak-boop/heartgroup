@@ -26,6 +26,7 @@ export default function DashboardNeutral() {
     activeWorkoutProfileIds,
     sessionCode,
     lobbyCount,
+    lobbyProfileIds,
     createSessionCode,
     startSession,
     stopSession,
@@ -135,6 +136,8 @@ export default function DashboardNeutral() {
           <NeutralDashboard
             participants={participants}
             allProfiles={allProfiles}
+            lobbyProfileIds={lobbyProfileIds}
+            sessionCode={sessionCode}
             isLoading={isLoading}
             isSessionActive={sessionActive}
           />
