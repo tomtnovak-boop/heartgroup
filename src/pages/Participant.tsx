@@ -621,9 +621,8 @@ export default function Participant() {
     return <HeartRateDisplay profile={profile} onBack={() => setIsTrainingActive(false)} />;
   }
 
-  if (showHistory && profile) {
-    return <WorkoutHistory profileId={profile.id} onClose={() => setShowHistory(false)} />;
-  }
+
+
 
   if (isLoading) {
     return (
