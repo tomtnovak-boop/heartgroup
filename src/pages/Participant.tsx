@@ -170,7 +170,36 @@ export default function Participant() {
       });
   }, [profile]);
 
-  // Check for coach-started active session (any open workout within last 3 hours)
+  // Fetch year workouts for Year view
+  useEffect(() => {
+    if (!profile) return;
+    const yearStart = startOfYear(new Date(selectedYear, 0, 1)).toISOString();
+    const yearEnd = endOfYear(new Date(selectedYear, 0, 1)).toISOString();
+    supabase.from('workouts').select('*')
+      .eq('profile_id', profile.id)
+      .not('ended_at', 'is', null)
+      .gte('started_at', yearStart)
+      .lte('started_at', yearEnd)
+      .order('started_at', { ascending: false })
+      .then(({ data }) => setYearWorkouts(data || []));
+  }, [profile, selectedYear]);
+
+  // Year stats
+  const yearStats = useMemo(() => {
+    const w = yearWorkouts;
+    const withBpm = w.filter(x => x.avg_bpm && x.avg_bpm > 0);
+    const totalWeightedBpm = withBpm.reduce((s, x) => s + (x.avg_bpm || 0) * (x.duration_seconds || 1), 0);
+    const totalWeight = withBpm.reduce((s, x) => s + (x.duration_seconds || 1), 0);
+    const avgBpm = totalWeight > 0 ? Math.round(totalWeightedBpm / totalWeight) : 0;
+    const lowestSessionBpm = withBpm.length > 0 ? Math.min(...withBpm.map(x => x.avg_bpm!)) : 0;
+    const highestSessionBpm = withBpm.length > 0 ? Math.max(...withBpm.map(x => x.avg_bpm!)) : 0;
+    const maxBpm = w.reduce((max, x) => Math.max(max, x.max_bpm || 0), 0);
+    const totalSeconds = w.reduce((s, x) => s + (x.duration_seconds || 0), 0);
+    const totalCalories = Math.round(w.reduce((s, x) => s + (x.total_calories || 0), 0));
+    return { avgBpm, lowestSessionBpm, highestSessionBpm, maxBpm, sessionCount: w.length, totalCalories, totalSeconds };
+  }, [yearWorkouts]);
+
+
   useEffect(() => {
     if (!profile) return;
     
