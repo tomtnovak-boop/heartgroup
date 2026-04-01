@@ -17,7 +17,7 @@ export default function Index() {
   useEffect(() => {
     if (isLoading || !isAuthenticated) return;
     if (isAdmin || isCoach) {
-      navigate('/dashboard', { replace: true });
+      navigate('/coach', { replace: true });
     } else {
       navigate('/participant', { replace: true });
     }
