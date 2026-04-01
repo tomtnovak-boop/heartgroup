@@ -2,7 +2,7 @@ import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { ZoneColumn, FIXED_TILE_SIZE, FIXED_GAP, ZONE_HEADER_HEIGHT, TILE_TOTAL_HEIGHT } from './ZoneColumn';
 import { HexTile } from './HexTile';
 import { HRHistoryStrip } from './HRHistoryStrip';
-import { Heart } from 'lucide-react';
+import { Heart, Users } from 'lucide-react';
 import { LiveHRData } from '@/hooks/useLiveHR';
 
 interface CoachDashboardProps {
