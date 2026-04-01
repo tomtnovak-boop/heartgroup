@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,52 +6,36 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAuthContext } from './AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { calculateMaxHR, calculateAgeFromBirthDate } from '@/lib/heartRateUtils';
 import { formatDateInput, parseDateString, formatDateToInput } from '@/lib/dateUtils';
-import { Loader2, Mail, Lock, User, CalendarIcon, Heart } from 'lucide-react';
+import { Loader2, Mail, Lock, User, CalendarIcon, Heart, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface RegisterFormProps {
   onSwitchToLogin: () => void;
+  onRegistered: (email: string) => void;
 }
 
-export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
-  const REGISTRATION_OPEN = false;
-
-  if (!REGISTRATION_OPEN) {
-    return (
-      <Card className="w-full max-w-md mx-auto bg-card border-border">
-        <CardContent className="text-center p-8 space-y-4">
-          <h2 className="text-xl font-semibold">Registration Currently Closed</h2>
-          <p className="text-muted-foreground">
-            We are not accepting new registrations at this time.<br />
-            Please contact the administrator if you need access.
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Already registered?{' '}
-            <button type="button" onClick={onSwitchToLogin} className="text-primary hover:underline font-medium">Sign in now</button>
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
+export function RegisterForm({ onSwitchToLogin, onRegistered }: RegisterFormProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [nickname, setNickname] = useState('');
-  const [nicknameError, setNicknameError] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [birthDate, setBirthDate] = useState<Date | undefined>();
   const [dateInput, setDateInput] = useState('');
-  const [customMaxHr, setCustomMaxHr] = useState('');
   const [weight, setWeight] = useState('');
-  const [height, setHeight] = useState('');
+  const [gender, setGender] = useState('');
+  const [customMaxHr, setCustomMaxHr] = useState('');
+  const [privacyConsent, setPrivacyConsent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuthContext();
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   const calculatedAge = birthDate ? calculateAgeFromBirthDate(birthDate) : null;
   const calculatedMaxHr = calculatedAge ? calculateMaxHR(calculatedAge) : null;
@@ -73,18 +56,24 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     setDateInput(date ? formatDateToInput(date) : '');
   };
 
-  const checkNicknameAvailability = async (value: string) => {
-    if (!value.trim()) { setNicknameError(''); return; }
-    const { data } = await supabase.from('profiles').select('id').eq('nickname', value.trim()).maybeSingle();
-    setNicknameError(data ? 'This nickname is already taken' : '');
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     if (!birthDate) {
       toast({ title: 'Date of birth required', description: 'Please select your date of birth.', variant: 'destructive' });
+      setIsLoading(false);
+      return;
+    }
+
+    if (!gender) {
+      toast({ title: 'Gender required', description: 'Please select your gender.', variant: 'destructive' });
+      setIsLoading(false);
+      return;
+    }
+
+    if (!privacyConsent) {
+      toast({ title: 'Consent required', description: 'Please accept the data processing terms.', variant: 'destructive' });
       setIsLoading(false);
       return;
     }
@@ -109,85 +98,66 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
       return;
     }
 
-    if (nickname.trim()) {
-      const { data: existingNickname } = await supabase.from('profiles').select('id').eq('nickname', nickname.trim()).maybeSingle();
-      if (existingNickname) {
-        toast({ title: 'Nickname already taken', description: 'Please choose a different nickname.', variant: 'destructive' });
-        setIsLoading(false);
-        return;
-      }
-    }
-
     const maxHr = calculateMaxHR(age);
     const customMaxHrNum = customMaxHr ? parseInt(customMaxHr) : null;
     const parsedWeight = weight ? parseInt(weight, 10) : null;
-    const parsedHeight = height ? parseInt(height, 10) : null;
+    const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
 
     const { error: profileError } = await supabase.from('profiles').insert({
       user_id: authData.user.id,
-      name: name.trim(),
-      nickname: nickname.trim() || null,
-      age, birth_date: format(birthDate, 'yyyy-MM-dd'),
-      max_hr: maxHr, custom_max_hr: customMaxHrNum,
-      weight: parsedWeight, height: parsedHeight,
+      name: fullName,
+      age,
+      birth_date: format(birthDate, 'yyyy-MM-dd'),
+      max_hr: maxHr,
+      custom_max_hr: customMaxHrNum,
+      weight: parsedWeight,
+      gender,
     });
 
     if (profileError) {
-      toast({ title: 'Could not create profile', description: profileError.message, variant: 'destructive' });
-      setIsLoading(false);
-      return;
+      console.error('Profile creation error:', profileError);
     }
 
-    toast({ title: 'Welcome!', description: 'Your account has been created successfully.' });
-    navigate('/participant');
+    setIsLoading(false);
+    onRegistered(email);
   };
 
   return (
     <Card className="w-full max-w-md mx-auto bg-card border-border">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Register</CardTitle>
-        <CardDescription>Create your profile for heart rate training</CardDescription>
+        <CardTitle className="text-2xl">Create Account</CardTitle>
+        <CardDescription>Join your heart rate training group</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">First Name</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input id="firstName" placeholder="Max" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="pl-10" required />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input id="lastName" placeholder="Mustermann" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="reg-email">Email</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input id="email" type="email" placeholder="your@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10" required />
+              <Input id="reg-email" type="email" placeholder="your@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10" required />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="reg-password">Password</Label>
             <div className="relative">
               <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input id="password" type="password" placeholder="At least 6 characters" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10" minLength={6} required />
+              <Input id="reg-password" type="password" placeholder="Min. 8 characters" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10" minLength={8} required />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="name">First Name</Label>
-            <div className="relative">
-              <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input id="name" type="text" placeholder="Max" value={name} onChange={(e) => setName(e.target.value)} className="pl-10" required />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="nickname">Nickname (optional)</Label>
-            <div className="relative">
-              <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="nickname" type="text" placeholder="Displayed on the dashboard"
-                value={nickname}
-                onChange={(e) => { setNickname(e.target.value); checkNicknameAvailability(e.target.value); }}
-                className={cn("pl-10", nicknameError && "border-destructive")}
-                maxLength={30}
-              />
-            </div>
-            {nicknameError && <p className="text-xs text-destructive">{nicknameError}</p>}
-            <p className="text-xs text-muted-foreground">Shown instead of your name on the coach dashboard</p>
           </div>
 
           <div className="space-y-2">
@@ -205,41 +175,70 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
             </div>
             {birthDate && calculatedAge && calculatedMaxHr && (
               <p className="text-xs text-muted-foreground">
-                {format(birthDate, "MMMM d, yyyy")} • Age: {calculatedAge} years • Max HR (Tanaka): {calculatedMaxHr} bpm
+                Age: {calculatedAge} years • Max HR (Tanaka): {calculatedMaxHr} bpm
               </p>
             )}
-            {!birthDate && <p className="text-xs text-muted-foreground">Format: DD/MM/YYYY (e.g. 15/03/1990)</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="weight">Weight (kg)</Label>
-              <Input id="weight" type="number" placeholder="e.g. 75" value={weight} onChange={(e) => setWeight(e.target.value)} min={30} max={300} />
+              <Input id="weight" type="number" placeholder="e.g. 75" value={weight} onChange={(e) => setWeight(e.target.value)} min={30} max={300} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="height">Height (cm)</Label>
-              <Input id="height" type="number" placeholder="e.g. 175" value={height} onChange={(e) => setHeight(e.target.value)} min={100} max={250} />
+              <Label>Gender</Label>
+              <RadioGroup value={gender} onValueChange={setGender} className="flex gap-4 pt-2">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="male" id="male" />
+                  <Label htmlFor="male" className="cursor-pointer font-normal">Male</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="female" id="female" />
+                  <Label htmlFor="female" className="cursor-pointer font-normal">Female</Label>
+                </div>
+              </RadioGroup>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="customMaxHr">Custom Max HR (optional)</Label>
+            <Label htmlFor="customMaxHr" className="flex items-center gap-1.5">
+              Max HR Override (optional)
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="w-3.5 h-3.5 text-muted-foreground/60 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-[260px] text-xs">
+                  We calculate your max HR automatically using the Tanaka formula. Only fill this in if you know your actual max HR from a sports medical test.
+                </TooltipContent>
+              </Tooltip>
+            </Label>
             <div className="relative">
               <Heart className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input id="customMaxHr" type="number" placeholder="Overrides automatic calculation" value={customMaxHr} onChange={(e) => setCustomMaxHr(e.target.value)} className="pl-10" min={100} max={250} />
+              <Input id="customMaxHr" type="number" placeholder="Leave empty to use Tanaka formula: 208 − 0.7 × age" value={customMaxHr} onChange={(e) => setCustomMaxHr(e.target.value)} className="pl-10" min={100} max={250} />
             </div>
-            <p className="text-xs text-muted-foreground">If known, overrides the automatic calculation</p>
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Registering...</>) : 'Register'}
+          <div className="flex items-start space-x-3 rounded-md border border-border p-3 bg-muted/30">
+            <Checkbox
+              id="privacy"
+              checked={privacyConsent}
+              onCheckedChange={(checked) => setPrivacyConsent(checked === true)}
+              className="mt-0.5"
+            />
+            <Label htmlFor="privacy" className="text-xs text-muted-foreground leading-relaxed cursor-pointer font-normal">
+              Your data is confidential. We use your personal information solely to calculate your heart rate zones and calorie expenditure during training sessions. Your data is never shared with third parties. By registering, you agree to our data processing terms.
+            </Label>
+          </div>
+
+          <Button type="submit" className="w-full" disabled={isLoading || !privacyConsent}>
+            {isLoading ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creating account...</>) : 'Create account'}
           </Button>
         </form>
 
         <div className="mt-6 text-center">
           <p className="text-sm text-muted-foreground">
-            Already registered?{' '}
-            <button type="button" onClick={onSwitchToLogin} className="text-primary hover:underline font-medium">Sign in now</button>
+            Already have an account?{' '}
+            <button type="button" onClick={onSwitchToLogin} className="text-primary hover:underline font-medium">Sign in</button>
           </p>
         </div>
       </CardContent>
