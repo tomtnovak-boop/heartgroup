@@ -1393,7 +1393,12 @@ export default function Participant() {
                 <p className="font-medium">{profile.gender === 'male' ? 'Male' : profile.gender === 'female' ? 'Female' : '–'}</p>
               </div>
               <div>
-                <span className="text-muted-foreground">Max HR</span>
+                <span className="text-muted-foreground flex items-center gap-1">
+                  Max HR
+                  <button onClick={() => setShowZoneInfo(true)} className="inline-flex" aria-label="Zone info">
+                    <Info className="w-3.5 h-3.5 text-muted-foreground/60 hover:text-foreground transition-colors" />
+                  </button>
+                </span>
                 <p className="font-medium">{effectiveMaxHr} bpm {profile.custom_max_hr ? '(custom)' : '(Tanaka)'}</p>
               </div>
             </div>
