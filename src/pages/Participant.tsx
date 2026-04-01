@@ -1424,6 +1424,8 @@ export default function Participant() {
             </Card>
           )}
         </TabsContent>
+
+        <ZoneInfoModal open={showZoneInfo} onOpenChange={setShowZoneInfo} />
       </Tabs>
 
 
