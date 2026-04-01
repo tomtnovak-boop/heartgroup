@@ -12,9 +12,19 @@ interface CoachDashboardProps {
   selectedProfileId?: string;
   averageBPM?: number;
   isSessionActive?: boolean;
+  sessionCode?: string | null;
+  lobbyProfileIds?: string[];
 }
 
-export function CoachDashboard({ participants, isLoading, activeTab, selectedProfileId, averageBPM = 0, isSessionActive = false }: CoachDashboardProps) {
+const WAITING_ZONE_GLOWS = [
+  { left: '10%', color: '#00bcd4' },
+  { left: '30%', color: '#4caf50' },
+  { left: '50%', color: '#ffc107' },
+  { left: '70%', color: '#ff9800' },
+  { left: '90%', color: '#f44336' },
+];
+
+export function CoachDashboard({ participants, isLoading, activeTab, selectedProfileId, averageBPM = 0, isSessionActive = false, sessionCode, lobbyProfileIds = [] }: CoachDashboardProps) {
   const gridRef = useRef<HTMLDivElement>(null);
   const [columnOffsets, setColumnOffsets] = useState<{ left: number; width: number }[]>([]);
 

@@ -97,7 +97,7 @@ export default function CoachFancy() {
         </button>
       </AppHeader>
       <div className="flex-1 min-h-0 overflow-hidden">
-        <CoachDashboard participants={participants} isLoading={isLoading} activeTab="live" averageBPM={averageBPM} isSessionActive={sessionActive} />
+        <CoachDashboard participants={participants} isLoading={isLoading} activeTab="live" averageBPM={averageBPM} isSessionActive={sessionActive} sessionCode={sessionCode} lobbyProfileIds={lobbyProfileIds} />
       </div>
       {showLeaderboard && leaderboardData.length > 0 && (
         <SessionLeaderboard entries={leaderboardData} sessionDuration={leaderboardDuration} sessionDate={leaderboardDate} onClose={() => setShowLeaderboard(false)} variant="coach" />
