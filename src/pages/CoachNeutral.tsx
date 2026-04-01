@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Monitor } from 'lucide-react';
 import { NeutralDashboard } from '@/components/dashboard/NeutralDashboard';
 import { SessionLeaderboard, LeaderboardEntry } from '@/components/dashboard/SessionLeaderboard';
 import { AppHeader } from '@/components/layout/AppHeader';
