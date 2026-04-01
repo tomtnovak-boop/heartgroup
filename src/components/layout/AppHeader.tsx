@@ -1,8 +1,5 @@
 import { Heart, Users, Play, Square, Hash } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useAuthContext } from '@/components/auth/AuthProvider';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
 
 export type ViewMode = 'participant' | 'coach';
 
