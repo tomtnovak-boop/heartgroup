@@ -99,11 +99,12 @@ export function useLiveHR(onNewData?: (data: { profile_id: string; bpm: number; 
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'live_hr',
         },
         async (payload) => {
+          console.log('[coach] live_hr update received:', payload.eventType, payload.new);
           const newData = payload.new as {
             id: string;
             profile_id: string;
