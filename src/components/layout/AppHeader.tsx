@@ -1,4 +1,4 @@
-import { Heart, Play, Square, Hash } from 'lucide-react';
+import { Heart, Users, Play, Square, Hash } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 
