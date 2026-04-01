@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, startOfYear, endOfYear, getISOWeek, eachWeekOfInterval, subMonths } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
+import { ZoneInfoModal } from '@/components/participant/ZoneInfoModal';
 
 interface Profile {
   id: string;
