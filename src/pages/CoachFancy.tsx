@@ -20,7 +20,7 @@ export default function CoachFancy() {
 
   const {
     isActive: sessionActive, elapsedSeconds: sessionElapsed,
-    sessionCode, lobbyCount, createSessionCode, startSession, stopSession, recordHRData,
+    sessionCode, lobbyCount, lobbyProfileIds, createSessionCode, startSession, stopSession, recordHRData,
   } = useWorkoutSession();
 
   const onNewHRData = useCallback((data: { profile_id: string; bpm: number; zone: number; hr_percentage: number; timestamp: string }) => {
