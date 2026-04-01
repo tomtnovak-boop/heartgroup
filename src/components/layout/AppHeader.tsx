@@ -1,8 +1,5 @@
-import { Heart, Users, RefreshCw, Play, Square, Home, Hash, Monitor, UserCog } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useAuthContext } from '@/components/auth/AuthProvider';
+import { Heart, Users, Play, Square, Hash } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
 
 export type ViewMode = 'participant' | 'coach';
 
@@ -50,30 +47,12 @@ export function AppHeader({
   sessionCode, lobbyCount = 0, onCreateSessionCode,
   children,
 }: AppHeaderProps) {
-  const { isAuthenticated, isAdmin, signOut, user } = useAuthContext();
   const navigate = useNavigate();
-  const { toast } = useToast();
-
-  const handleSignOut = async () => {
-    const { error } = await signOut();
-    if (error) {
-      toast({ title: 'Sign out failed', description: error.message, variant: 'destructive' });
-      return;
-    }
-    navigate('/');
-  };
-
-  const initials = user?.email?.slice(0, 2).toUpperCase() || 'U';
 
   return (
     <header className="flex items-center justify-between px-4 py-1.5 bg-background border-b border-border">
-      {/* Left: Logo + Home */}
+      {/* Left: Logo */}
       <div className="flex items-center gap-2 flex-shrink-0">
-        {currentView === 'coach' && (
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate('/participant')} title="Home">
-            <Home className="w-3.5 h-3.5" />
-          </Button>
-        )}
         <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center">
           <Heart className="w-3.5 h-3.5 text-primary" fill="currentColor" />
         </div>
@@ -184,26 +163,6 @@ export function AppHeader({
 
         {children}
 
-        {/* Admin: Users link */}
-        {currentView === 'coach' && isAdmin && (
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate('/admin/users')} title="User Management">
-            <UserCog className="w-3.5 h-3.5" />
-          </Button>
-        )}
-
-        {/* Refresh */}
-        {onRefresh && (
-          <Button variant="ghost" size="icon" onClick={onRefresh} className="h-7 w-7">
-            <RefreshCw className="w-3.5 h-3.5" />
-          </Button>
-        )}
-
-        {/* Avatar / Sign out */}
-        {isAuthenticated && (
-          <Button variant="ghost" size="icon" onClick={handleSignOut} title="Sign out" className="h-7 w-7 rounded-full bg-muted text-xs font-bold">
-            <span>{initials}</span>
-          </Button>
-        )}
       </div>
     </header>
   );
