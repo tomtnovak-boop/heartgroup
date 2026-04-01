@@ -94,6 +94,13 @@ export default function CoachNeutral() {
         >
           <ArrowLeft style={{ width: 14, height: 14 }} /> Hub
         </button>
+        <button
+          onClick={() => window.open('/display', '_blank', 'noopener')}
+          className="w-8 h-8 rounded-full flex items-center justify-center bg-muted hover:bg-muted/80 transition-colors"
+          title="Open TV Display"
+        >
+          <Monitor className="w-3.5 h-3.5 text-muted-foreground" />
+        </button>
       </AppHeader>
       <div className="flex-1 min-h-0 overflow-hidden">
         <NeutralDashboard participants={participants} allProfiles={allProfiles} lobbyProfileIds={lobbyProfileIds} sessionCode={sessionCode} isLoading={isLoading} isSessionActive={sessionActive} />
