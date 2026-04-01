@@ -9,10 +9,10 @@ import Index from "./pages/Index";
 import Participant from "./pages/Participant";
 import Dashboard from "./pages/Dashboard";
 import DashboardNeutral from "./pages/DashboardNeutral";
-import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Display from "./pages/Display";
 import ProfileEdit from "./pages/ProfileEdit";
+import AdminUsers from "./pages/AdminUsers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,7 +26,6 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
             <Route 
               path="/participant" 
               element={
@@ -48,6 +47,14 @@ const App = () => (
               element={
                 <ProtectedRoute requireCoach>
                   <DashboardNeutral />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/users" 
+              element={
+                <ProtectedRoute requireCoach>
+                  <AdminUsers />
                 </ProtectedRoute>
               } 
             />
