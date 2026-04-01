@@ -1,6 +1,8 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthContext } from './AuthProvider';
+import { ProfileCompletionForm } from './ProfileCompletionForm';
+import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Heart } from 'lucide-react';
 
 interface ProtectedRouteProps {
@@ -9,8 +11,34 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, requireCoach = false }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading, isCoach } = useAuthContext();
+  const { isAuthenticated, isLoading, isCoach, user } = useAuthContext();
   const location = useLocation();
+  const [profileCheck, setProfileCheck] = useState<'loading' | 'complete' | 'incomplete'>('loading');
+  const [profileData, setProfileData] = useState<any>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      setProfileCheck('loading');
+      return;
+    }
+
+    const checkProfile = async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, birth_date, weight, gender')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!data || !data.birth_date || !data.weight || !data.gender) {
+        setProfileData(data);
+        setProfileCheck('incomplete');
+      } else {
+        setProfileCheck('complete');
+      }
+    };
+
+    checkProfile();
+  }, [isAuthenticated, user]);
 
   if (isLoading) {
     return (
@@ -28,5 +56,28 @@ export function ProtectedRoute({ children, requireCoach = false }: ProtectedRout
 
   if (!isAuthenticated) return <Navigate to="/auth" state={{ from: location }} replace />;
   if (requireCoach && !isCoach) return <Navigate to="/participant" replace />;
+
+  if (profileCheck === 'loading') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (profileCheck === 'incomplete') {
+    return (
+      <ProfileCompletionForm
+        profileId={profileData?.id || ''}
+        existingData={{
+          birth_date: profileData?.birth_date,
+          weight: profileData?.weight,
+          gender: profileData?.gender,
+        }}
+        onComplete={() => setProfileCheck('complete')}
+      />
+    );
+  }
+
   return <>{children}</>;
 }

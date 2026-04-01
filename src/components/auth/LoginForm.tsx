@@ -49,9 +49,7 @@ export function LoginForm({ onSwitchToRegister, onSwitchToForgotPassword }: Logi
     <Card className="w-full max-w-md mx-auto bg-card border-border">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl">Sign In</CardTitle>
-        <CardDescription>
-          Sign in to start your training
-        </CardDescription>
+        <CardDescription>Sign in to start your training</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -59,70 +57,37 @@ export function LoginForm({ onSwitchToRegister, onSwitchToForgotPassword }: Logi
             <Label htmlFor="email">Email</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="email"
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="pl-10"
-                required
-              />
+              <Input id="email" type="email" placeholder="your@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10" required />
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
             <div className="relative">
               <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="pl-10"
-                required
-              />
+              <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10" required />
             </div>
           </div>
 
           <div className="text-right">
-            <button
-              type="button"
-              onClick={onSwitchToForgotPassword}
-              className="text-xs text-muted-foreground hover:text-primary hover:underline"
-            >
+            <button type="button" onClick={onSwitchToForgotPassword} className="text-xs text-muted-foreground hover:text-primary hover:underline">
               Forgot password?
             </button>
           </div>
 
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Signing in...
-              </>
-            ) : (
-              'Sign In'
-            )}
+            {isLoading ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Signing in...</>) : 'Sign In'}
           </Button>
         </form>
 
-        {/* Registration currently closed
         <div className="mt-6 text-center">
           <p className="text-sm text-muted-foreground">
-            Don't have an account?{' '}
-            <button
-              type="button"
-              onClick={onSwitchToRegister}
-              className="text-primary hover:underline font-medium"
-            >
-              Register now
+            New here?{' '}
+            <button type="button" onClick={onSwitchToRegister} className="text-primary hover:underline font-medium">
+              Create an account
             </button>
           </p>
         </div>
-        */}
       </CardContent>
     </Card>
   );
