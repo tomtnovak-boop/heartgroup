@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Monitor } from 'lucide-react';
 import { NeutralDashboard } from '@/components/dashboard/NeutralDashboard';
 import { SessionLeaderboard, LeaderboardEntry } from '@/components/dashboard/SessionLeaderboard';
 import { AppHeader } from '@/components/layout/AppHeader';
@@ -93,6 +93,13 @@ export default function CoachNeutral() {
           onMouseLeave={e => (e.currentTarget.style.color = '#666')}
         >
           <ArrowLeft style={{ width: 14, height: 14 }} /> Hub
+        </button>
+        <button
+          onClick={() => window.open('/display', '_blank', 'noopener')}
+          className="w-8 h-8 rounded-full flex items-center justify-center bg-muted hover:bg-muted/80 transition-colors"
+          title="Open TV Display"
+        >
+          <Monitor className="w-3.5 h-3.5 text-muted-foreground" />
         </button>
       </AppHeader>
       <div className="flex-1 min-h-0 overflow-hidden">

@@ -2,7 +2,7 @@ import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { ZoneColumn, FIXED_TILE_SIZE, FIXED_GAP, ZONE_HEADER_HEIGHT, TILE_TOTAL_HEIGHT } from './ZoneColumn';
 import { HexTile } from './HexTile';
 import { HRHistoryStrip } from './HRHistoryStrip';
-import { Heart } from 'lucide-react';
+import { Heart, Users } from 'lucide-react';
 import { LiveHRData } from '@/hooks/useLiveHR';
 
 interface CoachDashboardProps {
@@ -12,9 +12,19 @@ interface CoachDashboardProps {
   selectedProfileId?: string;
   averageBPM?: number;
   isSessionActive?: boolean;
+  sessionCode?: string | null;
+  lobbyProfileIds?: string[];
 }
 
-export function CoachDashboard({ participants, isLoading, activeTab, selectedProfileId, averageBPM = 0, isSessionActive = false }: CoachDashboardProps) {
+const WAITING_ZONE_GLOWS = [
+  { left: '10%', color: '#00bcd4' },
+  { left: '30%', color: '#4caf50' },
+  { left: '50%', color: '#ffc107' },
+  { left: '70%', color: '#ff9800' },
+  { left: '90%', color: '#f44336' },
+];
+
+export function CoachDashboard({ participants, isLoading, activeTab, selectedProfileId, averageBPM = 0, isSessionActive = false, sessionCode, lobbyProfileIds = [] }: CoachDashboardProps) {
   const gridRef = useRef<HTMLDivElement>(null);
   const [columnOffsets, setColumnOffsets] = useState<{ left: number; width: number }[]>([]);
 
@@ -68,6 +78,71 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
         <div className="text-center">
           <Heart className="w-16 h-16 mx-auto text-primary animate-pulse mb-4" />
           <p className="text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Waiting state: no participants in lobby (same as NeutralDashboard)
+  if (lobbyProfileIds.length === 0) {
+    return (
+      <div className="flex-1 flex items-center justify-center" style={{ background: '#0a0a0a', height: 'calc(100dvh - 56px)' }}>
+        <div className="relative" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
+          {WAITING_ZONE_GLOWS.map((g, i) => (
+            <div key={i} className="absolute pointer-events-none" style={{
+              left: `${20 + i * 15}%`,
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '200px',
+              height: '200px',
+              borderRadius: '50%',
+              background: g.color,
+              opacity: 0.12,
+              filter: 'blur(80px)',
+            }} />
+          ))}
+          <div style={{
+            width: '80px',
+            height: '80px',
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.05)',
+            border: '2px solid rgba(255,255,255,0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <Users style={{ width: '36px', height: '36px', color: 'rgba(255,255,255,0.3)' }} />
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>
+              Waiting for participants...
+            </p>
+            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '14px' }}>
+              Share the session code so participants can join
+            </p>
+          </div>
+          {sessionCode && (
+            <div style={{
+              background: 'rgba(255,255,255,0.06)',
+              border: '2px solid rgba(255,255,255,0.12)',
+              borderRadius: '16px',
+              padding: '16px 40px',
+              textAlign: 'center',
+            }}>
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                Session Code
+              </p>
+              <p style={{
+                color: 'white',
+                fontSize: '48px',
+                fontWeight: 900,
+                letterSpacing: '0.2em',
+                textShadow: '0 0 30px rgba(255,255,255,0.2)',
+              }}>
+                {sessionCode}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     );
