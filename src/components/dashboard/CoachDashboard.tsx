@@ -1,8 +1,6 @@
 import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { ZoneColumn, FIXED_TILE_SIZE, FIXED_GAP, ZONE_HEADER_HEIGHT, TILE_TOTAL_HEIGHT } from './ZoneColumn';
 import { HexTile } from './HexTile';
-import { CustomerList } from '@/components/admin/CustomerList';
-import { CoachList } from '@/components/admin/CoachList';
 import { HRHistoryStrip } from './HRHistoryStrip';
 import { Heart } from 'lucide-react';
 import { LiveHRData } from '@/hooks/useLiveHR';
@@ -26,7 +24,6 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
       const z = Math.min(Math.max(p.zone, 1), 5);
       groups[z].push(p);
     });
-    // Sort each group by hr_percentage descending
     Object.values(groups).forEach(g => g.sort((a, b) => b.hr_percentage - a.hr_percentage));
     return groups;
   }, [participants]);
@@ -48,7 +45,6 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
     return () => window.removeEventListener('resize', measureColumns);
   }, [measureColumns]);
 
-  // Re-measure when participants change (zone counts affect layout)
   useEffect(() => {
     measureColumns();
   }, [participants, measureColumns]);
@@ -56,17 +52,13 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
   const getTilePosition = useCallback((zone: number, rankInZone: number) => {
     const col = columnOffsets[zone - 1];
     if (!col) return { left: 0, top: 0 };
-
     const tilesPerRow = 2;
     const row = Math.floor(rankInZone / tilesPerRow);
     const colInGroup = rankInZone % tilesPerRow;
-
     const totalTileWidth = 2 * FIXED_TILE_SIZE + FIXED_GAP;
     const startX = col.left + (col.width - totalTileWidth) / 2;
-
     const left = startX + colInGroup * (FIXED_TILE_SIZE + FIXED_GAP);
     const top = ZONE_HEADER_HEIGHT + row * (TILE_TOTAL_HEIGHT + FIXED_GAP);
-
     return { left, top };
   }, [columnOffsets]);
 
@@ -77,22 +69,6 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
           <Heart className="w-16 h-16 mx-auto text-primary animate-pulse mb-4" />
           <p className="text-muted-foreground">Loading dashboard...</p>
         </div>
-      </div>
-    );
-  }
-
-  if (activeTab === 'customers') {
-    return (
-      <div className="flex-1 px-4 pt-2 min-h-0 overflow-y-auto" style={{ background: '#0a0a0a' }}>
-        <CustomerList />
-      </div>
-    );
-  }
-
-  if (activeTab === 'coaches') {
-    return (
-      <div className="flex-1 px-4 pt-2 min-h-0 overflow-y-auto" style={{ background: '#0a0a0a' }}>
-        <CoachList />
       </div>
     );
   }
@@ -123,7 +99,6 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
           <ZoneColumn key={zone} zone={zone} participants={zoneGroups[zone]} selectedProfileId={selectedProfileId} />
         ))}
 
-        {/* Animated tile overlay */}
         {columnOffsets.length === 5 && participants.map((p) => {
           const z = Math.min(Math.max(p.zone, 1), 5);
           const rankInZone = zoneGroups[z].findIndex(x => x.profile_id === p.profile_id);

@@ -1,169 +1,206 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Heart, Monitor, Smartphone, Users, Activity, Zap, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/components/auth/AuthProvider';
-import { useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Loader2 } from 'lucide-react';
 
 export default function Index() {
   const { user, isAuthenticated, isCoach, isAdmin, isLoading } = useAuthContext();
   const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
 
-  // Auto-redirect based on role
+  // Auto-redirect authenticated users
   useEffect(() => {
     if (isLoading || !isAuthenticated) return;
-
-    // Admins see the choice screen (rendered below)
-    if (isAdmin) return;
-
-    // Coaches go straight to dashboard
-    if (isCoach) {
+    if (isAdmin || isCoach) {
       navigate('/dashboard', { replace: true });
+    } else {
+      navigate('/participant', { replace: true });
+    }
+  }, [isLoading, isAuthenticated, isCoach, isAdmin, navigate]);
+
+  if (isLoading) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Loader2 style={{ width: 32, height: 32, color: '#ff4425' }} className="animate-spin" />
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Loader2 style={{ width: 32, height: 32, color: '#ff4425' }} className="animate-spin" />
+      </div>
+    );
+  }
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setIsSubmitting(true);
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (signInError) {
+      setError(signInError.message);
+      setIsSubmitting(false);
       return;
     }
 
-    // Participants go to their dashboard
-    navigate('/participant', { replace: true });
-  }, [isLoading, isAuthenticated, isCoach, isAdmin, navigate]);
+    // Role-based routing happens via the useEffect above after auth state updates
+    setIsSubmitting(false);
+  };
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-        <Heart className="w-12 h-12 text-primary animate-pulse" fill="currentColor" />
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Loader2 className="w-4 h-4 animate-spin" />
-          <span>Loading...</span>
-        </div>
-      </div>
-    );
-  }
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      setError('Bitte E-Mail-Adresse eingeben.');
+      return;
+    }
+    setError('');
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (resetError) {
+      setError(resetError.message);
+      return;
+    }
+    setForgotSent(true);
+  };
 
-  // Admin choice screen
-  if (isAuthenticated && isAdmin) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-        <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-6">
-          <Heart className="w-8 h-8 text-primary" fill="currentColor" />
-        </div>
-        <h1 className="text-2xl font-bold mb-2">HR Training</h1>
-        <p className="text-muted-foreground mb-8">Choose where to go</p>
-        <div className="flex flex-col sm:flex-row gap-4 w-full max-w-lg">
-          <Button
-            size="lg"
-            className="flex-1 gap-2"
-            onClick={() => navigate('/participant')}
-          >
-            <Smartphone className="w-5 h-5" />
-            My Training
-          </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            className="flex-1 gap-2"
-            onClick={() => navigate('/dashboard')}
-          >
-            <Monitor className="w-5 h-5" />
-            Dashboard Fancy
-          </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            className="flex-1 gap-2"
-            onClick={() => navigate('/dashboard-neutral')}
-          >
-            <Monitor className="w-5 h-5" />
-            Dashboard Neutral
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // Landing page for unauthenticated users
   return (
-    <div className="min-h-screen bg-background">
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-background" />
-        <div className="relative container mx-auto px-4 py-16 md:py-24">
-          <div className="text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/20 mb-6">
-              <Heart className="w-10 h-10 text-primary animate-heartbeat" fill="currentColor" />
-            </div>
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">Group Heart Rate Training</h1>
-            <p className="text-xl text-muted-foreground mb-8">
-              Real-time heart rate monitoring for group training. Connect Bluetooth chest straps and visualize the intensity of all participants on a big screen.
+    <div style={{
+      minHeight: '100vh',
+      background: '#0a0a0a',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '16px',
+    }}>
+      <div style={{
+        background: '#111',
+        border: '1px solid #1f1f1f',
+        borderRadius: '16px',
+        padding: '40px 36px',
+        width: '100%',
+        maxWidth: '420px',
+      }}>
+        {/* Branding */}
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <h1 style={{
+            fontWeight: 900,
+            fontSize: '28px',
+            letterSpacing: '0.15em',
+            textTransform: 'uppercase' as const,
+            margin: 0,
+          }}>
+            <span style={{ color: '#fff' }}>BALBOA</span>
+            <span style={{ color: '#ff4425' }}>MOVE</span>
+          </h1>
+          <p style={{ color: '#666', fontSize: '13px', marginTop: '6px' }}>
+            Coach & Admin Login
+          </p>
+        </div>
+
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            style={{
+              background: '#1a1a1a',
+              border: '1px solid #2a2a2a',
+              borderRadius: '10px',
+              height: '48px',
+              color: '#fff',
+              padding: '0 16px',
+              fontSize: '15px',
+              outline: 'none',
+              width: '100%',
+              boxSizing: 'border-box',
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#ff4425'}
+            onBlur={(e) => e.target.style.borderColor = '#2a2a2a'}
+          />
+          <input
+            type="password"
+            placeholder="Passwort"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            style={{
+              background: '#1a1a1a',
+              border: '1px solid #2a2a2a',
+              borderRadius: '10px',
+              height: '48px',
+              color: '#fff',
+              padding: '0 16px',
+              fontSize: '15px',
+              outline: 'none',
+              width: '100%',
+              boxSizing: 'border-box',
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#ff4425'}
+            onBlur={(e) => e.target.style.borderColor = '#2a2a2a'}
+          />
+
+          {error && (
+            <p style={{ color: '#ff4425', fontSize: '13px', margin: 0 }}>{error}</p>
+          )}
+
+          {forgotSent && (
+            <p style={{ color: '#22C55E', fontSize: '13px', margin: 0 }}>
+              Reset-Link wurde gesendet. Prüfe dein Postfach.
             </p>
-            <Link to="/auth">
-              <Button size="lg" className="gap-2">
-                <Smartphone className="w-5 h-5" />Sign In / Register
-              </Button>
-            </Link>
-          </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            style={{
+              background: isSubmitting ? 'rgba(255,68,37,0.5)' : '#ff4425',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '10px',
+              height: '48px',
+              fontWeight: 700,
+              fontSize: '15px',
+              cursor: isSubmitting ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              width: '100%',
+            }}
+          >
+            {isSubmitting && <Loader2 style={{ width: 16, height: 16 }} className="animate-spin" />}
+            {isSubmitting ? 'Einloggen...' : 'Einloggen'}
+          </button>
+        </form>
+
+        <div style={{ textAlign: 'center', marginTop: '16px' }}>
+          <button
+            type="button"
+            onClick={handleForgotPassword}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#666',
+              fontSize: '13px',
+              cursor: 'pointer',
+              textDecoration: 'none',
+            }}
+          >
+            Passwort vergessen?
+          </button>
         </div>
       </div>
-
-      <div className="container mx-auto px-4 py-16">
-        <h2 className="text-2xl font-bold text-center mb-12">Features</h2>
-        <div className="grid md:grid-cols-3 gap-6">
-          <Card className="glass">
-            <CardHeader>
-              <div className="w-12 h-12 rounded-full bg-zone-2/20 flex items-center justify-center mb-2"><Activity className="w-6 h-6 text-zone-2" /></div>
-              <CardTitle>5 Heart Rate Zones</CardTitle>
-              <CardDescription>Automatic zone calculation based on age and maximum heart rate</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full zone-1-bg" /><span>Zone 1: Recovery (&lt;60%)</span></div>
-                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full zone-2-bg" /><span>Zone 2: Fat Burn (60-70%)</span></div>
-                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full zone-3-bg" /><span>Zone 3: Aerobic (70-80%)</span></div>
-                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full zone-4-bg" /><span>Zone 4: Cardio (80-90%)</span></div>
-                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full zone-5-bg" /><span>Zone 5: Max Effort (&gt;90%)</span></div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass">
-            <CardHeader>
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-2"><Users className="w-6 h-6 text-primary" /></div>
-              <CardTitle>Live Dashboard</CardTitle>
-              <CardDescription>Up to 20 participants simultaneously as pulsing bubbles on a big screen</CardDescription>
-            </CardHeader>
-            <CardContent className="text-muted-foreground text-sm">
-              <ul className="space-y-2">
-                <li>• Real-time heart rate updates</li>
-                <li>• Color-coded zones for quick overview</li>
-                <li>• Heartbeat animation for visual feedback</li>
-                <li>• Larger bubbles for higher zones</li>
-                <li>• Team averages in real-time</li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card className="glass">
-            <CardHeader>
-              <div className="w-12 h-12 rounded-full bg-zone-4/20 flex items-center justify-center mb-2"><Zap className="w-6 h-6 text-zone-4" /></div>
-              <CardTitle>Web Bluetooth</CardTitle>
-              <CardDescription>Direct connection to heart rate chest straps without additional apps</CardDescription>
-            </CardHeader>
-            <CardContent className="text-muted-foreground text-sm">
-              <ul className="space-y-2">
-                <li>• Compatible with all BLE HR monitors</li>
-                <li>• Screen Wake Lock keeps display active</li>
-                <li>• Data synced every 2 seconds</li>
-                <li>• Works with Chrome, Edge, Opera</li>
-                <li>• Mobile-optimized PWA view</li>
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      <footer className="border-t border-border py-8">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>Group HR Training • Powered by Web Bluetooth & Realtime Database</p>
-        </div>
-      </footer>
     </div>
   );
 }

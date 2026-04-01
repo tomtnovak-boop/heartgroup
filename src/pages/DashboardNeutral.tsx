@@ -39,7 +39,6 @@ export default function DashboardNeutral() {
 
   const { participants, averageBPM, lowestBPM, highestBPM, averageZone, isLoading, refresh } = useLiveHR(onNewHRData);
 
-  // Fetch all profiles for stable ordering
   useEffect(() => {
     async function fetchProfiles() {
       const { data } = await supabase
@@ -51,7 +50,6 @@ export default function DashboardNeutral() {
     fetchProfiles();
   }, []);
 
-  // Detect session stop → show leaderboard after 5s
   useEffect(() => {
     if (prevSessionActive.current && !sessionActive) {
       const timer = setTimeout(async () => {
@@ -132,25 +130,14 @@ export default function DashboardNeutral() {
         onCreateSessionCode={createSessionCode}
       />
       <div className="flex-1 min-h-0 overflow-hidden">
-        {activeTab === 'live' ? (
-          <NeutralDashboard
-            participants={participants}
-            allProfiles={allProfiles}
-            lobbyProfileIds={lobbyProfileIds}
-            sessionCode={sessionCode}
-            isLoading={isLoading}
-            isSessionActive={sessionActive}
-          />
-        ) : activeTab === 'customers' ? (
-          <div className="flex-1 px-4 pt-2 min-h-0 overflow-y-auto h-full" style={{ background: '#0a0a0a' }}>
-            {/* Reuse CustomerList */}
-            <CustomerListLazy />
-          </div>
-        ) : activeTab === 'coaches' ? (
-          <div className="flex-1 px-4 pt-2 min-h-0 overflow-y-auto h-full" style={{ background: '#0a0a0a' }}>
-            <CoachListLazy />
-          </div>
-        ) : null}
+        <NeutralDashboard
+          participants={participants}
+          allProfiles={allProfiles}
+          lobbyProfileIds={lobbyProfileIds}
+          sessionCode={sessionCode}
+          isLoading={isLoading}
+          isSessionActive={sessionActive}
+        />
       </div>
 
       {showLeaderboard && leaderboardData.length > 0 && (
@@ -165,9 +152,3 @@ export default function DashboardNeutral() {
     </div>
   );
 }
-
-// Lazy imports to avoid circular deps
-import { CustomerList } from '@/components/admin/CustomerList';
-import { CoachList } from '@/components/admin/CoachList';
-function CustomerListLazy() { return <CustomerList />; }
-function CoachListLazy() { return <CoachList />; }

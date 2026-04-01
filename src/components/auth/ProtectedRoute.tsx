@@ -54,7 +54,7 @@ export function ProtectedRoute({ children, requireCoach = false }: ProtectedRout
     );
   }
 
-  if (!isAuthenticated) return <Navigate to="/auth" state={{ from: location }} replace />;
+  if (!isAuthenticated) return <Navigate to="/" state={{ from: location }} replace />;
   if (requireCoach && !isCoach) return <Navigate to="/participant" replace />;
 
   if (profileCheck === 'loading') {

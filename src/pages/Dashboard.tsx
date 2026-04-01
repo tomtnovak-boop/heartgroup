@@ -39,13 +39,10 @@ export default function Dashboard() {
 
   const { participants, averageBPM, lowestBPM, highestBPM, averageZone, isLoading, refresh } = useLiveHR(onNewHRData);
 
-  // Detect session stop → show leaderboard after 5s
   useEffect(() => {
     if (prevSessionActive.current && !sessionActive) {
-      // Session just stopped — fetch leaderboard data after 5s
       const timer = setTimeout(async () => {
         try {
-          // Get recently ended workouts (ended in last 30s)
           const thirtySecsAgo = new Date(Date.now() - 30000).toISOString();
           const { data: workouts } = await supabase
             .from('workouts')
@@ -55,7 +52,6 @@ export default function Dashboard() {
 
           if (!workouts || workouts.length === 0) return;
 
-          // Get profile names
           const profileIds = [...new Set(workouts.map(w => w.profile_id))];
           const { data: profiles } = await supabase
             .from('profiles')
@@ -123,15 +119,13 @@ export default function Dashboard() {
         lobbyCount={lobbyCount}
         onCreateSessionCode={createSessionCode}
       >
-        {activeTab === 'live' && (
-          <button
-            onClick={() => window.open('/display', '_blank', 'noopener')}
-            className="w-8 h-8 rounded-full flex items-center justify-center bg-muted hover:bg-muted/80 transition-colors"
-            title="Open TV Display"
-          >
-            <Monitor className="w-3.5 h-3.5 text-muted-foreground" />
-          </button>
-        )}
+        <button
+          onClick={() => window.open('/display', '_blank', 'noopener')}
+          className="w-8 h-8 rounded-full flex items-center justify-center bg-muted hover:bg-muted/80 transition-colors"
+          title="Open TV Display"
+        >
+          <Monitor className="w-3.5 h-3.5 text-muted-foreground" />
+        </button>
       </AppHeader>
       <div className="flex-1 min-h-0 overflow-hidden">
         <CoachDashboard

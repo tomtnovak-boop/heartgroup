@@ -1,4 +1,4 @@
-import { Heart, Users, Activity, RefreshCw, Play, Square, Shield, Home, Hash } from 'lucide-react';
+import { Heart, Users, RefreshCw, Play, Square, Home, Hash, Monitor, UserCog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { useNavigate } from 'react-router-dom';
@@ -70,37 +70,23 @@ export function AppHeader({
       {/* Left: Logo + Home */}
       <div className="flex items-center gap-2 flex-shrink-0">
         {currentView === 'coach' && (
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(isAdmin ? '/' : '/participant')} title="Home">
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate('/participant')} title="Home">
             <Home className="w-3.5 h-3.5" />
           </Button>
         )}
         <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center">
           <Heart className="w-3.5 h-3.5 text-primary" fill="currentColor" />
         </div>
-        <span className="text-sm font-bold">HR Training</span>
+        <span className="text-sm font-bold tracking-wider uppercase">
+          <span className="text-foreground">BALBOA</span>
+          <span className="text-primary">MOVE</span>
+        </span>
       </div>
 
-      {/* Center: Tabs (admin only) */}
-      {currentView === 'coach' && isAdmin && onTabChange && (
-        <div className="flex items-center gap-3">
-          <div className="flex rounded-full bg-muted p-0.5 gap-0.5">
-            <button onClick={() => onTabChange('live')} className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${activeTab === 'live' ? 'bg-foreground/10 text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
-              <span className="flex items-center gap-1.5"><Activity className="w-3 h-3" />Live</span>
-            </button>
-            <button onClick={() => onTabChange('customers')} className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${activeTab === 'customers' ? 'bg-foreground/10 text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
-              <span className="flex items-center gap-1.5"><Users className="w-3 h-3" />Customers</span>
-            </button>
-            <button onClick={() => onTabChange('coaches')} className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${activeTab === 'coaches' ? 'bg-foreground/10 text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
-              <span className="flex items-center gap-1.5"><Shield className="w-3 h-3" />Coaches</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Right: session code, participant count, start/stop, refresh, avatar */}
+      {/* Right: session code, participant count, start/stop, admin users link, refresh, avatar */}
       <div className="flex items-center gap-1.5 flex-shrink-0">
         {/* Session code badge */}
-        {currentView === 'coach' && activeTab === 'live' && (
+        {currentView === 'coach' && (
           <>
             {sessionCode && (
               <div style={{
@@ -160,7 +146,7 @@ export function AppHeader({
         )}
 
         {/* Participant count */}
-        {currentView === 'coach' && activeTab === 'live' && stats && (
+        {currentView === 'coach' && stats && (
           <div className="flex items-center gap-1 mr-1">
             <Users className="w-3.5 h-3.5 text-muted-foreground" />
             <span className="text-sm font-bold">{stats.participantCount}</span>
@@ -168,7 +154,7 @@ export function AppHeader({
         )}
 
         {/* Start/Stop session button */}
-        {currentView === 'coach' && activeTab === 'live' && (
+        {currentView === 'coach' && (
           sessionActive ? (
             <div className="flex items-center gap-1.5">
               <button
@@ -198,8 +184,15 @@ export function AppHeader({
 
         {children}
 
+        {/* Admin: Users link */}
+        {currentView === 'coach' && isAdmin && (
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate('/admin/users')} title="User Management">
+            <UserCog className="w-3.5 h-3.5" />
+          </Button>
+        )}
+
         {/* Refresh */}
-        {activeTab === 'live' && onRefresh && (
+        {onRefresh && (
           <Button variant="ghost" size="icon" onClick={onRefresh} className="h-7 w-7">
             <RefreshCw className="w-3.5 h-3.5" />
           </Button>
