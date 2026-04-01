@@ -184,26 +184,6 @@ export function AppHeader({
 
         {children}
 
-        {/* Admin: Users link */}
-        {currentView === 'coach' && isAdmin && (
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate('/admin/users')} title="User Management">
-            <UserCog className="w-3.5 h-3.5" />
-          </Button>
-        )}
-
-        {/* Refresh */}
-        {onRefresh && (
-          <Button variant="ghost" size="icon" onClick={onRefresh} className="h-7 w-7">
-            <RefreshCw className="w-3.5 h-3.5" />
-          </Button>
-        )}
-
-        {/* Avatar / Sign out */}
-        {isAuthenticated && (
-          <Button variant="ghost" size="icon" onClick={handleSignOut} title="Sign out" className="h-7 w-7 rounded-full bg-muted text-xs font-bold">
-            <span>{initials}</span>
-          </Button>
-        )}
       </div>
     </header>
   );
