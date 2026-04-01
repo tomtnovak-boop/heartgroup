@@ -47,20 +47,7 @@ export function AppHeader({
   sessionCode, lobbyCount = 0, onCreateSessionCode,
   children,
 }: AppHeaderProps) {
-  const { isAuthenticated, isAdmin, signOut, user } = useAuthContext();
   const navigate = useNavigate();
-  const { toast } = useToast();
-
-  const handleSignOut = async () => {
-    const { error } = await signOut();
-    if (error) {
-      toast({ title: 'Sign out failed', description: error.message, variant: 'destructive' });
-      return;
-    }
-    navigate('/');
-  };
-
-  const initials = user?.email?.slice(0, 2).toUpperCase() || 'U';
 
   return (
     <header className="flex items-center justify-between px-4 py-1.5 bg-background border-b border-border">
