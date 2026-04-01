@@ -25,10 +25,11 @@ import {
 import {
   Heart, Loader2, Bluetooth, BluetoothOff, LogOut, Settings, User, Home,
   TrendingUp, TrendingDown, Flame, Clock, Activity, ChevronRight, Zap,
-  BarChart3, Calendar, ArrowDown, ArrowUp, ChevronDown, ArrowLeft, ChevronLeft,
+  BarChart3, Calendar, ArrowDown, ArrowUp, ChevronDown, ArrowLeft, ChevronLeft, Info,
 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, startOfYear, endOfYear, getISOWeek, eachWeekOfInterval, subMonths } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
+import { ZoneInfoModal } from '@/components/participant/ZoneInfoModal';
 
 interface Profile {
   id: string;
@@ -95,6 +96,7 @@ export default function Participant() {
   const [leaderboardDuration, setLeaderboardDuration] = useState(0);
   const [leaderboardDate, setLeaderboardDate] = useState(new Date());
   const prevCoachSessionActive = useRef(false);
+  const [showZoneInfo, setShowZoneInfo] = useState(false);
   const navigate = useNavigate();
   const { user, signOut, isCoach, isAdmin } = useAuthContext();
   const { toast } = useToast();
@@ -1391,7 +1393,12 @@ export default function Participant() {
                 <p className="font-medium">{profile.gender === 'male' ? 'Male' : profile.gender === 'female' ? 'Female' : '–'}</p>
               </div>
               <div>
-                <span className="text-muted-foreground">Max HR</span>
+                <span className="text-muted-foreground flex items-center gap-1">
+                  Max HR
+                  <button onClick={() => setShowZoneInfo(true)} className="inline-flex" aria-label="Zone info">
+                    <Info className="w-3.5 h-3.5 text-muted-foreground/60 hover:text-foreground transition-colors" />
+                  </button>
+                </span>
                 <p className="font-medium">{effectiveMaxHr} bpm {profile.custom_max_hr ? '(custom)' : '(Tanaka)'}</p>
               </div>
             </div>
@@ -1417,6 +1424,8 @@ export default function Participant() {
             </Card>
           )}
         </TabsContent>
+
+        <ZoneInfoModal open={showZoneInfo} onOpenChange={setShowZoneInfo} />
       </Tabs>
 
 
