@@ -1,4 +1,4 @@
-import { Heart, Users, RefreshCw, Play, Square, Home, Hash, Monitor, UserCog } from 'lucide-react';
+import { Heart, Users, Play, Square, Hash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { useNavigate } from 'react-router-dom';
