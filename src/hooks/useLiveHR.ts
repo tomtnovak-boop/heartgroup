@@ -99,7 +99,7 @@ export function useLiveHR(onNewData?: (data: { profile_id: string; bpm: number; 
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'live_hr',
         },
