@@ -7,12 +7,10 @@ import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Participant from "./pages/Participant";
-import Dashboard from "./pages/Dashboard";
-import DashboardNeutral from "./pages/DashboardNeutral";
+import CoachWorkspace from "./pages/CoachWorkspace";
 import ResetPassword from "./pages/ResetPassword";
 import Display from "./pages/Display";
 import ProfileEdit from "./pages/ProfileEdit";
-import AdminUsers from "./pages/AdminUsers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,23 +36,7 @@ const App = () => (
               path="/dashboard" 
               element={
                 <ProtectedRoute requireCoach>
-                  <Dashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/dashboard-neutral" 
-              element={
-                <ProtectedRoute requireCoach>
-                  <DashboardNeutral />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/admin/users" 
-              element={
-                <ProtectedRoute requireCoach>
-                  <AdminUsers />
+                  <CoachWorkspace />
                 </ProtectedRoute>
               } 
             />
