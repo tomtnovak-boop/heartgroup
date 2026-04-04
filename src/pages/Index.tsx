@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 
 export default function Index() {
-  const { user, isAuthenticated, isCoach, isAdmin, isLoading } = useAuthContext();
+  const { user, isAuthenticated, isLoading } = useAuthContext();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
