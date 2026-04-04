@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { startOfMonth, endOfMonth, startOfYear, endOfYear, format, subMonths, addMonths, getISOWeek, eachWeekOfInterval } from 'date-fns';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Line, ComposedChart } from 'recharts';
+import { Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Line, ComposedChart } from 'recharts';
 
 const ZONE_COLORS = ['#9CA3AF', '#00BFFF', '#22C55E', '#F59E0B', '#EF4444'];
 const ZONE_LABELS = ['Z1 Recovery', 'Z2 Light', 'Z3 Moderate', 'Z4 Hard', 'Z5 Maximum'];
@@ -22,6 +22,7 @@ export default function AdminStats() {
   const [workouts, setWorkouts] = useState<any[]>([]);
   const [allSessions, setAllSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showTop20, setShowTop20] = useState(false);
 
   const periodStart = useMemo(() =>
     mode === 'month' ? startOfMonth(currentMonth).toISOString() : startOfYear(new Date(currentYear, 0, 1)).toISOString(),
@@ -48,36 +49,26 @@ export default function AdminStats() {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-
-      // Load active_sessions for the period
       const { data: sessions } = await supabase.from('active_sessions').select('*')
         .gte('started_at', periodStart).lte('started_at', periodEnd);
       setAllSessions(sessions || []);
 
-      // Determine which session codes to filter by
       let filteredCodes: string[] | null = null;
-
       if (selectedCoachId) {
-        const coachSessions = (sessions || []).filter(s => s.created_by === selectedCoachId);
-        filteredCodes = coachSessions.map(s => s.session_code);
+        filteredCodes = (sessions || []).filter(s => s.created_by === selectedCoachId).map(s => s.session_code);
       } else if (!isAdmin && user) {
-        // Coach sees only their own sessions
-        const coachSessions = (sessions || []).filter(s => s.created_by === user.id);
-        filteredCodes = coachSessions.map(s => s.session_code);
+        filteredCodes = (sessions || []).filter(s => s.created_by === user.id).map(s => s.session_code);
       }
 
-      // Load workouts
       const { data: wkData } = await supabase.from('workouts').select('*')
         .gte('started_at', periodStart).lte('started_at', periodEnd)
         .not('ended_at', 'is', null);
 
-      // We can't filter workouts by session_code directly (no column), so we filter by time overlap with sessions
       let filtered = wkData || [];
       if (filteredCodes !== null && filteredCodes.length > 0) {
         const coachSessionTimes = (sessions || [])
           .filter(s => filteredCodes!.includes(s.session_code))
           .map(s => ({ start: new Date(s.started_at).getTime(), end: s.ended_at ? new Date(s.ended_at).getTime() : Date.now() }));
-        
         filtered = filtered.filter(w => {
           const wStart = new Date(w.started_at).getTime();
           return coachSessionTimes.some(st => wStart >= st.start - 60000 && wStart <= st.end + 60000);
@@ -92,27 +83,26 @@ export default function AdminStats() {
     load();
   }, [periodStart, periodEnd, selectedCoachId, isAdmin, user]);
 
-  // KPIs
-  const kpis = useMemo(() => {
-    const sessionCount = allSessions.filter(s => {
-      if (selectedCoachId) return s.created_by === selectedCoachId;
-      if (!isAdmin && user) return s.created_by === user.id;
-      return true;
-    }).length;
-    const uniqueParticipants = new Set(workouts.map(w => w.profile_id)).size;
-    const totalSeconds = workouts.reduce((s, w) => s + (w.duration_seconds || 0), 0);
-    const avgPerSession = sessionCount > 0 ? (uniqueParticipants / sessionCount).toFixed(1) : '0';
-    return { sessionCount, uniqueParticipants, totalSeconds, avgPerSession };
-  }, [workouts, allSessions, selectedCoachId, isAdmin, user]);
-
-  // Chart data
-  const chartData = useMemo(() => {
-    const relevantSessions = allSessions.filter(s => {
+  // Relevant sessions helper
+  const relevantSessions = useMemo(() => {
+    return allSessions.filter(s => {
       if (selectedCoachId) return s.created_by === selectedCoachId;
       if (!isAdmin && user) return s.created_by === user.id;
       return true;
     });
+  }, [allSessions, selectedCoachId, isAdmin, user]);
 
+  // KPIs
+  const kpis = useMemo(() => {
+    const sessionCount = relevantSessions.length;
+    const uniqueParticipants = new Set(workouts.map(w => w.profile_id)).size;
+    const totalSeconds = workouts.reduce((s, w) => s + (w.duration_seconds || 0), 0);
+    const avgPerSession = sessionCount > 0 ? (uniqueParticipants / sessionCount).toFixed(1) : '0';
+    return { sessionCount, uniqueParticipants, totalSeconds, avgPerSession };
+  }, [workouts, relevantSessions]);
+
+  // Chart data
+  const chartData = useMemo(() => {
     if (mode === 'year') {
       const months = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
       return months.map((label, i) => {
@@ -131,43 +121,56 @@ export default function AdminStats() {
         return { label: `KW${wk}`, sessions: wSessions.length, participants: new Set(wWorkouts.map(w => w.profile_id)).size };
       });
     }
-  }, [workouts, allSessions, mode, currentMonth, selectedCoachId, isAdmin, user]);
+  }, [workouts, relevantSessions, mode, currentMonth]);
 
   // Zone totals
   const zoneTotals = useMemo(() => {
     const z = [0, 0, 0, 0, 0];
     workouts.forEach(w => {
-      z[0] += w.zone_1_seconds || 0;
-      z[1] += w.zone_2_seconds || 0;
-      z[2] += w.zone_3_seconds || 0;
-      z[3] += w.zone_4_seconds || 0;
-      z[4] += w.zone_5_seconds || 0;
+      z[0] += w.zone_1_seconds || 0; z[1] += w.zone_2_seconds || 0; z[2] += w.zone_3_seconds || 0;
+      z[3] += w.zone_4_seconds || 0; z[4] += w.zone_5_seconds || 0;
     });
     const total = z.reduce((a, b) => a + b, 0) || 1;
     return z.map((s, i) => ({ label: ZONE_LABELS[i], seconds: s, pct: Math.round((s / total) * 100), color: ZONE_COLORS[i] }));
   }, [workouts]);
 
-  // Participant ranking
-  const participantRanking = useMemo(() => {
-    const map = new Map<string, { name: string; sessions: number; totalSeconds: number }>();
+  // Participant ranking (for collapsible top 20 + anonymous stats)
+  const participantStats = useMemo(() => {
+    const map = new Map<string, { sessions: number; totalSeconds: number }>();
     workouts.forEach(w => {
-      const existing = map.get(w.profile_id) || { name: '', sessions: 0, totalSeconds: 0 };
+      const existing = map.get(w.profile_id) || { sessions: 0, totalSeconds: 0 };
       existing.sessions += 1;
       existing.totalSeconds += w.duration_seconds || 0;
       map.set(w.profile_id, existing);
     });
-
     const totalSessions = kpis.sessionCount || 1;
-    return Array.from(map.entries())
+    const entries = Array.from(map.entries())
       .map(([pid, d]) => ({ profileId: pid, ...d, attendance: Math.round((d.sessions / totalSessions) * 100) }))
-      .sort((a, b) => b.sessions - a.sessions)
-      .slice(0, 10);
+      .sort((a, b) => b.sessions - a.sessions);
+
+    // Attendance distribution buckets
+    const buckets = [
+      { label: '10+ Sessions', min: 10, max: Infinity, count: 0 },
+      { label: '7–9 Sessions', min: 7, max: 9, count: 0 },
+      { label: '4–6 Sessions', min: 4, max: 6, count: 0 },
+      { label: '1–3 Sessions', min: 1, max: 3, count: 0 },
+    ];
+    entries.forEach(e => {
+      for (const b of buckets) {
+        if (e.sessions >= b.min && e.sessions <= b.max) { b.count++; break; }
+      }
+    });
+
+    const avgAttendance = entries.length > 0 ? Math.round(entries.reduce((s, e) => s + e.attendance, 0) / entries.length) : 0;
+    const avgDuration = entries.length > 0 ? Math.round(entries.reduce((s, e) => s + e.totalSeconds, 0) / entries.length / (kpis.sessionCount || 1)) : 0;
+
+    return { entries: entries.slice(0, 20), buckets, activeCount: entries.length, avgAttendance, avgDuration };
   }, [workouts, kpis.sessionCount]);
 
-  // Load names for ranking
+  // Profile names for top 20
   const [profileNames, setProfileNames] = useState<Record<string, string>>({});
   useEffect(() => {
-    const ids = participantRanking.map(p => p.profileId);
+    const ids = participantStats.entries.map(p => p.profileId);
     if (ids.length === 0) return;
     supabase.from('profiles').select('id, name, nickname').in('id', ids)
       .then(({ data }) => {
@@ -175,35 +178,35 @@ export default function AdminStats() {
         (data || []).forEach(p => { map[p.id] = p.nickname || p.name; });
         setProfileNames(map);
       });
-  }, [participantRanking]);
+  }, [participantStats.entries]);
 
-  // Top sessions
-  const topSessions = useMemo(() => {
-    const relevantSessions = allSessions.filter(s => {
-      if (selectedCoachId) return s.created_by === selectedCoachId;
-      if (!isAdmin && user) return s.created_by === user.id;
-      return true;
-    });
+  // Klassen-Durchschnitt & Top Sessions
+  const sessionAnalysis = useMemo(() => {
+    const sessionDetails = relevantSessions.map(s => {
+      const sWorkouts = workouts.filter(w => {
+        const wStart = new Date(w.started_at).getTime();
+        const sStart = new Date(s.started_at).getTime();
+        const sEnd = s.ended_at ? new Date(s.ended_at).getTime() : Date.now();
+        return wStart >= sStart - 60000 && wStart <= sEnd + 60000;
+      });
+      const avgHr = sWorkouts.length > 0 ? Math.round(sWorkouts.reduce((sum, w) => sum + (w.avg_bpm || 0), 0) / sWorkouts.length) : 0;
+      const avgDur = sWorkouts.length > 0 ? Math.round(sWorkouts.reduce((sum, w) => sum + (w.duration_seconds || 0), 0) / sWorkouts.length) : 0;
+      const avgCal = sWorkouts.length > 0 ? Math.round(sWorkouts.reduce((sum, w) => sum + (Number(w.total_calories) || 0), 0) / sWorkouts.length) : 0;
+      const zoneHighSec = sWorkouts.reduce((sum, w) => sum + (w.zone_3_seconds || 0) + (w.zone_4_seconds || 0) + (w.zone_5_seconds || 0), 0);
+      const zoneTotalSec = sWorkouts.reduce((sum, w) => sum + (w.zone_1_seconds || 0) + (w.zone_2_seconds || 0) + (w.zone_3_seconds || 0) + (w.zone_4_seconds || 0) + (w.zone_5_seconds || 0), 0);
+      const zoneHighPct = zoneTotalSec > 0 ? Math.round((zoneHighSec / zoneTotalSec) * 100) : 0;
+      return { date: s.started_at, participants: sWorkouts.length, avgHr, avgDuration: avgDur, avgCal, zoneHighPct };
+    }).filter(s => s.participants > 0);
 
-    return relevantSessions
-      .map(s => {
-        const sessionWorkouts = workouts.filter(w => {
-          const wStart = new Date(w.started_at).getTime();
-          const sStart = new Date(s.started_at).getTime();
-          const sEnd = s.ended_at ? new Date(s.ended_at).getTime() : Date.now();
-          return wStart >= sStart - 60000 && wStart <= sEnd + 60000;
-        });
-        const avgHr = sessionWorkouts.length > 0
-          ? Math.round(sessionWorkouts.reduce((sum, w) => sum + (w.avg_bpm || 0), 0) / sessionWorkouts.length)
-          : 0;
-        const avgDuration = sessionWorkouts.length > 0
-          ? Math.round(sessionWorkouts.reduce((sum, w) => sum + (w.duration_seconds || 0), 0) / sessionWorkouts.length)
-          : 0;
-        return { date: s.started_at, code: s.session_code, participants: sessionWorkouts.length, avgHr, avgDuration };
-      })
-      .sort((a, b) => b.participants - a.participants)
-      .slice(0, 5);
-  }, [allSessions, workouts, selectedCoachId, isAdmin, user]);
+    const count = sessionDetails.length || 1;
+    const avgParticipants = (sessionDetails.reduce((s, d) => s + d.participants, 0) / count).toFixed(1);
+    const avgHr = Math.round(sessionDetails.reduce((s, d) => s + d.avgHr, 0) / count);
+    const avgCal = Math.round(sessionDetails.reduce((s, d) => s + d.avgCal, 0) / count);
+
+    const top5 = [...sessionDetails].sort((a, b) => b.participants - a.participants).slice(0, 5);
+
+    return { avgParticipants, avgHr, avgCal, top5 };
+  }, [relevantSessions, workouts]);
 
   // Coach breakdown (admin only)
   const coachBreakdown = useMemo(() => {
@@ -242,14 +245,14 @@ export default function AdminStats() {
     return h > 0 ? `${h}h ${m}m` : `${m}m`;
   };
 
-  const periodLabel = mode === 'month'
-    ? format(currentMonth, 'MMMM yyyy')
-    : `${currentYear}`;
+  const periodLabel = mode === 'month' ? format(currentMonth, 'MMMM yyyy') : `${currentYear}`;
 
   const navigatePeriod = (dir: -1 | 1) => {
     if (mode === 'month') setCurrentMonth(prev => dir === -1 ? subMonths(prev, 1) : addMonths(prev, 1));
     else setCurrentYear(prev => prev + dir);
   };
+
+  const maxBucket = Math.max(...participantStats.buckets.map(b => b.count), 1);
 
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a0a', color: '#fff' }}>
@@ -352,62 +355,117 @@ export default function AdminStats() {
 
             <div style={{ borderTop: '1px solid #1a1a1a', margin: '32px 0' }} />
 
-            {/* Participant Ranking */}
+            {/* Teilnehmer-Aktivität (anonymous by default) */}
             <div style={{ marginBottom: '32px' }}>
               <div style={{ fontSize: '14px', fontWeight: 700, color: '#ff4425', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px' }}>Teilnehmer-Aktivität</div>
-              {participantRanking.length === 0 ? (
-                <p style={{ color: '#666', fontSize: '14px' }}>Keine Daten im Zeitraum</p>
-              ) : (
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
-                    <thead>
-                      <tr style={{ borderBottom: '1px solid #1f1f1f' }}>
-                        {['#', 'Name', 'Sessions', 'Ø Anwesenheit', 'Gesamtzeit'].map(h => (
-                          <th key={h} style={{ padding: '8px 12px', textAlign: 'left', color: '#666', fontWeight: 600, fontSize: '12px' }}>{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {participantRanking.map((p, i) => (
-                        <tr key={p.profileId} style={{ borderBottom: '1px solid #111' }}>
-                          <td style={{ padding: '10px 12px', color: '#666' }}>{i + 1}</td>
-                          <td style={{ padding: '10px 12px', fontWeight: 600 }}>{profileNames[p.profileId] || '...'}</td>
-                          <td style={{ padding: '10px 12px' }}>{p.sessions}</td>
-                          <td style={{ padding: '10px 12px' }}>{p.attendance}%</td>
-                          <td style={{ padding: '10px 12px' }}>{fmtTime(p.totalSeconds)}</td>
+
+              {/* Anonymous overview cards */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
+                {[
+                  { icon: '👥', value: participantStats.activeCount, label: 'Aktive Teiln.' },
+                  { icon: '📈', value: `${participantStats.avgAttendance}%`, label: 'Ø Anwesenheit' },
+                  { icon: '⏱️', value: fmtTime(participantStats.avgDuration), label: 'Ø Dauer/Session' },
+                ].map((k, i) => (
+                  <div key={i} style={{ background: '#111', border: '1px solid #1f1f1f', borderRadius: '14px', padding: '24px' }}>
+                    <div style={{ fontSize: '24px', marginBottom: '8px' }}>{k.icon}</div>
+                    <div style={{ fontSize: '32px', fontWeight: 800 }}>{k.value}</div>
+                    <div style={{ fontSize: '13px', color: '#666', marginTop: '4px' }}>{k.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Attendance distribution (anonymous bar chart) */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                {participantStats.buckets.map((b, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ fontSize: '12px', color: '#999', width: '100px', flexShrink: 0, textAlign: 'right' }}>{b.label}</span>
+                    <div style={{ flex: 1, height: '24px', background: '#1a1a1a', borderRadius: '4px', overflow: 'hidden' }}>
+                      <div style={{ width: `${(b.count / maxBucket) * 100}%`, height: '100%', background: '#ff4425', opacity: 0.7, borderRadius: '4px', transition: 'width 0.3s', minWidth: b.count > 0 ? '4px' : '0' }} />
+                    </div>
+                    <span style={{ fontSize: '13px', color: '#999', width: '90px' }}>{b.count} {b.count === 1 ? 'Person' : 'Personen'}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Collapsible Top 20 */}
+              <button onClick={() => setShowTop20(!showTop20)} style={{
+                background: 'none', border: 'none', color: '#ff4425', fontSize: '14px', fontWeight: 600,
+                cursor: 'pointer', padding: '12px 0', display: 'flex', alignItems: 'center', gap: '6px',
+              }}>
+                {showTop20 ? <ChevronUp style={{ width: 16, height: 16 }} /> : <ChevronDown style={{ width: 16, height: 16 }} />}
+                {showTop20 ? 'Top 20 Besucher ausblenden' : 'Top 20 Besucher anzeigen'}
+              </button>
+
+              {showTop20 && participantStats.entries.length > 0 && (
+                <div style={{ background: '#111', border: '1px solid #1f1f1f', borderRadius: '12px', padding: '16px', marginTop: '8px' }}>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid #1f1f1f' }}>
+                          {['#', 'Name', 'Sessions', 'Anwesenheit', 'Gesamtzeit'].map(h => (
+                            <th key={h} style={{ padding: '8px 12px', textAlign: 'left', color: '#666', fontWeight: 600, fontSize: '12px' }}>{h}</th>
+                          ))}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {participantStats.entries.map((p, i) => (
+                          <tr key={p.profileId} style={{ borderBottom: '1px solid #1a1a1a' }}>
+                            <td style={{ padding: '10px 12px', color: '#666' }}>{i + 1}</td>
+                            <td style={{ padding: '10px 12px', fontWeight: 600 }}>{profileNames[p.profileId] || '...'}</td>
+                            <td style={{ padding: '10px 12px' }}>{p.sessions}</td>
+                            <td style={{ padding: '10px 12px' }}>{p.attendance}%</td>
+                            <td style={{ padding: '10px 12px' }}>{fmtTime(p.totalSeconds)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>
 
             <div style={{ borderTop: '1px solid #1a1a1a', margin: '32px 0' }} />
 
-            {/* Top Sessions */}
+            {/* Top Sessions & Klassen-Durchschnitt */}
             <div style={{ marginBottom: '32px' }}>
-              <div style={{ fontSize: '14px', fontWeight: 700, color: '#ff4425', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px' }}>Top Sessions</div>
-              {topSessions.length === 0 ? (
+              <div style={{ fontSize: '14px', fontWeight: 700, color: '#ff4425', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px' }}>Top Sessions & Klassen-Durchschnitt</div>
+
+              {/* Klassen-Durchschnitt cards */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
+                {[
+                  { icon: '👥', value: sessionAnalysis.avgParticipants, label: 'Ø Teiln./Klasse' },
+                  { icon: '🫀', value: sessionAnalysis.avgHr > 0 ? `${sessionAnalysis.avgHr} BPM` : '–', label: 'Ø HR/Klasse' },
+                  { icon: '🔥', value: sessionAnalysis.avgCal > 0 ? `${sessionAnalysis.avgCal} kcal` : '–', label: 'Ø Kcal/Klasse' },
+                ].map((k, i) => (
+                  <div key={i} style={{ background: '#111', border: '1px solid #1f1f1f', borderRadius: '14px', padding: '24px' }}>
+                    <div style={{ fontSize: '24px', marginBottom: '8px' }}>{k.icon}</div>
+                    <div style={{ fontSize: '32px', fontWeight: 800 }}>{k.value}</div>
+                    <div style={{ fontSize: '13px', color: '#666', marginTop: '4px' }}>{k.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Top 5 Sessions table */}
+              {sessionAnalysis.top5.length === 0 ? (
                 <p style={{ color: '#666', fontSize: '14px' }}>Keine Sessions im Zeitraum</p>
               ) : (
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                     <thead>
                       <tr style={{ borderBottom: '1px solid #1f1f1f' }}>
-                        {['Datum', 'Code', 'Teilnehmer', 'Ø HR', 'Dauer'].map(h => (
+                        {['Datum', 'Teilnehmer', 'Ø HR', 'Dauer', 'Z3+Z4+Z5'].map(h => (
                           <th key={h} style={{ padding: '8px 12px', textAlign: 'left', color: '#666', fontWeight: 600, fontSize: '12px' }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {topSessions.map((s, i) => (
+                      {sessionAnalysis.top5.map((s, i) => (
                         <tr key={i} style={{ borderBottom: '1px solid #111' }}>
                           <td style={{ padding: '10px 12px' }}>{format(new Date(s.date), 'dd.MM.yyyy')}</td>
-                          <td style={{ padding: '10px 12px', fontFamily: 'monospace' }}>{s.code}</td>
                           <td style={{ padding: '10px 12px' }}>{s.participants}</td>
                           <td style={{ padding: '10px 12px' }}>{s.avgHr > 0 ? `${s.avgHr} BPM` : '–'}</td>
                           <td style={{ padding: '10px 12px' }}>{fmtTime(s.avgDuration)}</td>
+                          <td style={{ padding: '10px 12px', color: '#22C55E', fontWeight: 600 }}>{s.zoneHighPct}%</td>
                         </tr>
                       ))}
                     </tbody>
