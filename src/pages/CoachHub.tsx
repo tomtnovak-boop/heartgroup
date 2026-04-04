@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, LogOut, BarChart3, LayoutGrid, Users, Shield } from 'lucide-react';
+import { Heart, LogOut, BarChart3, LayoutGrid, Users, Shield, TrendingUp } from 'lucide-react';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -28,6 +28,7 @@ export default function CoachHub() {
     { key: 'fancy', icon: LayoutGrid, title: 'Dashboard Fancy', sub: 'Live HR · Zonen', route: '/coach/fancy' },
     { key: 'neutral', icon: BarChart3, title: 'Dashboard Neutral', sub: 'Live HR · Zonen', route: '/coach/neutral' },
     { key: 'training', icon: Heart, title: 'Mein Training', sub: 'Übersicht · Stats', route: '/participant' },
+    { key: 'stats', icon: TrendingUp, title: 'Statistiken', sub: 'Sessions · Zonen', route: '/admin/stats' },
     ...(isAdmin ? [
       { key: 'teilnehmer', icon: Users, title: 'Teilnehmer', sub: 'Verwalten', route: '/admin/teilnehmer' },
       { key: 'coaches', icon: Shield, title: 'Coaches', sub: 'Verwalten', route: '/admin/coaches' },
@@ -74,7 +75,7 @@ export default function CoachHub() {
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: cards.length <= 2 ? '1fr 1fr' : 'repeat(2, 1fr)',
+            gridTemplateColumns: 'repeat(3, 1fr)',
             gap: '16px',
           }}>
             {cards.map(card => (
