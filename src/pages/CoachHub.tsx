@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, LogOut, BarChart3, LayoutGrid, Users, Shield } from 'lucide-react';
+import { Heart, LogOut, BarChart3, LayoutGrid, Users, Shield, TrendingUp } from 'lucide-react';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 
