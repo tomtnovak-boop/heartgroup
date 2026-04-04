@@ -683,10 +683,15 @@ export default function Participant() {
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 border-b border-border">
         <div className="flex items-center gap-2">
-          {isCoach && (
-            <Button variant="ghost" size="icon" onClick={() => navigate(isAdmin ? '/' : '/dashboard')} className="h-8 w-8 text-muted-foreground hover:text-foreground">
-              {isAdmin ? <Home className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
-            </Button>
+          {(isCoach || isAdmin) && (
+            <button
+              onClick={() => navigate('/coach')}
+              style={{ background: 'none', border: 'none', color: '#666', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', padding: '0' }}
+              onMouseEnter={e => e.currentTarget.style.color = '#ff4425'}
+              onMouseLeave={e => e.currentTarget.style.color = '#666'}
+            >
+              ← Hub
+            </button>
           )}
           <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
             <Heart className="w-4 h-4 text-primary" fill="currentColor" />

@@ -13,15 +13,26 @@ export default function Index() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
 
-  // Auto-redirect authenticated users
+  // Auto-redirect authenticated users based on role
   useEffect(() => {
-    if (isLoading || !isAuthenticated) return;
-    if (isAdmin || isCoach) {
-      navigate('/coach', { replace: true });
-    } else {
-      navigate('/participant', { replace: true });
-    }
-  }, [isLoading, isAuthenticated, isCoach, isAdmin, navigate]);
+    if (isLoading || !isAuthenticated || !user) return;
+
+    const redirectByRole = async () => {
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id);
+
+      const roles = (data || []).map(r => r.role);
+      if (roles.includes('admin') || roles.includes('coach')) {
+        navigate('/coach', { replace: true });
+      } else {
+        navigate('/participant', { replace: true });
+      }
+    };
+
+    redirectByRole();
+  }, [isLoading, isAuthenticated, user, navigate]);
 
   if (isLoading) {
     return (
