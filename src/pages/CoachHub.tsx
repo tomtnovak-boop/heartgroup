@@ -75,7 +75,7 @@ export default function CoachHub() {
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: cards.length <= 2 ? '1fr 1fr' : 'repeat(2, 1fr)',
+            gridTemplateColumns: 'repeat(3, 1fr)',
             gap: '16px',
           }}>
             {cards.map(card => (
