@@ -57,9 +57,9 @@ export function AppHeader({
         <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center">
           <Heart className="w-3.5 h-3.5 text-primary" fill="currentColor" />
         </div>
-        <span className="text-sm font-bold tracking-wider uppercase">
-          <span className="text-foreground">BALBOA</span>
-          <span className="text-primary">MOVE</span>
+        <span className="text-sm font-bold tracking-wider">
+          <span className="text-foreground">B</span>
+          <span className="text-primary">heart</span>
         </span>
       </div>
 
