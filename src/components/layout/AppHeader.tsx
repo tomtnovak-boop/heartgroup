@@ -149,13 +149,13 @@ export function AppHeader({
           ) : (
             <button
               onClick={onStartSession}
-              disabled={!sessionCode || lobbyCount === 0}
+              disabled={!sessionCode}
               className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                sessionCode && lobbyCount > 0
+                sessionCode
                   ? 'bg-emerald-600 hover:bg-emerald-700'
                   : 'bg-muted cursor-not-allowed'
               }`}
-              title={!sessionCode ? 'Create a session code first' : lobbyCount === 0 ? 'No participants in lobby' : 'Start Session'}
+              title={!sessionCode ? 'Create a session code first' : 'Start Session'}
             >
               <Play className="w-3.5 h-3.5 text-white" fill="currentColor" />
             </button>
