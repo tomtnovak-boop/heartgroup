@@ -73,7 +73,7 @@ export function useWorkoutSession() {
       .eq('created_by', userData.user.id)
       .order('started_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (existing) {
       setSessionCode(existing.session_code);
