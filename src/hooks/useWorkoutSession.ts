@@ -185,7 +185,7 @@ export function useWorkoutSession() {
 
   const startSession = useCallback(async (participants: LiveHRData[]) => {
     const code = sessionCodeRef.current;
-    console.log('startSession called, code:', code);
+    console.log('startSession called, code:', code, 'participants passed:', participants.length);
     if (!code) {
       console.error('startSession: No session code available');
       return;
@@ -193,12 +193,18 @@ export function useWorkoutSession() {
 
     try {
       // Mark session as started in active_sessions — MUST run first
-      const { error: sessionStartError } = await supabase
+      const { error: sessionStartError, data: sessionUpdateData, count } = await supabase
         .from('active_sessions')
         .update({ started_at: new Date().toISOString() })
         .eq('session_code', code)
-        .is('ended_at', null);
-      console.log('session start update:', sessionStartError);
+        .is('ended_at', null)
+        .select();
+      console.log('session start update result:', { error: sessionStartError, data: sessionUpdateData, count });
+
+      if (sessionStartError) {
+        console.error('startSession: Failed to update active_sessions', sessionStartError);
+        throw sessionStartError;
+      }
 
       // Fetch lobby participants
       const { data: lobbyParticipants, error: lobbyError } = await supabase
@@ -209,12 +215,20 @@ export function useWorkoutSession() {
       console.log('startSession: lobby participants', lobbyParticipants, 'error:', lobbyError);
 
       const profileIds = lobbyParticipants?.map(p => p.profile_id) || [];
+      const now = new Date().toISOString();
+
       if (profileIds.length === 0) {
-        console.warn('startSession: No participants in lobby');
+        console.log('startSession: No participants in lobby, starting empty session');
+        // Start session even without participants — late joiners can still join
+        setSession({
+          isActive: true,
+          startedAt: new Date(now),
+          elapsedSeconds: 0,
+          activeWorkouts: new Map(),
+        });
         return;
       }
 
-      const now = new Date().toISOString();
       const inserts = profileIds.map(profile_id => ({
         profile_id,
         started_at: now,
