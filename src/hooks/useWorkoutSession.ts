@@ -211,27 +211,38 @@ export function useWorkoutSession() {
       }
 
       // Insert session code into session_lobby so companion app can find it
+      console.log('startSession: coachUserId =', coachUserId);
       if (coachUserId) {
-        const { data: coachProfile } = await supabase
+        const { data: coachProfile, error: profileError } = await supabase
           .from('profiles')
           .select('id')
           .eq('user_id', coachUserId)
           .maybeSingle();
 
+        console.log('startSession: coachProfile lookup =', { coachProfile, profileError });
+
         if (coachProfile) {
-          const { error: lobbyInsertError } = await supabase
+          console.log('startSession: Inserting into session_lobby with', { session_code: code, profile_id: coachProfile.id });
+          const { data: lobbyData, error: lobbyInsertError } = await supabase
             .from('session_lobby')
-            .upsert({
+            .insert({
               session_code: code,
               profile_id: coachProfile.id,
-            }, { onConflict: 'profile_id' });
+            })
+            .select();
+
+          console.log('startSession: session_lobby insert result =', { data: lobbyData, error: lobbyInsertError });
 
           if (lobbyInsertError) {
             console.error('startSession: Failed to insert into session_lobby', lobbyInsertError);
           } else {
-            console.log('startSession: Inserted session code into session_lobby', code);
+            console.log('startSession: Successfully inserted session code into session_lobby', code);
           }
+        } else {
+          console.error('startSession: No profile found for coach user', coachUserId);
         }
+      } else {
+        console.error('startSession: No coachUserId available');
       }
 
       // Fetch lobby participants
