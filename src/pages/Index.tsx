@@ -109,8 +109,8 @@ export default function Index() {
             textTransform: 'uppercase' as const,
             margin: 0,
           }}>
-            <span style={{ color: '#fff' }}>BALBOA</span>
-            <span style={{ color: '#ff4425' }}>MOVE</span>
+            <span style={{ color: '#fff', fontWeight: 'bold' }}>B</span>
+            <span style={{ color: '#ff4425', fontWeight: 'bold' }}>heart</span>
           </h1>
           <p style={{ color: '#666', fontSize: '13px', marginTop: '6px' }}>
             Coach & Admin Login

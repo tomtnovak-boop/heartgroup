@@ -138,8 +138,8 @@ export default function AdminUsers() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <span style={{ fontWeight: 900, letterSpacing: '0.15em', textTransform: 'uppercase', fontSize: '16px' }}>
-            <span style={{ color: '#fff' }}>BALBOA</span>
-            <span style={{ color: '#ff4425' }}>MOVE</span>
+            <span style={{ color: '#fff', fontWeight: 'bold' }}>B</span>
+            <span style={{ color: '#ff4425', fontWeight: 'bold' }}>heart</span>
           </span>
         </div>
         <Button

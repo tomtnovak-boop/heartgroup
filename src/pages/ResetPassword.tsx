@@ -48,8 +48,8 @@ export default function ResetPassword() {
       <div style={{ background: '#111', border: '1px solid #1f1f1f', borderRadius: '16px', padding: '40px 36px', width: '100%', maxWidth: '420px' }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <h1 style={{ fontWeight: 900, fontSize: '28px', letterSpacing: '0.15em', textTransform: 'uppercase' as const, margin: 0 }}>
-            <span style={{ color: '#fff' }}>BALBOA</span>
-            <span style={{ color: '#ff4425' }}>MOVE</span>
+            <span style={{ color: '#fff', fontWeight: 'bold' }}>B</span>
+            <span style={{ color: '#ff4425', fontWeight: 'bold' }}>heart</span>
           </h1>
           <p style={{ color: '#666', fontSize: '13px', marginTop: '6px' }}>
             {isValid ? 'Neues Passwort festlegen' : 'Ungültiger oder abgelaufener Link'}

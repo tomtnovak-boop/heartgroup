@@ -31,8 +31,8 @@ export default function AdminCoaches() {
           </button>
         </div>
         <span style={{ fontWeight: 900, letterSpacing: '0.15em', textTransform: 'uppercase', fontSize: '14px' }}>
-          <span style={{ color: '#fff' }}>BALBOA</span>
-          <span style={{ color: '#ff4425' }}>MOVE</span>
+          <span style={{ color: '#fff', fontWeight: 'bold' }}>B</span>
+          <span style={{ color: '#ff4425', fontWeight: 'bold' }}>heart</span>
         </span>
       </header>
       <div style={{ padding: '20px' }}>

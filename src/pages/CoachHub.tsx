@@ -47,8 +47,8 @@ export default function CoachHub() {
             <Heart style={{ width: 14, height: 14, color: '#ff4425', fill: '#ff4425' }} />
           </div>
           <span style={{ fontWeight: 900, letterSpacing: '0.15em', textTransform: 'uppercase', fontSize: '14px' }}>
-            <span style={{ color: '#fff' }}>BALBOA</span>
-            <span style={{ color: '#ff4425' }}>MOVE</span>
+            <span style={{ color: '#fff', fontWeight: 'bold' }}>B</span>
+            <span style={{ color: '#ff4425', fontWeight: 'bold' }}>heart</span>
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
