@@ -192,6 +192,10 @@ export function useWorkoutSession() {
     }
 
     try {
+      // Get coach's user and profile
+      const { data: userData } = await supabase.auth.getUser();
+      const coachUserId = userData?.user?.id;
+
       // Mark session as started in active_sessions — MUST run first
       const { error: sessionStartError, data: sessionUpdateData, count } = await supabase
         .from('active_sessions')
@@ -204,6 +208,30 @@ export function useWorkoutSession() {
       if (sessionStartError) {
         console.error('startSession: Failed to update active_sessions', sessionStartError);
         throw sessionStartError;
+      }
+
+      // Insert session code into session_lobby so companion app can find it
+      if (coachUserId) {
+        const { data: coachProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', coachUserId)
+          .maybeSingle();
+
+        if (coachProfile) {
+          const { error: lobbyInsertError } = await supabase
+            .from('session_lobby')
+            .upsert({
+              session_code: code,
+              profile_id: coachProfile.id,
+            }, { onConflict: 'profile_id' });
+
+          if (lobbyInsertError) {
+            console.error('startSession: Failed to insert into session_lobby', lobbyInsertError);
+          } else {
+            console.log('startSession: Inserted session code into session_lobby', code);
+          }
+        }
       }
 
       // Fetch lobby participants
