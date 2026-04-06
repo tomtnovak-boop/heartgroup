@@ -4,6 +4,39 @@ import { HexTile } from './HexTile';
 import { HRHistoryStrip } from './HRHistoryStrip';
 import { Heart, Users } from 'lucide-react';
 import { LiveHRData } from '@/hooks/useLiveHR';
+import { supabase } from '@/integrations/supabase/client';
+
+function LobbyParticipantList({ profileIds }: { profileIds: string[] }) {
+  const [names, setNames] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (profileIds.length === 0) return;
+    supabase.from('profiles').select('id, name, nickname').in('id', profileIds)
+      .then(({ data }) => {
+        const map: Record<string, string> = {};
+        data?.forEach(p => { map[p.id] = p.nickname || p.name; });
+        setNames(map);
+      });
+  }, [profileIds]);
+
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', maxWidth: '320px' }}>
+      {profileIds.map(id => (
+        <div key={id} style={{
+          background: 'rgba(255,255,255,0.08)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          borderRadius: '8px',
+          padding: '4px 12px',
+          fontSize: '13px',
+          fontWeight: 600,
+          color: 'rgba(255,255,255,0.7)',
+        }}>
+          {names[id] || '...'}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 interface CoachDashboardProps {
   participants: LiveHRData[];
@@ -83,8 +116,8 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
     );
   }
 
-  // Waiting state: no participants in lobby (same as NeutralDashboard)
-  if (lobbyProfileIds.length === 0) {
+  // Pre-session state: show session code + lobby participants
+  if (!isSessionActive) {
     return (
       <div className="flex-1 flex items-center justify-center" style={{ background: '#0a0a0a', height: 'calc(100dvh - 56px)' }}>
         <div className="relative" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
@@ -113,15 +146,8 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
           }}>
             <Users style={{ width: '36px', height: '36px', color: 'rgba(255,255,255,0.3)' }} />
           </div>
-          <div style={{ textAlign: 'center' }}>
-            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>
-              Waiting for participants...
-            </p>
-            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '14px' }}>
-              Share the session code so participants can join
-            </p>
-          </div>
-          {sessionCode && (
+
+          {sessionCode ? (
             <div style={{
               background: 'rgba(255,255,255,0.06)',
               border: '2px solid rgba(255,255,255,0.12)',
@@ -140,6 +166,27 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
                 textShadow: '0 0 30px rgba(255,255,255,0.2)',
               }}>
                 {sessionCode}
+              </p>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>
+                Preparing next session...
+              </p>
+            </div>
+          )}
+
+          {lobbyProfileIds.length > 0 ? (
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>
+                {lobbyProfileIds.length} participant{lobbyProfileIds.length !== 1 ? 's' : ''} ready
+              </p>
+              <LobbyParticipantList profileIds={lobbyProfileIds} />
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '14px' }}>
+                Share the session code so participants can join
               </p>
             </div>
           )}
