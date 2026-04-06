@@ -293,11 +293,11 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
       ))}
 
       <div ref={gridRef} className="relative flex-1 grid grid-cols-5 gap-2 min-h-0 overflow-hidden z-10">
-        {[1, 2, 3, 4, 5].map((zone) => (
+        {!showLobbyOverlay && [1, 2, 3, 4, 5].map((zone) => (
           <ZoneColumn key={zone} zone={zone} participants={zoneGroups[zone]} selectedProfileId={selectedProfileId} />
         ))}
 
-        {columnOffsets.length === 5 && participants.map((p) => {
+        {!showLobbyOverlay && columnOffsets.length === 5 && participants.map((p) => {
           const z = Math.min(Math.max(p.zone, 1), 5);
           const rankInZone = zoneGroups[z].findIndex(x => x.profile_id === p.profile_id);
           const pos = getTilePosition(z, Math.max(rankInZone, 0));
@@ -320,6 +320,10 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
             </div>
           );
         })}
+
+        {showLobbyOverlay && lobbyProfileIds.length > 0 && (
+          <LobbyRows profileIds={lobbyProfileIds} participants={participants} />
+        )}
       </div>
 
       {/* Session code lobby overlay */}
