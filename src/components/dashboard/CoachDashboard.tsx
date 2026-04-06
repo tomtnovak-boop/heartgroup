@@ -4,6 +4,39 @@ import { HexTile } from './HexTile';
 import { HRHistoryStrip } from './HRHistoryStrip';
 import { Heart, Users } from 'lucide-react';
 import { LiveHRData } from '@/hooks/useLiveHR';
+import { supabase } from '@/integrations/supabase/client';
+
+function LobbyParticipantList({ profileIds }: { profileIds: string[] }) {
+  const [names, setNames] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (profileIds.length === 0) return;
+    supabase.from('profiles').select('id, name, nickname').in('id', profileIds)
+      .then(({ data }) => {
+        const map: Record<string, string> = {};
+        data?.forEach(p => { map[p.id] = p.nickname || p.name; });
+        setNames(map);
+      });
+  }, [profileIds]);
+
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', maxWidth: '320px' }}>
+      {profileIds.map(id => (
+        <div key={id} style={{
+          background: 'rgba(255,255,255,0.08)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          borderRadius: '8px',
+          padding: '4px 12px',
+          fontSize: '13px',
+          fontWeight: 600,
+          color: 'rgba(255,255,255,0.7)',
+        }}>
+          {names[id] || '...'}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 interface CoachDashboardProps {
   participants: LiveHRData[];
