@@ -102,12 +102,11 @@ export function NeutralDashboard({ participants, allProfiles, lobbyProfileIds, s
     );
   }
 
-  // Empty state: no participants in lobby
-  if (lobbyProfileIds.length === 0) {
+  // Empty state: no participants in lobby and no session
+  if (lobbyProfileIds.length === 0 && !isSessionActive) {
     return (
       <div className="flex-1 flex items-center justify-center" style={{ background: '#0a0a0a', height: 'calc(100dvh - 56px)' }}>
         <div className="relative" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
-          {/* Zone glow blobs behind */}
           {ZONE_GLOWS.map((g, i) => (
             <div key={i} className="absolute pointer-events-none" style={{
               left: `${20 + i * 15}%`,
@@ -145,22 +144,24 @@ export function NeutralDashboard({ participants, allProfiles, lobbyProfileIds, s
           </div>
 
           {sessionCode && (
-            <div style={{
-              background: 'rgba(255,255,255,0.06)',
-              border: '2px solid rgba(255,255,255,0.12)',
-              borderRadius: '16px',
-              padding: '16px 40px',
-              textAlign: 'center',
-            }}>
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '8px' }}>
-                Session Code
+            <div style={{ textAlign: 'center' }}>
+              <p style={{
+                color: 'rgba(255,255,255,0.6)',
+                fontSize: '12px',
+                fontWeight: 600,
+                letterSpacing: '0.25em',
+                textTransform: 'uppercase',
+                marginBottom: '8px',
+              }}>
+                SESSION CODE
               </p>
               <p style={{
                 color: 'white',
-                fontSize: '48px',
+                fontSize: 'clamp(48px, 10vw, 96px)',
                 fontWeight: 900,
                 letterSpacing: '0.2em',
-                textShadow: '0 0 30px rgba(255,255,255,0.2)',
+                lineHeight: 1,
+                textShadow: '0 0 30px rgba(255,255,255,0.25)',
               }}>
                 {sessionCode}
               </p>
@@ -170,6 +171,8 @@ export function NeutralDashboard({ participants, allProfiles, lobbyProfileIds, s
       </div>
     );
   }
+
+  const showLobbyOverlay = !isSessionActive && !!sessionCode;
 
   const rowCount = Math.max(rows.length, 1);
   const rowHeight = `calc((100dvh - 56px - 40px - 28px) / ${rowCount})`;
@@ -266,6 +269,42 @@ export function NeutralDashboard({ participants, allProfiles, lobbyProfileIds, s
         </div>
         <div style={{ width: 56 }} />
       </div>
+
+      {/* Session code lobby overlay */}
+      {showLobbyOverlay && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 30 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', textAlign: 'center' }}>
+            <p style={{
+              color: 'rgba(255,255,255,0.6)',
+              fontSize: '12px',
+              fontWeight: 600,
+              letterSpacing: '0.25em',
+              textTransform: 'uppercase',
+            }}>
+              SESSION CODE
+            </p>
+            <p style={{
+              color: 'white',
+              fontSize: 'clamp(48px, 10vw, 96px)',
+              fontWeight: 900,
+              letterSpacing: '0.2em',
+              lineHeight: 1,
+              textShadow: '0 0 30px rgba(255,255,255,0.25)',
+            }}>
+              {sessionCode}
+            </p>
+            <p style={{
+              color: 'rgba(255,255,255,0.5)',
+              fontSize: '13px',
+              fontWeight: 400,
+            }}>
+              {lobbyProfileIds.length > 0
+                ? `${lobbyProfileIds.length} participant${lobbyProfileIds.length !== 1 ? 's' : ''} ready`
+                : 'Share this code with participants'}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Rows */}
       <div style={{ flex: 1, overflow: 'hidden', position: 'relative', zIndex: 1 }}>
