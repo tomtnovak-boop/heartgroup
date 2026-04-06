@@ -335,7 +335,7 @@ export function useWorkoutSession() {
       activeWorkouts: new Map(),
     });
 
-    // End the active session record and immediately create a new one
+    // End the active session record (do NOT create new code yet — wait for leaderboard dismiss)
     if (code) {
       await supabase.from('active_sessions')
         .update({ ended_at: new Date().toISOString() })
@@ -343,8 +343,8 @@ export function useWorkoutSession() {
         .is('ended_at', null);
       // Clean up lobby for old code
       await supabase.from('session_lobby').delete().eq('session_code', code);
-      // Auto-create new session code for next session
-      await ensureSessionCode();
+      // Clear session code — new one created after leaderboard dismiss
+      setSessionCode(null);
     }
 
     if (workouts.size === 0) return;

@@ -83,8 +83,8 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
     );
   }
 
-  // Waiting state: no participants in lobby (same as NeutralDashboard)
-  if (lobbyProfileIds.length === 0) {
+  // Pre-session state: show session code + lobby participants
+  if (!isSessionActive) {
     return (
       <div className="flex-1 flex items-center justify-center" style={{ background: '#0a0a0a', height: 'calc(100dvh - 56px)' }}>
         <div className="relative" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
@@ -113,15 +113,8 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
           }}>
             <Users style={{ width: '36px', height: '36px', color: 'rgba(255,255,255,0.3)' }} />
           </div>
-          <div style={{ textAlign: 'center' }}>
-            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>
-              Waiting for participants...
-            </p>
-            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '14px' }}>
-              Share the session code so participants can join
-            </p>
-          </div>
-          {sessionCode && (
+
+          {sessionCode ? (
             <div style={{
               background: 'rgba(255,255,255,0.06)',
               border: '2px solid rgba(255,255,255,0.12)',
@@ -140,6 +133,27 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
                 textShadow: '0 0 30px rgba(255,255,255,0.2)',
               }}>
                 {sessionCode}
+              </p>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>
+                Preparing next session...
+              </p>
+            </div>
+          )}
+
+          {lobbyProfileIds.length > 0 ? (
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>
+                {lobbyProfileIds.length} participant{lobbyProfileIds.length !== 1 ? 's' : ''} ready
+              </p>
+              <LobbyParticipantList profileIds={lobbyProfileIds} />
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '14px' }}>
+                Share the session code so participants can join
               </p>
             </div>
           )}
