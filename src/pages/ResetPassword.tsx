@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Loader2, Lock } from 'lucide-react';
+import { Loader2, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -9,8 +8,8 @@ export default function ResetPassword() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isValid, setIsValid] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   useEffect(() => {
     const hash = window.location.hash;
@@ -38,25 +37,40 @@ export default function ResetPassword() {
       toast({ title: 'Fehler', description: error.message, variant: 'destructive' });
       return;
     }
-    toast({ title: 'Passwort geändert', description: 'Dein Passwort wurde erfolgreich zurückgesetzt.' });
     await supabase.auth.signOut();
-    navigate('/');
+    setIsSuccess(true);
   };
+
+  const Logo = () => (
+    <h1 style={{ fontWeight: 900, fontSize: '28px', letterSpacing: '0.15em', textTransform: 'uppercase' as const, margin: 0 }}>
+      <span style={{ color: '#fff', fontWeight: 'bold' }}>B</span>
+      <span style={{ color: '#ff4425', fontWeight: 'bold' }}>heart</span>
+    </h1>
+  );
 
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
       <div style={{ background: '#111', border: '1px solid #1f1f1f', borderRadius: '16px', padding: '40px 36px', width: '100%', maxWidth: '420px' }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <h1 style={{ fontWeight: 900, fontSize: '28px', letterSpacing: '0.15em', textTransform: 'uppercase' as const, margin: 0 }}>
-            <span style={{ color: '#fff', fontWeight: 'bold' }}>B</span>
-            <span style={{ color: '#ff4425', fontWeight: 'bold' }}>heart</span>
-          </h1>
-          <p style={{ color: '#666', fontSize: '13px', marginTop: '6px' }}>
-            {isValid ? 'Neues Passwort festlegen' : 'Ungültiger oder abgelaufener Link'}
-          </p>
+          <Logo />
+          {!isSuccess && (
+            <p style={{ color: '#666', fontSize: '13px', marginTop: '6px' }}>
+              {isValid ? 'Neues Passwort festlegen' : 'Ungültiger oder abgelaufener Link'}
+            </p>
+          )}
         </div>
 
-        {isValid ? (
+        {isSuccess ? (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(34,197,94,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+              <Check style={{ width: 32, height: 32, color: '#22C55E' }} />
+            </div>
+            <h2 style={{ color: '#fff', fontSize: '20px', fontWeight: 700, margin: '0 0 8px' }}>Passwort geändert</h2>
+            <p style={{ color: '#999', fontSize: '14px', lineHeight: '1.5', margin: 0 }}>
+              Dein Passwort wurde erfolgreich geändert. Du kannst dich jetzt in der Bheart App anmelden.
+            </p>
+          </div>
+        ) : isValid ? (
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <input
               type="password"
@@ -107,15 +121,6 @@ export default function ResetPassword() {
             <p style={{ color: '#999', fontSize: '14px', marginBottom: '16px' }}>
               Bitte fordere einen neuen Reset-Link an.
             </p>
-            <button
-              onClick={() => navigate('/')}
-              style={{
-                background: '#1a1a1a', color: '#fff', border: '1px solid #2a2a2a', borderRadius: '10px',
-                height: '44px', padding: '0 20px', fontWeight: 600, cursor: 'pointer',
-              }}
-            >
-              Zurück zum Login
-            </button>
           </div>
         )}
       </div>
