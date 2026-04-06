@@ -270,6 +270,42 @@ export function NeutralDashboard({ participants, allProfiles, lobbyProfileIds, s
         <div style={{ width: 56 }} />
       </div>
 
+      {/* Session code lobby overlay */}
+      {showLobbyOverlay && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 30 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', textAlign: 'center' }}>
+            <p style={{
+              color: 'rgba(255,255,255,0.6)',
+              fontSize: '12px',
+              fontWeight: 600,
+              letterSpacing: '0.25em',
+              textTransform: 'uppercase',
+            }}>
+              SESSION CODE
+            </p>
+            <p style={{
+              color: 'white',
+              fontSize: 'clamp(48px, 10vw, 96px)',
+              fontWeight: 900,
+              letterSpacing: '0.2em',
+              lineHeight: 1,
+              textShadow: '0 0 30px rgba(255,255,255,0.25)',
+            }}>
+              {sessionCode}
+            </p>
+            <p style={{
+              color: 'rgba(255,255,255,0.5)',
+              fontSize: '13px',
+              fontWeight: 400,
+            }}>
+              {lobbyProfileIds.length > 0
+                ? `${lobbyProfileIds.length} participant${lobbyProfileIds.length !== 1 ? 's' : ''} ready`
+                : 'Share this code with participants'}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Rows */}
       <div style={{ flex: 1, overflow: 'hidden', position: 'relative', zIndex: 1 }}>
         {rows.map((row) => {
