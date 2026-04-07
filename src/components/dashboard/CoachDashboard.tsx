@@ -59,6 +59,7 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
       if (!liveMap.has(id)) {
         const profile = lobbyProfiles[id];
         merged.push({
+          id: `lobby-${id}`,
           profile_id: id,
           bpm: 0,
           zone: 1,
