@@ -463,9 +463,9 @@ export default function Participant() {
     if (!isConnected || bpm <= 0 || !profile) return;
     const zone = calculateZone(bpm, effectiveMaxHr);
     const hrPct = calculateHRPercentage(bpm, effectiveMaxHr);
-    supabase.from('live_hr').insert({
-      profile_id: profile.id, bpm, zone, hr_percentage: hrPct,
-    }).then(() => {});
+    supabase.from('live_hr').upsert({
+      profile_id: profile.id, bpm, zone, hr_percentage: hrPct, last_seen: new Date().toISOString(),
+    }, { onConflict: 'profile_id' }).then(() => {});
   }, [bpm, isConnected, profile, effectiveMaxHr]);
 
   // Also record HR data to workout_hr_data when in an active workout

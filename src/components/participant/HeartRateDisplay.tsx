@@ -97,7 +97,7 @@ export function HeartRateDisplay({ profile, onBack }: HeartRateDisplayProps) {
     if (now - lastSentRef.current < 2000) return;
     lastSentRef.current = now;
     try {
-      await supabase.from('live_hr').insert({ profile_id: profile.id, bpm, zone, hr_percentage: hrPercentage });
+      await supabase.from('live_hr').upsert({ profile_id: profile.id, bpm, zone, hr_percentage: hrPercentage, last_seen: new Date().toISOString() }, { onConflict: 'profile_id' });
       if (workoutId) {
         await supabase.from('workout_hr_data').insert({ workout_id: workoutId, bpm, zone, hr_percentage: hrPercentage });
       }
