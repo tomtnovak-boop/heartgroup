@@ -42,7 +42,9 @@ export function LoginForm({ onSwitchToRegister, onSwitchToForgotPassword }: Logi
       description: 'You have been successfully logged in.',
     });
 
-    navigate('/participant');
+    // Don't navigate here — let the auth state change trigger
+    // the role-based redirect in Index.tsx
+    navigate('/', { replace: true });
   };
 
   return (
