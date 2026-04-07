@@ -1,5 +1,6 @@
-import { Heart, Users, Play, Square, Hash } from 'lucide-react';
+import { Heart, Users, Play, Square, Hash, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuthContext } from '@/components/auth/AuthProvider';
 
 
 export type ViewMode = 'participant' | 'coach';
@@ -49,7 +50,12 @@ export function AppHeader({
   children,
 }: AppHeaderProps) {
   const navigate = useNavigate();
+  const { signOut } = useAuthContext();
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
   return (
     <header className="flex items-center justify-between px-4 py-1.5 bg-background border-b border-border">
       {/* Left: Logo */}
@@ -162,7 +168,14 @@ export function AppHeader({
           )
         )}
 
-        {children}
+        <button
+          onClick={handleSignOut}
+          className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-colors text-muted-foreground"
+          title="Sign out"
+        >
+          <LogOut className="w-4 h-4" />
+        </button>
+
 
       </div>
     </header>
