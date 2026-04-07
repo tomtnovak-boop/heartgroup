@@ -1,5 +1,4 @@
 import { Heart, Users, Play, Square, Hash, LogOut } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 
 
@@ -49,12 +48,10 @@ export function AppHeader({
   sessionCode, lobbyCount = 0, onCreateSessionCode,
   children,
 }: AppHeaderProps) {
-  const navigate = useNavigate();
   const { signOut } = useAuthContext();
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/');
   };
   return (
     <header className="flex items-center justify-between px-4 py-1.5 bg-background border-b border-border">

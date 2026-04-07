@@ -112,7 +112,6 @@ export default function CoachWorkspace() {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/');
   };
 
   const isDashboardTab = activeTab === 'fancy' || activeTab === 'neutral';

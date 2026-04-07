@@ -19,7 +19,6 @@ export default function CoachHub() {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/');
   };
 
   const initials = user?.email?.slice(0, 2).toUpperCase() || 'U';

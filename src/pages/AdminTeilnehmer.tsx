@@ -8,7 +8,7 @@ export default function AdminTeilnehmer() {
   const { isAdmin, isLoading, signOut } = useAuthContext();
   const navigate = useNavigate();
 
-  const handleSignOut = async () => { await signOut(); navigate('/'); };
+  const handleSignOut = async () => { await signOut(); };
 
   useEffect(() => {
     if (!isLoading && !isAdmin) navigate('/coach', { replace: true });
