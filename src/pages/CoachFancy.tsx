@@ -8,6 +8,7 @@ import { useLiveHR } from '@/hooks/useLiveHR';
 import { useWorkoutSession } from '@/hooks/useWorkoutSession';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { logParticipantRedirect } from '@/lib/roleRouting';
 
 export default function CoachFancy() {
   const { viewMode, changeView } = useViewMode('coach');
@@ -60,7 +61,10 @@ export default function CoachFancy() {
 
   const handleViewChange = (view: 'participant' | 'coach') => {
     changeView(view);
-    if (view === 'participant') navigate('/participant');
+    if (view === 'participant') {
+      logParticipantRedirect('CoachFancy.handleViewChange', { view });
+      navigate('/participant');
+    }
   };
 
   return (

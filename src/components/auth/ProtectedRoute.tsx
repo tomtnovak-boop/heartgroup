@@ -3,6 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthContext } from './AuthProvider';
 import { ProfileCompletionForm } from './ProfileCompletionForm';
 import { supabase } from '@/integrations/supabase/client';
+import { getCoachOrAdminStatus, logParticipantRedirect } from '@/lib/roleRouting';
 import { Loader2, Heart } from 'lucide-react';
 
 interface ProtectedRouteProps {
@@ -15,6 +16,48 @@ export function ProtectedRoute({ children, requireCoach = false }: ProtectedRout
   const location = useLocation();
   const [profileCheck, setProfileCheck] = useState<'loading' | 'complete' | 'incomplete'>('loading');
   const [profileData, setProfileData] = useState<any>(null);
+  const [coachAccessCheck, setCoachAccessCheck] = useState<'loading' | 'allowed' | 'denied'>(requireCoach ? 'loading' : 'allowed');
+
+  useEffect(() => {
+    if (!requireCoach) {
+      setCoachAccessCheck('allowed');
+      return;
+    }
+
+    if (!isAuthenticated || !user) {
+      setCoachAccessCheck('loading');
+      return;
+    }
+
+    let isActive = true;
+
+    const checkCoachAccess = async () => {
+      setCoachAccessCheck('loading');
+
+      const { roles, isCoachOrAdmin, error } = await getCoachOrAdminStatus(user.id);
+
+      if (!isActive) return;
+
+      const hasCoachAccess = error ? isCoach : isCoachOrAdmin;
+
+      console.log('[ProtectedRoute] requireCoach decision', {
+        pathname: location.pathname,
+        roles,
+        isCoachOrAdmin,
+        fallbackIsCoach: isCoach,
+        hasCoachAccess,
+        error: error?.message ?? null,
+      });
+
+      setCoachAccessCheck(hasCoachAccess ? 'allowed' : 'denied');
+    };
+
+    checkCoachAccess();
+
+    return () => {
+      isActive = false;
+    };
+  }, [requireCoach, isAuthenticated, user, location.pathname, isCoach]);
 
   useEffect(() => {
     if (!isAuthenticated || !user) {
@@ -55,7 +98,17 @@ export function ProtectedRoute({ children, requireCoach = false }: ProtectedRout
   }
 
   if (!isAuthenticated) return <Navigate to="/" state={{ from: location }} replace />;
-  if (requireCoach && !isCoach) return <Navigate to="/participant" replace />;
+  if (requireCoach && coachAccessCheck === 'loading') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+  if (requireCoach && coachAccessCheck === 'denied') {
+    logParticipantRedirect('ProtectedRoute.requireCoach', { pathname: location.pathname });
+    return <Navigate to="/participant" replace />;
+  }
 
   if (profileCheck === 'loading') {
     return (

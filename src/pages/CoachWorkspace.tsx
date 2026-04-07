@@ -10,6 +10,7 @@ import { useWorkoutSession } from '@/hooks/useWorkoutSession';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
+import { logParticipantRedirect } from '@/lib/roleRouting';
 import { AdminParticipantsTab } from '@/components/admin/AdminParticipantsTab';
 import { AdminCoachesTab } from '@/components/admin/AdminCoachesTab';
 
@@ -103,7 +104,10 @@ export default function CoachWorkspace() {
 
   const handleViewChange = (view: 'participant' | 'coach') => {
     changeView(view);
-    if (view === 'participant') navigate('/participant');
+    if (view === 'participant') {
+      logParticipantRedirect('CoachWorkspace.handleViewChange', { view });
+      navigate('/participant');
+    }
   };
 
   const handleStartSession = () => {
