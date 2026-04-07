@@ -202,6 +202,20 @@ function LiveDisplay() {
           <div key={i} className="absolute pointer-events-none" style={{ left: g.left, top: '45%', transform: 'translate(-50%, -50%)', width: '450px', height: '500px', borderRadius: '50%', background: g.color, opacity: 0.18, filter: 'blur(300px)' }} />
         ))}
 
+        {/* Zone headers */}
+        <div className="relative grid grid-cols-5 gap-2 z-10 flex-shrink-0 pt-1 pb-2">
+          {[1, 2, 3, 4, 5].map(zone => {
+            const names: Record<number, string> = { 1: 'REGENERATION', 2: 'FAT BURN', 3: 'AEROBIC', 4: 'CARDIO', 5: 'MAX EFFORT' };
+            return (
+              <div key={zone} className="text-center">
+                <h2 className="font-black text-[11px] tracking-[0.15em] uppercase" style={{ color: '#ffffff', textShadow: `0 0 8px ${ZONE_COLORS[zone]}44` }}>{names[zone]}</h2>
+                <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: ZONE_COLORS[zone] }}>Z{zone}</span>
+                <div className="w-full h-px mt-1.5" style={{ background: `linear-gradient(90deg, transparent, ${ZONE_COLORS[zone]}55, transparent)` }} />
+              </div>
+            );
+          })}
+        </div>
+
         <div ref={gridRef} className="relative h-full grid grid-cols-5 gap-2 z-10">
           {[1, 2, 3, 4, 5].map(zone => (
             <ZoneColumn key={zone} zone={zone} participants={zoneGroups[zone]} />
