@@ -66,8 +66,9 @@ export function AppHeader({
         </span>
       </div>
 
-      {/* Right: session code, participant count, start/stop, admin users link, refresh, avatar */}
+      {/* Right: children + session code, participant count, start/stop, admin users link, refresh, avatar */}
       <div className="flex items-center gap-1.5 flex-shrink-0">
+        {children}
         {/* Session code badge */}
         {currentView === 'coach' && (
           <>
