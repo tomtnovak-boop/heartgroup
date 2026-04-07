@@ -168,7 +168,14 @@ export function AppHeader({
           )
         )}
 
-        {children}
+        <button
+          onClick={handleSignOut}
+          className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-colors text-muted-foreground"
+          title="Sign out"
+        >
+          <LogOut className="w-4 h-4" />
+        </button>
+
 
       </div>
     </header>
