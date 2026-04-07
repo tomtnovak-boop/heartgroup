@@ -25,9 +25,9 @@ export default function Index() {
 
       const roles = (data || []).map(r => r.role);
       if (roles.includes('admin') || roles.includes('coach')) {
-        navigate('/coach', { replace: true });
+        navigate('/dashboard', { replace: true });
       } else {
-        navigate('/participant', { replace: true });
+        navigate('/training', { replace: true });
       }
     };
 
