@@ -46,6 +46,7 @@ export type Database = {
           bpm: number
           hr_percentage: number
           id: string
+          last_seen: string | null
           profile_id: string
           timestamp: string
           zone: number
@@ -54,6 +55,7 @@ export type Database = {
           bpm: number
           hr_percentage: number
           id?: string
+          last_seen?: string | null
           profile_id: string
           timestamp?: string
           zone: number
@@ -62,6 +64,7 @@ export type Database = {
           bpm?: number
           hr_percentage?: number
           id?: string
+          last_seen?: string | null
           profile_id?: string
           timestamp?: string
           zone?: number
@@ -128,18 +131,21 @@ export type Database = {
         Row: {
           id: string
           joined_at: string
+          last_seen: string | null
           profile_id: string
           session_code: string
         }
         Insert: {
           id?: string
           joined_at?: string
+          last_seen?: string | null
           profile_id: string
           session_code: string
         }
         Update: {
           id?: string
           joined_at?: string
+          last_seen?: string | null
           profile_id?: string
           session_code?: string
         }

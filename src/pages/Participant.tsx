@@ -370,10 +370,22 @@ export default function Participant() {
     await supabase.from('session_lobby').upsert({
       session_code: code,
       profile_id: profile!.id,
+      last_seen: new Date().toISOString(),
     });
 
     setLobbyJoined(true);
   }, [profile]);
+
+  // Heartbeat: update last_seen in session_lobby every 10 seconds
+  useEffect(() => {
+    if (!lobbyJoined || !profile || !sessionCodeInput) return;
+    const interval = setInterval(async () => {
+      await supabase.from('session_lobby').update({ last_seen: new Date().toISOString() })
+        .eq('profile_id', profile.id)
+        .eq('session_code', sessionCodeInput);
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [lobbyJoined, profile, sessionCodeInput]);
 
   // Track whether session was already active when participant connects
   useEffect(() => {
@@ -463,9 +475,9 @@ export default function Participant() {
     if (!isConnected || bpm <= 0 || !profile) return;
     const zone = calculateZone(bpm, effectiveMaxHr);
     const hrPct = calculateHRPercentage(bpm, effectiveMaxHr);
-    supabase.from('live_hr').insert({
-      profile_id: profile.id, bpm, zone, hr_percentage: hrPct,
-    }).then(() => {});
+    supabase.from('live_hr').upsert({
+      profile_id: profile.id, bpm, zone, hr_percentage: hrPct, last_seen: new Date().toISOString(),
+    }, { onConflict: 'profile_id' }).then(() => {});
   }, [bpm, isConnected, profile, effectiveMaxHr]);
 
   // Also record HR data to workout_hr_data when in an active workout
