@@ -2,194 +2,9 @@ import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { ZoneColumn, FIXED_TILE_SIZE, FIXED_GAP, ZONE_HEADER_HEIGHT, TILE_TOTAL_HEIGHT } from './ZoneColumn';
 import { HexTile } from './HexTile';
 import { HRHistoryStrip } from './HRHistoryStrip';
-import { Heart, Users } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import { LiveHRData } from '@/hooks/useLiveHR';
 import { supabase } from '@/integrations/supabase/client';
-
-import { calculateZone, getEffectiveMaxHR } from '@/lib/heartRateUtils';
-
-const LOBBY_ZONE_COLORS: Record<number, string> = {
-  1: '#4fc3f7', 2: '#66bb6a', 3: '#fdd835', 4: '#ff9800', 5: '#e53935',
-};
-
-const LOBBY_SEGMENT_OPACITY: Record<number, number> = {
-  1: 0.18, 2: 0.22, 3: 0.28, 4: 0.35, 5: 0.42,
-};
-
-const LOBBY_SEGMENTS = [
-  { zone: 1, width: '20%' },
-  { zone: 2, width: '20%' },
-  { zone: 3, width: '20%' },
-  { zone: 4, width: '20%' },
-  { zone: 5, width: '20%' },
-];
-
-function hrPercentToBarPosition(hrPercent: number): number {
-  if (hrPercent <= 60) return (hrPercent / 60) * 20;
-  if (hrPercent <= 70) return 20 + ((hrPercent - 60) / 10) * 20;
-  if (hrPercent <= 80) return 40 + ((hrPercent - 70) / 10) * 20;
-  if (hrPercent <= 90) return 60 + ((hrPercent - 80) / 10) * 20;
-  return 80 + ((hrPercent - 90) / 10) * 20;
-}
-
-function LobbyRows({ profileIds, participants }: { profileIds: string[]; participants: LiveHRData[] }) {
-  const [profiles, setProfiles] = useState<Record<string, { name: string; nickname?: string | null }>>({});
-
-  useEffect(() => {
-    if (profileIds.length === 0) return;
-    supabase.from('profiles').select('id, name, nickname').in('id', profileIds)
-      .then(({ data }) => {
-        const map: Record<string, { name: string; nickname?: string | null }> = {};
-        data?.forEach(p => { map[p.id] = { name: p.name, nickname: p.nickname }; });
-        setProfiles(map);
-      });
-  }, [profileIds]);
-
-  const liveMap = useMemo(() => new Map(participants.map(p => [p.profile_id, p])), [participants]);
-
-  const rows = useMemo(() => {
-    return profileIds.map((id, idx) => {
-      const profile = profiles[id];
-      const live = liveMap.get(id);
-      const displayName = profile?.nickname || profile?.name?.split(' ')[0] || '...';
-      const effectiveMaxHR = live?.profile
-        ? getEffectiveMaxHR(live.profile.age, live.profile.custom_max_hr)
-        : 170;
-      const realZone = live && live.bpm > 0 ? calculateZone(live.bpm, effectiveMaxHR) : null;
-      const realHRPercent = live && live.bpm > 0
-        ? Math.min(100, Math.round((live.bpm / effectiveMaxHR) * 100))
-        : null;
-      return {
-        number: idx + 1,
-        profileId: id,
-        name: displayName,
-        bpm: live?.bpm ?? null,
-        hrPercentage: realHRPercent,
-        zone: realZone,
-        isLive: !!live && live.bpm > 0,
-      };
-    });
-  }, [profileIds, profiles, liveMap]);
-
-  if (rows.length === 0) return null;
-
-  const rowHeight = `calc((100% - 8px) / ${Math.max(rows.length, 1)})`;
-
-  return (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 15, display: 'flex', flexDirection: 'column', padding: '4px 16px' }}>
-      {rows.map((row) => {
-        const zoneColor = row.zone ? LOBBY_ZONE_COLORS[row.zone] : 'rgba(255,255,255,0.2)';
-        return (
-          <div
-            key={row.profileId}
-            style={{
-              height: rowHeight,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              paddingLeft: row.isLive && row.zone ? '9px' : '12px',
-              paddingRight: '8px',
-              borderBottom: '1px solid rgba(255,255,255,0.04)',
-              borderLeft: row.isLive && row.zone
-                ? `3px solid ${zoneColor}`
-                : '3px solid rgba(255,255,255,0.08)',
-              opacity: row.isLive ? 1 : 0.5,
-              transition: 'border-left 1s ease, opacity 0.5s ease',
-              overflow: 'hidden',
-            }}
-          >
-            {/* Number */}
-            <div style={{
-              width: 28,
-              textAlign: 'right',
-              fontSize: 'clamp(10px, 1.2vh, 14px)',
-              fontWeight: 700,
-              color: 'white',
-            }}>
-              {String(row.number).padStart(2, '0')}
-            </div>
-
-            {/* Name */}
-            <div style={{
-              width: 100,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              fontSize: 'clamp(11px, 1.5vh, 16px)',
-              fontWeight: 700,
-              color: row.isLive && row.zone && row.zone >= 4 ? 'white' : 'rgba(255,255,255,0.85)',
-            }}>
-              {row.name}
-            </div>
-
-            {/* Zone Bar */}
-            <div style={{
-              position: 'relative',
-              display: 'flex',
-              flex: 1,
-              height: 'clamp(14px, 2vh, 28px)',
-              borderRadius: '4px',
-              overflow: 'hidden',
-            }}>
-              {LOBBY_SEGMENTS.map(seg => (
-                <div
-                  key={seg.zone}
-                  style={{
-                    width: seg.width,
-                    height: '100%',
-                    background: LOBBY_ZONE_COLORS[seg.zone],
-                    opacity: LOBBY_SEGMENT_OPACITY[seg.zone],
-                    flexShrink: 0,
-                  }}
-                />
-              ))}
-
-              {row.isLive && row.hrPercentage !== null && row.zone !== null && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: `${Math.min(Math.max(hrPercentToBarPosition(row.hrPercentage), 2), 98)}%`,
-                    top: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    width: 'clamp(24px, 2.5vw, 34px)',
-                    height: 'clamp(14px, 2vh, 26px)',
-                    borderRadius: '4px',
-                    background: LOBBY_ZONE_COLORS[row.zone],
-                    boxShadow: `0 0 8px ${LOBBY_ZONE_COLORS[row.zone]}66`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'left 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                    zIndex: 10,
-                  }}
-                >
-                  <span style={{ color: 'white', fontWeight: 900, fontSize: 'clamp(9px, 1.2vh, 13px)', textShadow: '0 1px 3px rgba(0,0,0,0.8)', lineHeight: 1 }}>{row.number}</span>
-                </div>
-              )}
-            </div>
-
-            {/* BPM or READY */}
-            <div style={{
-              width: 56,
-              textAlign: 'right',
-              fontWeight: row.isLive ? 800 : 600,
-              fontSize: row.isLive ? 'clamp(14px, 2.5vh, 28px)' : 'clamp(9px, 1.2vh, 12px)',
-              fontVariantNumeric: 'tabular-nums',
-              color: row.isLive
-                ? (row.zone ? LOBBY_ZONE_COLORS[row.zone] : 'rgba(255,255,255,0.2)')
-                : 'rgba(255,255,255,0.35)',
-              textTransform: row.isLive ? 'none' : 'uppercase',
-              letterSpacing: row.isLive ? undefined : '0.08em',
-              transition: 'color 1s ease',
-            }}>
-              {row.isLive ? (row.bpm ?? '--') : 'Ready'}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 
 interface CoachDashboardProps {
   participants: LiveHRData[];
@@ -202,7 +17,15 @@ interface CoachDashboardProps {
   lobbyProfileIds?: string[];
 }
 
-const WAITING_ZONE_GLOWS = [
+const ZONE_COLORS: Record<number, string> = {
+  1: '#4fc3f7', 2: '#66bb6a', 3: '#fdd835', 4: '#ff9800', 5: '#e53935',
+};
+
+const ZONE_NAMES: Record<number, string> = {
+  1: 'REGENERATION', 2: 'FAT BURN', 3: 'AEROBIC', 4: 'CARDIO', 5: 'MAX EFFORT',
+};
+
+const ZONE_GLOWS = [
   { left: '10%', color: '#00bcd4' },
   { left: '30%', color: '#4caf50' },
   { left: '50%', color: '#ffc107' },
@@ -213,16 +36,56 @@ const WAITING_ZONE_GLOWS = [
 export function CoachDashboard({ participants, isLoading, activeTab, selectedProfileId, averageBPM = 0, isSessionActive = false, sessionCode, lobbyProfileIds = [] }: CoachDashboardProps) {
   const gridRef = useRef<HTMLDivElement>(null);
   const [columnOffsets, setColumnOffsets] = useState<{ left: number; width: number }[]>([]);
+  const [lobbyProfiles, setLobbyProfiles] = useState<Record<string, { name: string; nickname?: string | null }>>({});
+
+  // Fetch lobby profile names
+  useEffect(() => {
+    if (lobbyProfileIds.length === 0) return;
+    supabase.from('profiles').select('id, name, nickname').in('id', lobbyProfileIds)
+      .then(({ data }) => {
+        const map: Record<string, { name: string; nickname?: string | null }> = {};
+        data?.forEach(p => { map[p.id] = { name: p.name, nickname: p.nickname }; });
+        setLobbyProfiles(map);
+      });
+  }, [lobbyProfileIds]);
+
+  // Merge lobby-only participants as "ready" tiles in zone 1
+  const allTiles = useMemo(() => {
+    const liveMap = new Map(participants.map(p => [p.profile_id, p]));
+    const merged: LiveHRData[] = [...participants];
+
+    // Add lobby participants who don't have live HR data yet
+    lobbyProfileIds.forEach(id => {
+      if (!liveMap.has(id)) {
+        const profile = lobbyProfiles[id];
+        merged.push({
+          profile_id: id,
+          bpm: 0,
+          zone: 1,
+          hr_percentage: 0,
+          timestamp: new Date().toISOString(),
+          profile: {
+            name: profile?.name || '...',
+            nickname: profile?.nickname || null,
+            age: 30,
+            custom_max_hr: null,
+          },
+        });
+      }
+    });
+
+    return merged;
+  }, [participants, lobbyProfileIds, lobbyProfiles]);
 
   const zoneGroups = useMemo(() => {
     const groups: Record<number, LiveHRData[]> = { 1: [], 2: [], 3: [], 4: [], 5: [] };
-    participants.forEach((p) => {
+    allTiles.forEach((p) => {
       const z = Math.min(Math.max(p.zone, 1), 5);
       groups[z].push(p);
     });
     Object.values(groups).forEach(g => g.sort((a, b) => b.hr_percentage - a.hr_percentage));
     return groups;
-  }, [participants]);
+  }, [allTiles]);
 
   const measureColumns = useCallback(() => {
     if (!gridRef.current) return;
@@ -243,7 +106,7 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
 
   useEffect(() => {
     measureColumns();
-  }, [participants, measureColumns]);
+  }, [allTiles, measureColumns]);
 
   const getTilePosition = useCallback((zone: number, rankInZone: number) => {
     const col = columnOffsets[zone - 1];
@@ -270,22 +133,6 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
   }
 
   const showLobbyOverlay = !isSessionActive && sessionCode;
-
-  const ZONE_COLORS: Record<number, string> = {
-    1: '#4fc3f7', 2: '#66bb6a', 3: '#fdd835', 4: '#ff9800', 5: '#e53935',
-  };
-
-  const ZONE_NAMES: Record<number, string> = {
-    1: 'REGENERATION', 2: 'FAT BURN', 3: 'AEROBIC', 4: 'CARDIO', 5: 'MAX EFFORT',
-  };
-
-  const ZONE_GLOWS = [
-    { left: '10%', color: '#00bcd4' },
-    { left: '30%', color: '#4caf50' },
-    { left: '50%', color: '#ffc107' },
-    { left: '70%', color: '#ff9800' },
-    { left: '90%', color: '#f44336' },
-  ];
 
   return (
     <div className="relative h-full flex flex-col px-4 pt-1 pb-0 min-h-0 overflow-hidden" style={{ background: '#0a0a0a' }}>
@@ -323,38 +170,17 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
         ))}
       </div>
 
-      {/* Main content area */}
+      {/* Main content area — always shows zone columns + hex tiles */}
       <div ref={gridRef} className="relative flex-1 min-h-0 overflow-hidden z-10">
-        {/* Decorative hexagons — visible when lobby or no participants */}
-        {(showLobbyOverlay || participants.length === 0) && (
-          <div className="absolute inset-0 grid grid-cols-5 gap-2 pointer-events-none" style={{ zIndex: 5 }}>
-            {[1, 2, 3, 4, 5].map((zone) => (
-              <div key={zone} className="flex items-start justify-center pt-8">
-                <div
-                  className="hex-breathe"
-                  style={{
-                    width: 56,
-                    height: 64,
-                    clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                    background: `linear-gradient(135deg, ${ZONE_COLORS[zone]}20, ${ZONE_COLORS[zone]}08)`,
-                    boxShadow: `0 0 12px ${ZONE_COLORS[zone]}18`,
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-        )}
+        {/* Zone columns (invisible placeholders for measurement + empty state hexagons) */}
+        <div className="absolute inset-0 grid grid-cols-5 gap-2">
+          {[1, 2, 3, 4, 5].map((zone) => (
+            <ZoneColumn key={zone} zone={zone} participants={zoneGroups[zone]} selectedProfileId={selectedProfileId} />
+          ))}
+        </div>
 
-        {/* Active session: zone columns + hex tiles */}
-        {!showLobbyOverlay && (
-          <div className="absolute inset-0 grid grid-cols-5 gap-2">
-            {[1, 2, 3, 4, 5].map((zone) => (
-              <ZoneColumn key={zone} zone={zone} participants={zoneGroups[zone]} selectedProfileId={selectedProfileId} />
-            ))}
-          </div>
-        )}
-
-        {!showLobbyOverlay && columnOffsets.length === 5 && participants.map((p) => {
+        {/* Hex tiles — absolutely positioned overlay */}
+        {columnOffsets.length === 5 && allTiles.map((p) => {
           const z = Math.min(Math.max(p.zone, 1), 5);
           const rankInZone = zoneGroups[z].findIndex(x => x.profile_id === p.profile_id);
           const pos = getTilePosition(z, Math.max(rankInZone, 0));
@@ -377,11 +203,6 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
             </div>
           );
         })}
-
-        {/* Lobby participant rows */}
-        {showLobbyOverlay && lobbyProfileIds.length > 0 && (
-          <LobbyRows profileIds={lobbyProfileIds} participants={participants} />
-        )}
       </div>
 
       {/* Session code lobby overlay */}
