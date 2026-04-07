@@ -370,10 +370,22 @@ export default function Participant() {
     await supabase.from('session_lobby').upsert({
       session_code: code,
       profile_id: profile!.id,
+      last_seen: new Date().toISOString(),
     });
 
     setLobbyJoined(true);
   }, [profile]);
+
+  // Heartbeat: update last_seen in session_lobby every 10 seconds
+  useEffect(() => {
+    if (!lobbyJoined || !profile || !sessionCodeInput) return;
+    const interval = setInterval(async () => {
+      await supabase.from('session_lobby').update({ last_seen: new Date().toISOString() })
+        .eq('profile_id', profile.id)
+        .eq('session_code', sessionCodeInput);
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [lobbyJoined, profile, sessionCodeInput]);
 
   // Track whether session was already active when participant connects
   useEffect(() => {
