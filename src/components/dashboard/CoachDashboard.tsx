@@ -275,6 +275,10 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
     1: '#4fc3f7', 2: '#66bb6a', 3: '#fdd835', 4: '#ff9800', 5: '#e53935',
   };
 
+  const ZONE_NAMES: Record<number, string> = {
+    1: 'REGENERATION', 2: 'FAT BURN', 3: 'AEROBIC', 4: 'CARDIO', 5: 'MAX EFFORT',
+  };
+
   const ZONE_GLOWS = [
     { left: '10%', color: '#00bcd4' },
     { left: '30%', color: '#4caf50' },
@@ -285,17 +289,70 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
 
   return (
     <div className="relative h-full flex flex-col px-4 pt-1 pb-0 min-h-0 overflow-hidden" style={{ background: '#0a0a0a' }}>
+      {/* Radial vignette */}
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,0.45) 100%)' }} />
+      {/* Grid pattern */}
       <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.09) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.09) 1px, transparent 1px)', backgroundSize: '60px 60px', maskImage: 'radial-gradient(ellipse at 50% 50%, black 20%, transparent 75%)', WebkitMaskImage: 'radial-gradient(ellipse at 50% 50%, black 20%, transparent 75%)' }} />
 
+      {/* Zone glow blobs */}
       {ZONE_GLOWS.map((g, i) => (
         <div key={i} className="absolute pointer-events-none" style={{ left: g.left, top: '45%', transform: 'translate(-50%, -50%)', width: '450px', height: '500px', borderRadius: '50%', background: g.color, opacity: 0.18, filter: 'blur(300px)' }} />
       ))}
 
-      <div ref={gridRef} className="relative flex-1 grid grid-cols-5 gap-2 min-h-0 overflow-hidden z-10">
-        {!showLobbyOverlay && [1, 2, 3, 4, 5].map((zone) => (
-          <ZoneColumn key={zone} zone={zone} participants={zoneGroups[zone]} selectedProfileId={selectedProfileId} />
+      {/* Zone header row — always visible */}
+      <div className="relative grid grid-cols-5 gap-2 z-10 flex-shrink-0 pt-1 pb-2">
+        {[1, 2, 3, 4, 5].map((zone) => (
+          <div key={zone} className="text-center">
+            <h2
+              className="font-black text-[11px] tracking-[0.15em] uppercase"
+              style={{ color: '#ffffff', textShadow: `0 0 8px ${ZONE_COLORS[zone]}44` }}
+            >
+              {ZONE_NAMES[zone]}
+            </h2>
+            <span
+              className="text-[10px] font-bold uppercase tracking-widest"
+              style={{ color: ZONE_COLORS[zone] }}
+            >
+              Z{zone}
+            </span>
+            <div
+              className="w-full h-px mt-1.5"
+              style={{ background: `linear-gradient(90deg, transparent, ${ZONE_COLORS[zone]}55, transparent)` }}
+            />
+          </div>
         ))}
+      </div>
+
+      {/* Main content area */}
+      <div ref={gridRef} className="relative flex-1 min-h-0 overflow-hidden z-10">
+        {/* Decorative hexagons — visible when lobby or no participants */}
+        {(showLobbyOverlay || participants.length === 0) && (
+          <div className="absolute inset-0 grid grid-cols-5 gap-2 pointer-events-none" style={{ zIndex: 5 }}>
+            {[1, 2, 3, 4, 5].map((zone) => (
+              <div key={zone} className="flex items-start justify-center pt-8">
+                <div
+                  className="hex-breathe"
+                  style={{
+                    width: 56,
+                    height: 64,
+                    clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+                    background: `linear-gradient(135deg, ${ZONE_COLORS[zone]}20, ${ZONE_COLORS[zone]}08)`,
+                    boxShadow: `0 0 12px ${ZONE_COLORS[zone]}18`,
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Active session: zone columns + hex tiles */}
+        {!showLobbyOverlay && (
+          <div className="absolute inset-0 grid grid-cols-5 gap-2">
+            {[1, 2, 3, 4, 5].map((zone) => (
+              <ZoneColumn key={zone} zone={zone} participants={zoneGroups[zone]} selectedProfileId={selectedProfileId} />
+            ))}
+          </div>
+        )}
 
         {!showLobbyOverlay && columnOffsets.length === 5 && participants.map((p) => {
           const z = Math.min(Math.max(p.zone, 1), 5);
@@ -321,6 +378,7 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
           );
         })}
 
+        {/* Lobby participant rows */}
         {showLobbyOverlay && lobbyProfileIds.length > 0 && (
           <LobbyRows profileIds={lobbyProfileIds} participants={participants} />
         )}
@@ -364,6 +422,7 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
 
       <HRHistoryStrip averageBPM={averageBPM} isSessionActive={isSessionActive} />
 
+      {/* Bottom zone count badges */}
       <div className="relative grid grid-cols-5 gap-2 py-1 z-10" style={{ background: 'linear-gradient(to top, #000000 60%, transparent)' }}>
         {[1, 2, 3, 4, 5].map((zone) => (
           <div key={zone} className="flex justify-center">
