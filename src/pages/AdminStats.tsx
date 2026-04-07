@@ -13,7 +13,9 @@ interface CoachOption { userId: string; name: string; }
 
 export default function AdminStats() {
   const navigate = useNavigate();
-  const { isAdmin, user } = useAuthContext();
+  const { isAdmin, user, signOut } = useAuthContext();
+
+  const handleSignOut = async () => { await signOut(); navigate('/'); };
   const [mode, setMode] = useState<'month' | 'year'>('month');
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
