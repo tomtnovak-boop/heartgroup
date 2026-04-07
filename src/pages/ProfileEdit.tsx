@@ -12,7 +12,7 @@ import { useAuthContext } from '@/components/auth/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { calculateMaxHR, calculateAgeFromBirthDate } from '@/lib/heartRateUtils';
 import { formatDateInput, parseDateString, formatDateToInput } from '@/lib/dateUtils';
-import { Loader2, CalendarIcon, ArrowLeft } from 'lucide-react';
+import { Loader2, CalendarIcon, ArrowLeft, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Profile {
@@ -30,8 +30,10 @@ interface Profile {
 
 export default function ProfileEdit() {
   const navigate = useNavigate();
-  const { user } = useAuthContext();
+  const { user, signOut } = useAuthContext();
   const { toast } = useToast();
+
+  const handleSignOut = async () => { await signOut(); navigate('/'); };
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
@@ -154,7 +156,10 @@ export default function ProfileEdit() {
         <Button variant="ghost" size="icon" onClick={() => navigate('/participant')} className="h-8 w-8">
           <ArrowLeft className="w-5 h-5" />
         </Button>
-        <h1 className="text-lg font-bold">Edit Profile</h1>
+        <h1 className="text-lg font-bold flex-1">Edit Profile</h1>
+        <Button variant="ghost" size="icon" onClick={handleSignOut} className="h-8 w-8" title="Sign out">
+          <LogOut className="w-4 h-4" />
+        </Button>
       </header>
 
       {/* Form */}

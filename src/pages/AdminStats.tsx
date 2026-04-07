@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, LogOut } from 'lucide-react';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { startOfMonth, endOfMonth, startOfYear, endOfYear, format, subMonths, addMonths, getISOWeek, eachWeekOfInterval } from 'date-fns';
@@ -13,7 +13,9 @@ interface CoachOption { userId: string; name: string; }
 
 export default function AdminStats() {
   const navigate = useNavigate();
-  const { isAdmin, user } = useAuthContext();
+  const { isAdmin, user, signOut } = useAuthContext();
+
+  const handleSignOut = async () => { await signOut(); navigate('/'); };
   const [mode, setMode] = useState<'month' | 'year'>('month');
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
@@ -263,13 +265,18 @@ export default function AdminStats() {
           <ArrowLeft style={{ width: 16, height: 16 }} /> Hub
         </button>
         <span style={{ fontWeight: 700, fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Statistiken</span>
-        <div style={{ display: 'flex', background: '#1a1a1a', borderRadius: '8px', overflow: 'hidden' }}>
-          {(['month', 'year'] as const).map(m => (
-            <button key={m} onClick={() => setMode(m)} style={{
-              padding: '6px 14px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: mode === m ? 700 : 400,
-              background: mode === m ? '#ff4425' : 'transparent', color: mode === m ? '#fff' : '#666',
-            }}>{m === 'month' ? 'Monat' : 'Jahr'}</button>
-          ))}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', background: '#1a1a1a', borderRadius: '8px', overflow: 'hidden' }}>
+            {(['month', 'year'] as const).map(m => (
+              <button key={m} onClick={() => setMode(m)} style={{
+                padding: '6px 14px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: mode === m ? 700 : 400,
+                background: mode === m ? '#ff4425' : 'transparent', color: mode === m ? '#fff' : '#666',
+              }}>{m === 'month' ? 'Monat' : 'Jahr'}</button>
+            ))}
+          </div>
+          <button onClick={handleSignOut} style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }} title="Sign out">
+            <LogOut style={{ width: 18, height: 18 }} />
+          </button>
         </div>
       </header>
 
