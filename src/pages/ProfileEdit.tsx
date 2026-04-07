@@ -12,6 +12,7 @@ import { useAuthContext } from '@/components/auth/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { calculateMaxHR, calculateAgeFromBirthDate } from '@/lib/heartRateUtils';
 import { formatDateInput, parseDateString, formatDateToInput } from '@/lib/dateUtils';
+import { logParticipantRedirect } from '@/lib/roleRouting';
 import { Loader2, CalendarIcon, ArrowLeft, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -34,6 +35,10 @@ export default function ProfileEdit() {
   const { toast } = useToast();
 
   const handleSignOut = async () => { await signOut(); };
+  const navigateToParticipant = (source: string) => {
+    logParticipantRedirect(source);
+    navigate('/participant');
+  };
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
@@ -59,7 +64,7 @@ export default function ProfileEdit() {
         .single();
       if (error || !data) {
         toast({ title: 'Could not load profile', variant: 'destructive' });
-        navigate('/participant');
+        navigateToParticipant('ProfileEdit.fetchProfile.missingProfile');
         return;
       }
       setProfile(data);
@@ -138,7 +143,7 @@ export default function ProfileEdit() {
       return;
     }
     toast({ title: 'Profile updated successfully' });
-    navigate('/participant');
+    navigateToParticipant('ProfileEdit.handleSave.success');
   };
 
   if (isLoadingProfile) {
@@ -153,7 +158,7 @@ export default function ProfileEdit() {
     <div className="participant-theme min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="flex items-center gap-3 px-4 py-3 border-b border-border">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/participant')} className="h-8 w-8">
+        <Button variant="ghost" size="icon" onClick={() => navigateToParticipant('ProfileEdit.headerBack')} className="h-8 w-8">
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <h1 className="text-lg font-bold flex-1">Edit Profile</h1>

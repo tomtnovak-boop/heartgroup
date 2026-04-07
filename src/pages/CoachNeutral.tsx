@@ -8,6 +8,7 @@ import { useLiveHR } from '@/hooks/useLiveHR';
 import { useWorkoutSession } from '@/hooks/useWorkoutSession';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { logParticipantRedirect } from '@/lib/roleRouting';
 
 export default function CoachNeutral() {
   const { viewMode, changeView } = useViewMode('coach');
@@ -66,7 +67,10 @@ export default function CoachNeutral() {
 
   const handleViewChange = (view: 'participant' | 'coach') => {
     changeView(view);
-    if (view === 'participant') navigate('/participant');
+    if (view === 'participant') {
+      logParticipantRedirect('CoachNeutral.handleViewChange', { view });
+      navigate('/participant');
+    }
   };
 
   return (

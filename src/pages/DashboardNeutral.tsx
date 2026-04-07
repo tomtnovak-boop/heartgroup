@@ -8,6 +8,7 @@ import { useWorkoutSession } from '@/hooks/useWorkoutSession';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { LeaderboardEntry } from '@/components/dashboard/SessionLeaderboard';
+import { logParticipantRedirect } from '@/lib/roleRouting';
 
 export default function DashboardNeutral() {
   const { viewMode, changeView } = useViewMode('coach');
@@ -97,6 +98,7 @@ export default function DashboardNeutral() {
   const handleViewChange = (view: 'participant' | 'coach') => {
     changeView(view);
     if (view === 'participant') {
+      logParticipantRedirect('DashboardNeutral.handleViewChange', { view });
       navigate('/participant');
     }
   };

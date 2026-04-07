@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
+import { getCoachOrAdminStatus, logParticipantRedirect } from '@/lib/roleRouting';
 import { Loader2 } from 'lucide-react';
 
 export default function Index() {
@@ -18,16 +19,12 @@ export default function Index() {
     if (isLoading || !isAuthenticated || !user) return;
 
     const redirectByRole = async () => {
-      const { data } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id);
-
-      const isCoachOrAdmin = (data || []).some(r => r.role === 'admin' || r.role === 'coach');
-      console.log('[Auth] Roles for redirect:', data, 'isCoachOrAdmin:', isCoachOrAdmin);
+      const { roles, isCoachOrAdmin } = await getCoachOrAdminStatus(user.id);
+      console.log('[Auth] Index.redirectByRole', { roles, isCoachOrAdmin });
       if (isCoachOrAdmin) {
         navigate('/coach', { replace: true });
       } else {
+        logParticipantRedirect('Index.redirectByRole', { roles, isCoachOrAdmin });
         navigate('/participant', { replace: true });
       }
     };

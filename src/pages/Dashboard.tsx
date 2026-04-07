@@ -8,6 +8,7 @@ import { useLiveHR } from '@/hooks/useLiveHR';
 import { useWorkoutSession } from '@/hooks/useWorkoutSession';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { logParticipantRedirect } from '@/lib/roleRouting';
 
 import { LeaderboardEntry } from '@/components/dashboard/SessionLeaderboard';
 
@@ -86,6 +87,7 @@ export default function Dashboard() {
   const handleViewChange = (view: 'participant' | 'coach') => {
     changeView(view);
     if (view === 'participant') {
+      logParticipantRedirect('Dashboard.handleViewChange', { view });
       navigate('/participant');
     }
   };
