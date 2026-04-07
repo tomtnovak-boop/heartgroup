@@ -40,6 +40,19 @@ export default function Dashboard() {
 
   const { participants, averageBPM, lowestBPM, highestBPM, averageZone, isLoading, refresh } = useLiveHR(onNewHRData);
 
+  // Cleanup stale participants every 15 seconds
+  useEffect(() => {
+    const cleanup = async () => {
+      try {
+        await supabase.functions.invoke('cleanup-stale-participants');
+      } catch (err) {
+        console.error('Stale cleanup error:', err);
+      }
+    };
+    const interval = setInterval(cleanup, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     if (prevSessionActive.current && !sessionActive) {
       const timer = setTimeout(async () => {
