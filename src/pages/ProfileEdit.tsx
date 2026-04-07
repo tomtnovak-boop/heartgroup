@@ -33,7 +33,7 @@ export default function ProfileEdit() {
   const { user, signOut } = useAuthContext();
   const { toast } = useToast();
 
-  const handleSignOut = async () => { await signOut(); navigate('/'); };
+  const handleSignOut = async () => { await signOut(); };
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);

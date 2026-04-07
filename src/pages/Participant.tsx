@@ -488,7 +488,6 @@ export default function Participant() {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/');
   };
 
   const handleConnect = async () => {

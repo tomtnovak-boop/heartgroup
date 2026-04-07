@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { logoutAndRedirect } from '@/lib/logout';
 
 interface AuthState {
   user: User | null;
@@ -61,8 +62,8 @@ export function useAuth() {
   }, []);
 
   const signOut = useCallback(async () => {
-    const { error } = await supabase.auth.signOut({ scope: 'local' });
-    return { error };
+    await logoutAndRedirect();
+    return { error: null };
   }, []);
 
   return {

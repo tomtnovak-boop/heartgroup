@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Loader2, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { clearClientSession } from '@/lib/logout';
 
 export default function ResetPassword() {
   const [password, setPassword] = useState('');
@@ -37,7 +38,7 @@ export default function ResetPassword() {
       toast({ title: 'Fehler', description: error.message, variant: 'destructive' });
       return;
     }
-    await supabase.auth.signOut({ scope: 'local' });
+    await clearClientSession();
     setIsSuccess(true);
   };
 
