@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Monitor } from 'lucide-react';
+import { Monitor, ArrowLeft } from 'lucide-react';
 import { CoachDashboard } from '@/components/dashboard/CoachDashboard';
 import { SessionLeaderboard } from '@/components/dashboard/SessionLeaderboard';
 import { AppHeader } from '@/components/layout/AppHeader';
@@ -121,6 +121,14 @@ export default function Dashboard() {
         lobbyCount={lobbyCount}
         onCreateSessionCode={createSessionCode}
       >
+        <button
+          onClick={() => navigate('/coach')}
+          style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: '13px', padding: '4px 8px' }}
+          onMouseEnter={e => (e.currentTarget.style.color = '#ff4425')}
+          onMouseLeave={e => (e.currentTarget.style.color = '#666')}
+        >
+          <ArrowLeft style={{ width: 14, height: 14 }} /> Hub
+        </button>
         <button
           onClick={() => window.open('/display', '_blank', 'noopener')}
           className="w-8 h-8 rounded-full flex items-center justify-center bg-muted hover:bg-muted/80 transition-colors"
