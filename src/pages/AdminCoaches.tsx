@@ -1,12 +1,14 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, LogOut } from 'lucide-react';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { AdminCoachesTab } from '@/components/admin/AdminCoachesTab';
 
 export default function AdminCoaches() {
-  const { isAdmin, isLoading } = useAuthContext();
+  const { isAdmin, isLoading, signOut } = useAuthContext();
   const navigate = useNavigate();
+
+  const handleSignOut = async () => { await signOut(); navigate('/'); };
 
   useEffect(() => {
     if (!isLoading && !isAdmin) navigate('/coach', { replace: true });
@@ -30,10 +32,15 @@ export default function AdminCoaches() {
             <ArrowLeft style={{ width: 16, height: 16 }} /> Hub
           </button>
         </div>
-        <span style={{ fontWeight: 900, letterSpacing: '0.15em', textTransform: 'uppercase', fontSize: '14px' }}>
-          <span style={{ color: '#fff', fontWeight: 'bold' }}>B</span>
-          <span style={{ color: '#ff4425', fontWeight: 'bold' }}>heart</span>
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontWeight: 900, letterSpacing: '0.15em', textTransform: 'uppercase', fontSize: '14px' }}>
+            <span style={{ color: '#fff', fontWeight: 'bold' }}>B</span>
+            <span style={{ color: '#ff4425', fontWeight: 'bold' }}>heart</span>
+          </span>
+          <button onClick={handleSignOut} style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }} title="Sign out">
+            <LogOut style={{ width: 18, height: 18 }} />
+          </button>
+        </div>
       </header>
       <div style={{ padding: '20px' }}>
         <AdminCoachesTab />
