@@ -15,7 +15,7 @@ export default function Auth() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      navigate('/participant');
+      navigate('/', { replace: true });
     }
   }, [isAuthenticated, isLoading, navigate]);
 
