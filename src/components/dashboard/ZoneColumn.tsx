@@ -10,7 +10,7 @@ const ZONE_CONFIG: Record<number, { label: string; color: string }> = {
 
 export const FIXED_TILE_SIZE = 64;
 export const FIXED_GAP = 6;
-export const ZONE_HEADER_HEIGHT = 52;
+export const ZONE_HEADER_HEIGHT = 0;
 export const TILE_TOTAL_HEIGHT = FIXED_TILE_SIZE * 1.15 + 20; // hex height + name badge
 
 interface ZoneColumnProps {
