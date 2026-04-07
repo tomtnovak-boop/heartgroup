@@ -1,5 +1,6 @@
-import { Heart, Users, Play, Square, Hash } from 'lucide-react';
+import { Heart, Users, Play, Square, Hash, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuthContext } from '@/components/auth/AuthProvider';
 
 
 export type ViewMode = 'participant' | 'coach';
