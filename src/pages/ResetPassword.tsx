@@ -37,7 +37,7 @@ export default function ResetPassword() {
       toast({ title: 'Fehler', description: error.message, variant: 'destructive' });
       return;
     }
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: 'local' });
     setIsSuccess(true);
   };
 
