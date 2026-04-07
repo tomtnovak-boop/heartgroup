@@ -275,6 +275,10 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
     1: '#4fc3f7', 2: '#66bb6a', 3: '#fdd835', 4: '#ff9800', 5: '#e53935',
   };
 
+  const ZONE_NAMES: Record<number, string> = {
+    1: 'REGENERATION', 2: 'FAT BURN', 3: 'AEROBIC', 4: 'CARDIO', 5: 'MAX EFFORT',
+  };
+
   const ZONE_GLOWS = [
     { left: '10%', color: '#00bcd4' },
     { left: '30%', color: '#4caf50' },
