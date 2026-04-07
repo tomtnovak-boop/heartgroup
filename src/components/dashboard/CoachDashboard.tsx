@@ -65,10 +65,12 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
           hr_percentage: 0,
           timestamp: new Date().toISOString(),
           profile: {
+            id,
             name: profile?.name || '...',
             nickname: profile?.nickname || null,
             age: 30,
-            custom_max_hr: null,
+            max_hr: 190,
+            custom_max_hr: undefined,
           },
         });
       }
