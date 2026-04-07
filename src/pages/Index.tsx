@@ -23,8 +23,9 @@ export default function Index() {
         .select('role')
         .eq('user_id', user.id);
 
-      const roles = (data || []).map(r => r.role);
-      if (roles.includes('admin') || roles.includes('coach')) {
+      const isCoachOrAdmin = (data || []).some(r => r.role === 'admin' || r.role === 'coach');
+      console.log('[Auth] Roles for redirect:', data, 'isCoachOrAdmin:', isCoachOrAdmin);
+      if (isCoachOrAdmin) {
         navigate('/coach', { replace: true });
       } else {
         navigate('/participant', { replace: true });
