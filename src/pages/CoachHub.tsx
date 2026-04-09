@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, LogOut, BarChart3, LayoutGrid, Users, Shield, TrendingUp } from 'lucide-react';
+import { Heart, LogOut, BarChart3, LayoutGrid, Users, Shield, TrendingUp, Radio } from 'lucide-react';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -24,6 +24,7 @@ export default function CoachHub() {
   const initials = user?.email?.slice(0, 2).toUpperCase() || 'U';
 
   const cards = [
+    { key: 'cdash', icon: Radio, title: 'Coach Dashboard', sub: 'Session · Control', route: '/coach-dashboard' },
     { key: 'fancy', icon: LayoutGrid, title: 'Dashboard Fancy', sub: 'Live HR · Zonen', route: '/coach/fancy' },
     { key: 'neutral', icon: BarChart3, title: 'Dashboard Neutral', sub: 'Live HR · Zonen', route: '/coach/neutral' },
     { key: 'training', icon: Heart, title: 'Mein Training', sub: 'Übersicht · Stats', route: '/participant' },

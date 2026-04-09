@@ -9,6 +9,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Participant from "./pages/Participant";
 import CoachHub from "./pages/CoachHub";
+import CoachDashboard from "./pages/CoachDashboard";
 import CoachFancy from "./pages/CoachFancy";
 import CoachNeutral from "./pages/CoachNeutral";
 import AdminTeilnehmer from "./pages/AdminTeilnehmer";
@@ -47,6 +48,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/participant" element={<ProtectedRoute><Participant /></ProtectedRoute>} />
               <Route path="/coach" element={<ProtectedRoute requireCoach><CoachHub /></ProtectedRoute>} />
+              <Route path="/coach-dashboard" element={<ProtectedRoute requireCoach><CoachDashboard /></ProtectedRoute>} />
               <Route path="/coach/fancy" element={<ProtectedRoute requireCoach><CoachFancy /></ProtectedRoute>} />
               <Route path="/coach/neutral" element={<ProtectedRoute requireCoach><CoachNeutral /></ProtectedRoute>} />
               <Route path="/admin/teilnehmer" element={<ProtectedRoute requireCoach><AdminTeilnehmer /></ProtectedRoute>} />
