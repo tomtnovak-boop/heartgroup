@@ -112,27 +112,7 @@ export function AdminCoachesTab() {
             <tbody>
               {coaches.map(row => (
                 <CoachRow key={row.id} row={row} isSelf={isSelf(row)} onDelete={() => setDeleteCoach(row)} />
-              ))}
-                  <td style={{ padding: '14px 16px' }}>
-                    <span style={{
-                      background: row.role === 'admin' ? 'rgba(255,68,37,0.15)' : '#1a1a1a',
-                      color: row.role === 'admin' ? '#ff4425' : '#999',
-                      borderRadius: '6px', padding: '3px 10px', fontSize: '12px', fontWeight: 700,
-                    }}>
-                      {row.role}
-                    </span>
-                  </td>
-                  <td style={{ padding: '14px 16px' }}>
-                    {isSelf(row) ? (
-                      <span style={{ fontSize: '12px', color: '#666' }} title="Du kannst dich nicht selbst löschen">–</span>
-                    ) : (
-                      <button onClick={() => setDeleteCoach(row)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ff4425', padding: '4px' }}>
-                        <Trash2 style={{ width: 16, height: 16 }} />
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
+            </tbody>
             </tbody>
           </table>
         </div>
