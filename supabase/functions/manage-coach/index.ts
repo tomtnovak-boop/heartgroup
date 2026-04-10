@@ -117,10 +117,14 @@ Deno.serve(async (req) => {
 
         if (name) {
           console.log('[create] step 4: creating profile', { user_id: newUser.user.id, name });
-          await adminClient.from("profiles").upsert({
+          const { error: profileError } = await adminClient.from("profiles").upsert({
             user_id: newUser.user.id,
             name,
           }, { onConflict: "user_id" });
+
+          if (profileError) {
+            console.error('[create] step 4 failed:', profileError.message);
+          }
         }
 
         console.log('[create] success', { email, role: coachRole });
