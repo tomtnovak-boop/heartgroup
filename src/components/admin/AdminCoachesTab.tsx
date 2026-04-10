@@ -111,11 +111,8 @@ export function AdminCoachesTab() {
             </thead>
             <tbody>
               {coaches.map(row => (
-                <tr key={row.id} style={{ borderBottom: '1px solid #1a1a1a' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = '#111')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                >
-                  <td style={{ padding: '14px 16px', fontWeight: 500, color: '#fff' }}>{row.name}</td>
+                <CoachRow key={row.id} row={row} isSelf={isSelf(row)} onDelete={() => setDeleteCoach(row)} />
+              ))}
                   <td style={{ padding: '14px 16px' }}>
                     <span style={{
                       background: row.role === 'admin' ? 'rgba(255,68,37,0.15)' : '#1a1a1a',
