@@ -66,6 +66,18 @@ export function ProtectedRoute({ children, requireCoach = false }: ProtectedRout
     }
 
     const checkProfile = async () => {
+      // Check if user is coach or admin — they skip profile completion
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id);
+
+      const roles = (roleData || []).map(r => r.role);
+      if (roles.includes('coach') || roles.includes('admin')) {
+        setProfileCheck('complete');
+        return;
+      }
+
       const { data } = await supabase
         .from('profiles')
         .select('id, birth_date, weight, gender')
