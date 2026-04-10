@@ -65,17 +65,18 @@ export function useWorkoutSession() {
       return;
     }
 
-    // Check if there's already an active session
+    // Check if there's already an active session for THIS coach
     const { data: existing } = await supabase
       .from('active_sessions')
       .select('session_code')
-      .is('ended_at', null)
       .eq('created_by', userData.user.id)
-      .order('started_at', { ascending: false })
+      .is('ended_at', null)
+      .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
 
     if (existing) {
+      console.log('[ensureSessionCode] found existing code:', existing.session_code);
       setSessionCode(existing.session_code);
       return existing.session_code;
     }
@@ -89,6 +90,7 @@ export function useWorkoutSession() {
       console.error('ensureSessionCode: Insert failed', error);
       return;
     }
+    console.log('[ensureSessionCode] created new code:', code);
     setSessionCode(code);
     return code;
   }, []);
