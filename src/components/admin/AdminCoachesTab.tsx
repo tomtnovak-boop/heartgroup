@@ -21,6 +21,7 @@ interface CoachRow {
   name: string;
   user_id: string | null;
   role: string;
+  email?: string;
 }
 
 export function AdminCoachesTab() {
@@ -36,11 +37,21 @@ export function AdminCoachesTab() {
 
   const fetchCoaches = async () => {
     setIsLoading(true);
-    const { data: roles, error: rolesError } = await supabase.from('user_roles').select('user_id, role');
-    console.log('[fetchCoaches] roles query result:', { roles, rolesError });
+
+    // Fetch emails via edge function
+    const { data: edgeData } = await supabase.functions.invoke('manage-coach', {
+      body: { action: 'listCoaches' },
+    });
+    const emailMap = new Map<string, string>();
+    if (edgeData?.coaches) {
+      for (const c of edgeData.coaches) {
+        if (c.user_id && c.email) emailMap.set(c.user_id, c.email);
+      }
+    }
+
+    const { data: roles } = await supabase.from('user_roles').select('user_id, role');
     const coachAdminRoles = (roles || []).filter(r => r.role === 'coach' || r.role === 'admin');
     const userIds = coachAdminRoles.map(r => r.user_id);
-    console.log('[fetchCoaches] coach/admin userIds:', userIds);
 
     if (userIds.length === 0) {
       setCoaches([]);
@@ -48,8 +59,7 @@ export function AdminCoachesTab() {
       return;
     }
 
-    const { data: profiles, error: profilesError } = await supabase.from('profiles').select('id, name, user_id').in('user_id', userIds);
-    console.log('[fetchCoaches] profiles query result:', { profiles, profilesError });
+    const { data: profiles } = await supabase.from('profiles').select('id, name, user_id').in('user_id', userIds);
     const roleMap = new Map(coachAdminRoles.map(r => [r.user_id, r.role]));
 
     const list: CoachRow[] = (profiles || []).map((p) => ({
@@ -57,9 +67,9 @@ export function AdminCoachesTab() {
       name: p.name,
       user_id: p.user_id,
       role: roleMap.get(p.user_id!) || 'coach',
+      email: p.user_id ? emailMap.get(p.user_id) : undefined,
     }));
 
-    console.log('[fetchCoaches] final coach list:', list);
     list.sort((a, b) => a.name.localeCompare(b.name));
     setCoaches(list);
     setIsLoading(false);
@@ -308,6 +318,9 @@ function CoachTableRow({ row, isSelf, onDelete }: { row: CoachRow; isSelf: boole
     >
       <td style={{ padding: '14px 16px' }}>
         <span style={{ fontWeight: 500, color: '#fff' }}>{row.name}</span>
+        {row.email && (
+          <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>{row.email}</div>
+        )}
       </td>
       <td style={{ padding: '14px 16px' }}>
         <span
