@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
@@ -40,14 +40,22 @@ export function AdminCoachesTab() {
     const coachAdminRoles = (roles || []).filter(r => r.role === 'coach' || r.role === 'admin');
     const userIds = coachAdminRoles.map(r => r.user_id);
 
-    if (userIds.length === 0) { setCoaches([]); setIsLoading(false); return; }
+    if (userIds.length === 0) {
+      setCoaches([]);
+      setIsLoading(false);
+      return;
+    }
 
     const { data: profiles } = await supabase.from('profiles').select('id, name, user_id').in('user_id', userIds);
     const roleMap = new Map(coachAdminRoles.map(r => [r.user_id, r.role]));
 
-    const list: CoachRow[] = (profiles || []).map(p => ({
-      id: p.id, name: p.name, user_id: p.user_id, role: roleMap.get(p.user_id!) || 'coach',
+    const list: CoachRow[] = (profiles || []).map((p) => ({
+      id: p.id,
+      name: p.name,
+      user_id: p.user_id,
+      role: roleMap.get(p.user_id!) || 'coach',
     }));
+
     list.sort((a, b) => a.name.localeCompare(b.name));
     setCoaches(list);
     setIsLoading(false);
@@ -55,18 +63,21 @@ export function AdminCoachesTab() {
 
   const handleDelete = async () => {
     if (!deleteCoach) return;
+
     setIsDeleting(true);
     await supabase.from('profiles').delete().eq('id', deleteCoach.id);
+
     if (deleteCoach.user_id) {
       await supabase.from('user_roles').delete().eq('user_id', deleteCoach.user_id);
     }
+
     toast({ title: 'Coach gelöscht', description: `${deleteCoach.name} wurde entfernt.` });
     setDeleteCoach(null);
     setIsDeleting(false);
     fetchCoaches();
   };
 
-  const isSelf = (c: CoachRow) => c.user_id === user?.id;
+  const isSelf = (coach: CoachRow) => coach.user_id === user?.id;
 
   return (
     <div>
@@ -100,17 +111,22 @@ export function AdminCoachesTab() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid #1a1a1a' }}>
-                {['Name', 'Rolle', 'Aktionen'].map(h => (
-                  <th key={h} style={{
-                    textAlign: 'left', padding: '12px 16px', fontSize: '12px',
-                    fontWeight: 700, color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em',
-                    background: '#111',
-                  }}>{h}</th>
+                {['Name', 'Rolle', 'Aktionen'].map((heading) => (
+                  <th
+                    key={heading}
+                    style={{
+                      textAlign: 'left', padding: '12px 16px', fontSize: '12px',
+                      fontWeight: 700, color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em',
+                      background: '#111',
+                    }}
+                  >
+                    {heading}
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {coaches.map(row => (
+              {coaches.map((row) => (
                 <CoachTableRow key={row.id} row={row} isSelf={isSelf(row)} onDelete={() => setDeleteCoach(row)} />
               ))}
             </tbody>
@@ -120,7 +136,7 @@ export function AdminCoachesTab() {
 
       <CreateCoachModal open={showCreate} onOpenChange={setShowCreate} onCreated={fetchCoaches} />
 
-      <AlertDialog open={!!deleteCoach} onOpenChange={o => !o && setDeleteCoach(null)}>
+      <AlertDialog open={!!deleteCoach} onOpenChange={(open) => !open && setDeleteCoach(null)}>
         <AlertDialogContent style={{ background: '#111', border: '1px solid #2a2a2a' }}>
           <AlertDialogHeader>
             <AlertDialogTitle>{deleteCoach?.name} wirklich löschen?</AlertDialogTitle>
@@ -129,7 +145,8 @@ export function AdminCoachesTab() {
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>Abbrechen</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} disabled={isDeleting} style={{ background: '#ff4425', color: '#fff' }}>
-              {isDeleting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Löschen
+              {isDeleting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Löschen
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -139,7 +156,9 @@ export function AdminCoachesTab() {
 }
 
 function CreateCoachModal({ open, onOpenChange, onCreated }: {
-  open: boolean; onOpenChange: (o: boolean) => void; onCreated: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onCreated: () => void;
 }) {
   const { toast } = useToast();
   const [firstName, setFirstName] = useState('');
@@ -151,19 +170,27 @@ function CreateCoachModal({ open, onOpenChange, onCreated }: {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const reset = () => {
-    setFirstName(''); setLastName(''); setEmail(''); setPassword(''); setRole('coach');
-    setIsSubmitting(false); setShowPassword(false);
+    setFirstName('');
+    setLastName('');
+    setEmail('');
+    setPassword('');
+    setRole('coach');
+    setIsSubmitting(false);
+    setShowPassword(false);
   };
 
   const handleCreate = async () => {
     if (!firstName.trim() || !lastName.trim() || !email.trim()) {
-      toast({ title: 'Pflichtfelder ausfüllen', variant: 'destructive' }); return;
+      toast({ title: 'Pflichtfelder ausfüllen', variant: 'destructive' });
+      return;
     }
-    if (password.length < 8) {
-      toast({ title: 'Passwort muss mindestens 8 Zeichen haben', variant: 'destructive' }); return;
-    }
-    setIsSubmitting(true);
 
+    if (password.length < 8) {
+      toast({ title: 'Passwort muss mindestens 8 Zeichen haben', variant: 'destructive' });
+      return;
+    }
+
+    setIsSubmitting(true);
     const fullName = `${firstName.trim()} ${lastName.trim()}`;
 
     const { data, error } = await supabase.functions.invoke('manage-coach', {
@@ -171,34 +198,59 @@ function CreateCoachModal({ open, onOpenChange, onCreated }: {
     });
 
     if (error || data?.error) {
-      toast({ title: 'Fehler', description: data?.error || error?.message || 'Coach konnte nicht erstellt werden', variant: 'destructive' });
-      setIsSubmitting(false); return;
+      toast({
+        title: 'Fehler',
+        description: data?.error || error?.message || 'Coach konnte nicht erstellt werden',
+        variant: 'destructive',
+      });
+      setIsSubmitting(false);
+      return;
     }
 
     toast({ title: 'Coach erstellt', description: `${fullName} wurde als ${role} angelegt.` });
-    setIsSubmitting(false); reset(); onOpenChange(false); onCreated();
+    setIsSubmitting(false);
+    reset();
+    onOpenChange(false);
+    onCreated();
   };
 
   return (
-    <Dialog open={open} onOpenChange={o => { if (!o) reset(); onOpenChange(o); }}>
+    <Dialog open={open} onOpenChange={(nextOpen) => { if (!nextOpen) reset(); onOpenChange(nextOpen); }}>
       <DialogContent style={{ background: '#111', border: '1px solid #2a2a2a', borderRadius: '16px', maxWidth: '480px' }}>
-        <DialogHeader><DialogTitle>Neuer Coach</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Neuer Coach</DialogTitle>
+        </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5"><Label>Vorname *</Label><Input value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="Vorname" /></div>
-            <div className="space-y-1.5"><Label>Nachname *</Label><Input value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Nachname" /></div>
+            <div className="space-y-1.5">
+              <Label>Vorname *</Label>
+              <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Vorname" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Nachname *</Label>
+              <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Nachname" />
+            </div>
           </div>
-          <div className="space-y-1.5"><Label>Email *</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@example.com" /></div>
+          <div className="space-y-1.5">
+            <Label>Email *</Label>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@example.com" />
+          </div>
           <div className="space-y-1.5">
             <Label>Passwort *</Label>
             <div className="flex gap-1">
               <Input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="Mindestens 8 Zeichen"
               />
-              <Button variant="outline" size="icon" className="shrink-0" onClick={() => setShowPassword(!showPassword)} title={showPassword ? 'Verbergen' : 'Anzeigen'}>
+              <Button
+                variant="outline"
+                size="icon"
+                className="shrink-0"
+                onClick={() => setShowPassword(!showPassword)}
+                title={showPassword ? 'Verbergen' : 'Anzeigen'}
+              >
                 {showPassword ? <EyeOff style={{ width: 14, height: 14 }} /> : <Eye style={{ width: 14, height: 14 }} />}
               </Button>
             </div>
@@ -206,20 +258,36 @@ function CreateCoachModal({ open, onOpenChange, onCreated }: {
           <div className="space-y-1.5">
             <Label>Rolle *</Label>
             <div style={{ display: 'flex', gap: '4px' }}>
-              {(['coach', 'admin'] as const).map(r => (
-                <button key={r} onClick={() => setRole(r)} style={{
-                  flex: 1, background: role === r ? '#ff4425' : '#1a1a1a', color: role === r ? '#fff' : '#666',
-                  border: role === r ? 'none' : '1px solid #2a2a2a', borderRadius: '8px', padding: '8px',
-                  fontWeight: 600, fontSize: '13px', cursor: 'pointer', textTransform: 'capitalize',
-                }}>{r}</button>
+              {(['coach', 'admin'] as const).map((nextRole) => (
+                <button
+                  key={nextRole}
+                  onClick={() => setRole(nextRole)}
+                  style={{
+                    flex: 1,
+                    background: role === nextRole ? '#ff4425' : '#1a1a1a',
+                    color: role === nextRole ? '#fff' : '#666',
+                    border: role === nextRole ? 'none' : '1px solid #2a2a2a',
+                    borderRadius: '8px',
+                    padding: '8px',
+                    fontWeight: 600,
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    textTransform: 'capitalize',
+                  }}
+                >
+                  {nextRole}
+                </button>
               ))}
             </div>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => { reset(); onOpenChange(false); }}>Abbrechen</Button>
+          <Button variant="outline" onClick={() => { reset(); onOpenChange(false); }}>
+            Abbrechen
+          </Button>
           <Button onClick={handleCreate} disabled={isSubmitting} style={{ background: '#ff4425', color: '#fff' }}>
-            {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Coach erstellen
+            {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            Coach erstellen
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -228,61 +296,26 @@ function CreateCoachModal({ open, onOpenChange, onCreated }: {
 }
 
 function CoachTableRow({ row, isSelf, onDelete }: { row: CoachRow; isSelf: boolean; onDelete: () => void }) {
-  const [showEmail, setShowEmail] = useState(false);
-  const [email, setEmail] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const ref = useRef<HTMLTableRowElement>(null);
-
-  useEffect(() => {
-    if (!showEmail) return;
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setShowEmail(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [showEmail]);
-
-  const handleNameClick = async () => {
-    if (showEmail) { setShowEmail(false); return; }
-    setShowEmail(true);
-    if (email !== null) return;
-    if (!row.user_id) { setEmail('—'); return; }
-    setLoading(true);
-    const { data, error } = await supabase.functions.invoke('manage-coach', {
-      body: { action: 'getCoachEmail', user_id: row.user_id },
-    });
-    setLoading(false);
-    setEmail(error || data?.error ? '—' : data.email);
-  };
-
   return (
-    <tr ref={ref} style={{ borderBottom: '1px solid #1a1a1a' }}
-      onMouseEnter={e => (e.currentTarget.style.background = '#111')}
-      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+    <tr
+      style={{ borderBottom: '1px solid #1a1a1a' }}
+      onMouseEnter={(e) => { e.currentTarget.style.background = '#111'; }}
+      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
     >
-      <td style={{ padding: '14px 16px', position: 'relative' }}>
-        <span
-          onClick={handleNameClick}
-          style={{ fontWeight: 500, color: '#fff', cursor: 'pointer', borderBottom: '1px dashed #444' }}
-        >
-          {row.name}
-        </span>
-        {showEmail && (
-          <div style={{
-            position: 'absolute', top: '100%', left: 16, zIndex: 10, marginTop: 2,
-            background: '#1a1a1a', border: '1px solid #333', borderRadius: '8px',
-            padding: '6px 12px', fontSize: '12px', color: '#aaa', whiteSpace: 'nowrap',
-          }}>
-            {loading ? <Loader2 className="animate-spin" style={{ width: 12, height: 12 }} /> : email}
-          </div>
-        )}
+      <td style={{ padding: '14px 16px' }}>
+        <span style={{ fontWeight: 500, color: '#fff' }}>{row.name}</span>
       </td>
       <td style={{ padding: '14px 16px' }}>
-        <span style={{
-          background: row.role === 'admin' ? 'rgba(255,68,37,0.15)' : '#1a1a1a',
-          color: row.role === 'admin' ? '#ff4425' : '#999',
-          borderRadius: '6px', padding: '3px 10px', fontSize: '12px', fontWeight: 700,
-        }}>
+        <span
+          style={{
+            background: row.role === 'admin' ? 'rgba(255,68,37,0.15)' : '#1a1a1a',
+            color: row.role === 'admin' ? '#ff4425' : '#999',
+            borderRadius: '6px',
+            padding: '3px 10px',
+            fontSize: '12px',
+            fontWeight: 700,
+          }}
+        >
           {row.role}
         </span>
       </td>
