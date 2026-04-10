@@ -151,7 +151,7 @@ export function useWorkoutSession() {
     };
 
     restoreSession();
-  }, [ensureSessionCode]);
+  }, []);
 
   // Subscribe to lobby for current session code
   useEffect(() => {
