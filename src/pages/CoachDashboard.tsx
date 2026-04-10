@@ -114,6 +114,7 @@ export default function CoachDashboard() {
       .subscribe();
 
     return () => { supabase.removeChannel(chan); };
+  }, [user]);
 
   // ── subscribe to session_lobby count ──
   useEffect(() => {
