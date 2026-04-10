@@ -36,9 +36,11 @@ export function AdminCoachesTab() {
 
   const fetchCoaches = async () => {
     setIsLoading(true);
-    const { data: roles } = await supabase.from('user_roles').select('user_id, role');
+    const { data: roles, error: rolesError } = await supabase.from('user_roles').select('user_id, role');
+    console.log('[fetchCoaches] roles query result:', { roles, rolesError });
     const coachAdminRoles = (roles || []).filter(r => r.role === 'coach' || r.role === 'admin');
     const userIds = coachAdminRoles.map(r => r.user_id);
+    console.log('[fetchCoaches] coach/admin userIds:', userIds);
 
     if (userIds.length === 0) {
       setCoaches([]);
@@ -46,7 +48,8 @@ export function AdminCoachesTab() {
       return;
     }
 
-    const { data: profiles } = await supabase.from('profiles').select('id, name, user_id').in('user_id', userIds);
+    const { data: profiles, error: profilesError } = await supabase.from('profiles').select('id, name, user_id').in('user_id', userIds);
+    console.log('[fetchCoaches] profiles query result:', { profiles, profilesError });
     const roleMap = new Map(coachAdminRoles.map(r => [r.user_id, r.role]));
 
     const list: CoachRow[] = (profiles || []).map((p) => ({
@@ -56,6 +59,7 @@ export function AdminCoachesTab() {
       role: roleMap.get(p.user_id!) || 'coach',
     }));
 
+    console.log('[fetchCoaches] final coach list:', list);
     list.sort((a, b) => a.name.localeCompare(b.name));
     setCoaches(list);
     setIsLoading(false);
