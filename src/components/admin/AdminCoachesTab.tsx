@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
@@ -111,30 +111,7 @@ export function AdminCoachesTab() {
             </thead>
             <tbody>
               {coaches.map(row => (
-                <tr key={row.id} style={{ borderBottom: '1px solid #1a1a1a' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = '#111')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                >
-                  <td style={{ padding: '14px 16px', fontWeight: 500, color: '#fff' }}>{row.name}</td>
-                  <td style={{ padding: '14px 16px' }}>
-                    <span style={{
-                      background: row.role === 'admin' ? 'rgba(255,68,37,0.15)' : '#1a1a1a',
-                      color: row.role === 'admin' ? '#ff4425' : '#999',
-                      borderRadius: '6px', padding: '3px 10px', fontSize: '12px', fontWeight: 700,
-                    }}>
-                      {row.role}
-                    </span>
-                  </td>
-                  <td style={{ padding: '14px 16px' }}>
-                    {isSelf(row) ? (
-                      <span style={{ fontSize: '12px', color: '#666' }} title="Du kannst dich nicht selbst löschen">–</span>
-                    ) : (
-                      <button onClick={() => setDeleteCoach(row)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ff4425', padding: '4px' }}>
-                        <Trash2 style={{ width: 16, height: 16 }} />
-                      </button>
-                    )}
-                  </td>
-                </tr>
+                <CoachTableRow key={row.id} row={row} isSelf={isSelf(row)} onDelete={() => setDeleteCoach(row)} />
               ))}
             </tbody>
           </table>
@@ -247,5 +224,77 @@ function CreateCoachModal({ open, onOpenChange, onCreated }: {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function CoachTableRow({ row, isSelf, onDelete }: { row: CoachRow; isSelf: boolean; onDelete: () => void }) {
+  const [showEmail, setShowEmail] = useState(false);
+  const [email, setEmail] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const ref = useRef<HTMLTableRowElement>(null);
+
+  useEffect(() => {
+    if (!showEmail) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setShowEmail(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showEmail]);
+
+  const handleNameClick = async () => {
+    if (showEmail) { setShowEmail(false); return; }
+    setShowEmail(true);
+    if (email !== null) return;
+    if (!row.user_id) { setEmail('—'); return; }
+    setLoading(true);
+    const { data, error } = await supabase.functions.invoke('manage-coach', {
+      body: { action: 'getCoachEmail', user_id: row.user_id },
+    });
+    setLoading(false);
+    setEmail(error || data?.error ? '—' : data.email);
+  };
+
+  return (
+    <tr ref={ref} style={{ borderBottom: '1px solid #1a1a1a' }}
+      onMouseEnter={e => (e.currentTarget.style.background = '#111')}
+      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+    >
+      <td style={{ padding: '14px 16px', position: 'relative' }}>
+        <span
+          onClick={handleNameClick}
+          style={{ fontWeight: 500, color: '#fff', cursor: 'pointer', borderBottom: '1px dashed #444' }}
+        >
+          {row.name}
+        </span>
+        {showEmail && (
+          <div style={{
+            position: 'absolute', top: '100%', left: 16, zIndex: 10, marginTop: 2,
+            background: '#1a1a1a', border: '1px solid #333', borderRadius: '8px',
+            padding: '6px 12px', fontSize: '12px', color: '#aaa', whiteSpace: 'nowrap',
+          }}>
+            {loading ? <Loader2 className="animate-spin" style={{ width: 12, height: 12 }} /> : email}
+          </div>
+        )}
+      </td>
+      <td style={{ padding: '14px 16px' }}>
+        <span style={{
+          background: row.role === 'admin' ? 'rgba(255,68,37,0.15)' : '#1a1a1a',
+          color: row.role === 'admin' ? '#ff4425' : '#999',
+          borderRadius: '6px', padding: '3px 10px', fontSize: '12px', fontWeight: 700,
+        }}>
+          {row.role}
+        </span>
+      </td>
+      <td style={{ padding: '14px 16px' }}>
+        {isSelf ? (
+          <span style={{ fontSize: '12px', color: '#666' }} title="Du kannst dich nicht selbst löschen">–</span>
+        ) : (
+          <button onClick={onDelete} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ff4425', padding: '4px' }}>
+            <Trash2 style={{ width: 16, height: 16 }} />
+          </button>
+        )}
+      </td>
+    </tr>
   );
 }
