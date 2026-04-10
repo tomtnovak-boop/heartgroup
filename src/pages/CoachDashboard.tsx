@@ -83,6 +83,38 @@ export default function CoachDashboard() {
       });
   }, [user]);
 
+  // ── realtime sync of active_sessions (FIX 3) ──
+  useEffect(() => {
+    if (!user) return;
+
+    const chan = supabase.channel('cd-session-sync')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'active_sessions',
+        filter: `created_by=eq.${user.id}`,
+      }, (payload: any) => {
+        const row = payload.new;
+        if (!row) return;
+        if (!row.ended_at) {
+          // New or updated active session
+          console.log('[CoachDashboard] realtime session update:', row.session_code);
+          setSession(row as SessionRow);
+          const diff = new Date(row.started_at).getTime() - new Date(row.created_at).getTime();
+          setIsRunning(diff > 2000);
+        } else {
+          // Session ended
+          console.log('[CoachDashboard] realtime session ended');
+          setSession(null);
+          setIsRunning(false);
+          setRemainSec(-1);
+          setParticipants([]);
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(chan); };
+
   // ── subscribe to session_lobby count ──
   useEffect(() => {
     if (!session) { setLobbyCount(0); setLobbyProfileIds([]); return; }
