@@ -249,26 +249,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (action === "getCoachEmail") {
-      const { user_id: targetUserId } = payload;
-      if (!targetUserId) {
-        return new Response(JSON.stringify({ error: "user_id required" }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const { data: userData, error: fetchErr } = await adminClient.auth.admin.getUserById(targetUserId);
-      if (fetchErr || !userData?.user) {
-        return new Response(JSON.stringify({ error: fetchErr?.message || "User not found" }), {
-          status: 404,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      return new Response(JSON.stringify({ email: userData.user.email }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     return new Response(JSON.stringify({ error: "Unknown action" }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
