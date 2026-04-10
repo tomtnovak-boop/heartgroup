@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX profiles_user_id_unique ON public.profiles (user_id) WHERE user_id IS NOT NULL;
