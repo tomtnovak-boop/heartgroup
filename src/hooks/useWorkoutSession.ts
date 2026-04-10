@@ -65,17 +65,18 @@ export function useWorkoutSession() {
       return;
     }
 
-    // Check if there's already an active session
+    // Check if there's already an active session for THIS coach
     const { data: existing } = await supabase
       .from('active_sessions')
       .select('session_code')
-      .is('ended_at', null)
       .eq('created_by', userData.user.id)
-      .order('started_at', { ascending: false })
+      .is('ended_at', null)
+      .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
 
     if (existing) {
+      console.log('[ensureSessionCode] found existing code:', existing.session_code);
       setSessionCode(existing.session_code);
       return existing.session_code;
     }
@@ -89,28 +90,33 @@ export function useWorkoutSession() {
       console.error('ensureSessionCode: Insert failed', error);
       return;
     }
+    console.log('[ensureSessionCode] created new code:', code);
     setSessionCode(code);
     return code;
   }, []);
 
-  // Restore session on mount — or auto-create a code if none exists
+  // Restore session on mount — read existing session by created_by, never auto-create
   useEffect(() => {
     const restoreSession = async () => {
       try {
-        // Check for active session code
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData.user) return;
+
+        // Only read sessions created by this coach
         const { data: activeSession } = await supabase
           .from('active_sessions')
           .select('session_code')
+          .eq('created_by', userData.user.id)
           .is('ended_at', null)
-          .order('started_at', { ascending: false })
+          .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
 
         if (activeSession) {
+          console.log('[useWorkoutSession] restored session code:', activeSession.session_code);
           setSessionCode(activeSession.session_code);
         } else {
-          // No active session — auto-create one
-          await ensureSessionCode();
+          console.log('[useWorkoutSession] no active session found for user, not auto-creating');
         }
 
         const { data: openWorkouts, error } = await supabase
@@ -145,7 +151,7 @@ export function useWorkoutSession() {
     };
 
     restoreSession();
-  }, [ensureSessionCode]);
+  }, []);
 
   // Subscribe to lobby for current session code
   useEffect(() => {
