@@ -21,6 +21,7 @@ interface CoachRow {
   name: string;
   user_id: string | null;
   role: string;
+  email?: string;
 }
 
 export function AdminCoachesTab() {
