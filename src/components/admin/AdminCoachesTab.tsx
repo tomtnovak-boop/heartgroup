@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import {
-  Plus, Trash2, Loader2, Copy, Shield, RefreshCw,
+  Plus, Trash2, Loader2, Shield, Eye, EyeOff,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,13 +21,6 @@ interface CoachRow {
   name: string;
   user_id: string | null;
   role: string;
-}
-
-function generatePassword(): string {
-  const chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let pw = '';
-  for (let i = 0; i < 10; i++) pw += chars[Math.floor(Math.random() * chars.length)];
-  return pw + '!1';
 }
 
 export function AdminCoachesTab() {
@@ -175,44 +168,39 @@ function CreateCoachModal({ open, onOpenChange, onCreated }: {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
-  const [pw, setPw] = useState(generatePassword());
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<'coach' | 'admin'>('coach');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [pwCopied, setPwCopied] = useState(false);
-
-  useEffect(() => { if (open) setPw(generatePassword()); }, [open]);
 
   const reset = () => {
-    setFirstName(''); setLastName(''); setEmail(''); setRole('coach');
-    setIsSubmitting(false); setPwCopied(false);
+    setFirstName(''); setLastName(''); setEmail(''); setPassword(''); setRole('coach');
+    setIsSubmitting(false); setShowPassword(false);
   };
 
   const handleCreate = async () => {
     if (!firstName.trim() || !lastName.trim() || !email.trim()) {
       toast({ title: 'Pflichtfelder ausfüllen', variant: 'destructive' }); return;
     }
+    if (password.length < 8) {
+      toast({ title: 'Passwort muss mindestens 8 Zeichen haben', variant: 'destructive' }); return;
+    }
     setIsSubmitting(true);
 
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email: email.trim(), password: pw,
-      options: { emailRedirectTo: window.location.origin },
-    });
-    if (signUpError || !signUpData.user) {
-      toast({ title: 'Fehler', description: signUpError?.message || 'User konnte nicht erstellt werden', variant: 'destructive' });
-      setIsSubmitting(false); return;
-    }
-
-    const userId = signUpData.user.id;
     const fullName = `${firstName.trim()} ${lastName.trim()}`;
 
-    await supabase.from('profiles').upsert({ user_id: userId, name: fullName });
-    await supabase.from('user_roles').insert({ user_id: userId, role });
+    const { data, error } = await supabase.functions.invoke('manage-coach', {
+      body: { action: 'create', email: email.trim(), password, name: fullName, role },
+    });
+
+    if (error || data?.error) {
+      toast({ title: 'Fehler', description: data?.error || error?.message || 'Coach konnte nicht erstellt werden', variant: 'destructive' });
+      setIsSubmitting(false); return;
+    }
 
     toast({ title: 'Coach erstellt', description: `${fullName} wurde als ${role} angelegt.` });
     setIsSubmitting(false); reset(); onOpenChange(false); onCreated();
   };
-
-  const copyPw = () => { navigator.clipboard.writeText(pw); setPwCopied(true); setTimeout(() => setPwCopied(false), 2000); };
 
   return (
     <Dialog open={open} onOpenChange={o => { if (!o) reset(); onOpenChange(o); }}>
@@ -223,20 +211,19 @@ function CreateCoachModal({ open, onOpenChange, onCreated }: {
             <div className="space-y-1.5"><Label>Vorname *</Label><Input value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="Vorname" /></div>
             <div className="space-y-1.5"><Label>Nachname *</Label><Input value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Nachname" /></div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5"><Label>Email *</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@example.com" /></div>
-            <div className="space-y-1.5">
-              <Label>Passwort *</Label>
-              <div className="flex gap-1">
-                <Input value={pw} readOnly className="font-mono text-xs" />
-                <Button variant="outline" size="icon" className="shrink-0" onClick={() => setPw(generatePassword())} title="Neues Passwort">
-                  <RefreshCw style={{ width: 14, height: 14 }} />
-                </Button>
-                <Button variant="outline" size="icon" className="shrink-0" onClick={copyPw} title="Kopieren">
-                  <Copy style={{ width: 14, height: 14 }} />
-                </Button>
-              </div>
-              {pwCopied && <p className="text-xs" style={{ color: '#22C55E' }}>Kopiert!</p>}
+          <div className="space-y-1.5"><Label>Email *</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@example.com" /></div>
+          <div className="space-y-1.5">
+            <Label>Passwort *</Label>
+            <div className="flex gap-1">
+              <Input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Mindestens 8 Zeichen"
+              />
+              <Button variant="outline" size="icon" className="shrink-0" onClick={() => setShowPassword(!showPassword)} title={showPassword ? 'Verbergen' : 'Anzeigen'}>
+                {showPassword ? <EyeOff style={{ width: 14, height: 14 }} /> : <Eye style={{ width: 14, height: 14 }} />}
+              </Button>
             </div>
           </div>
           <div className="space-y-1.5">

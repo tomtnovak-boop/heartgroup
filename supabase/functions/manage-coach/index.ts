@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
     const { action, ...payload } = await req.json();
 
     if (action === "create") {
-      const { email, password } = payload;
+      const { email, password, name, role: requestedRole } = payload;
       if (!email || !password) {
         return new Response(JSON.stringify({ error: "email and password required" }), {
           status: 400,
@@ -90,15 +90,32 @@ Deno.serve(async (req) => {
         });
       }
 
+      const coachRole = requestedRole === "admin" ? "admin" : "coach";
+
+      // Delete the auto-assigned 'participant' role from the trigger
+      await adminClient
+        .from("user_roles")
+        .delete()
+        .eq("user_id", newUser.user.id)
+        .eq("role", "participant");
+
       const { error: roleError } = await adminClient
         .from("user_roles")
-        .insert({ user_id: newUser.user.id, role: "coach" });
+        .insert({ user_id: newUser.user.id, role: coachRole });
 
       if (roleError) {
         return new Response(JSON.stringify({ error: roleError.message }), {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
+      }
+
+      // Create profile so coach appears in lists immediately
+      if (name) {
+        await adminClient.from("profiles").upsert({
+          user_id: newUser.user.id,
+          name,
+        }, { onConflict: "user_id" });
       }
 
       return new Response(JSON.stringify({ success: true, email }), {
