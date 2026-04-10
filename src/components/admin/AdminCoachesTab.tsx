@@ -111,8 +111,8 @@ export function AdminCoachesTab() {
             </thead>
             <tbody>
               {coaches.map(row => (
-                <CoachRow key={row.id} row={row} isSelf={isSelf(row)} onDelete={() => setDeleteCoach(row)} />
-            </tbody>
+                <CoachTableRow key={row.id} row={row} isSelf={isSelf(row)} onDelete={() => setDeleteCoach(row)} />
+              ))}
             </tbody>
           </table>
         </div>
