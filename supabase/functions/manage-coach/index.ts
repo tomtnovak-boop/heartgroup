@@ -69,58 +69,72 @@ Deno.serve(async (req) => {
     const { action, ...payload } = await req.json();
 
     if (action === "create") {
-      const { email, password, name, role: requestedRole } = payload;
-      if (!email || !password) {
-        return new Response(JSON.stringify({ error: "email and password required" }), {
-          status: 400,
+      try {
+        const { email, password, name, role: requestedRole } = payload;
+        if (!email || !password) {
+          return new Response(JSON.stringify({ error: "email and password required" }), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        console.log('[create] step 1: creating auth user', { email });
+        const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
+          email,
+          password,
+          email_confirm: true,
+        });
+
+        if (createError) {
+          console.error('[create] step 1 failed:', createError.message);
+          return new Response(JSON.stringify({ error: createError.message }), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        const coachRole = requestedRole === "admin" ? "admin" : "coach";
+
+        console.log('[create] step 2: deleting default participant role', { user_id: newUser.user.id });
+        await adminClient
+          .from("user_roles")
+          .delete()
+          .eq("user_id", newUser.user.id)
+          .eq("role", "participant");
+
+        console.log('[create] step 3: inserting role', { user_id: newUser.user.id, role: coachRole });
+        const { error: roleError } = await adminClient
+          .from("user_roles")
+          .insert({ user_id: newUser.user.id, role: coachRole });
+
+        if (roleError) {
+          console.error('[create] step 3 failed:', roleError.message);
+          return new Response(JSON.stringify({ error: roleError.message }), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        if (name) {
+          console.log('[create] step 4: creating profile', { user_id: newUser.user.id, name });
+          await adminClient.from("profiles").upsert({
+            user_id: newUser.user.id,
+            name,
+          }, { onConflict: "user_id" });
+        }
+
+        console.log('[create] success', { email, role: coachRole });
+        return new Response(JSON.stringify({ success: true, email }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error('[create] unexpected error:', msg);
+        return new Response(JSON.stringify({ error: msg }), {
+          status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-
-      const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-      });
-
-      if (createError) {
-        return new Response(JSON.stringify({ error: createError.message }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      const coachRole = requestedRole === "admin" ? "admin" : "coach";
-
-      // Delete the auto-assigned 'participant' role from the trigger
-      await adminClient
-        .from("user_roles")
-        .delete()
-        .eq("user_id", newUser.user.id)
-        .eq("role", "participant");
-
-      const { error: roleError } = await adminClient
-        .from("user_roles")
-        .insert({ user_id: newUser.user.id, role: coachRole });
-
-      if (roleError) {
-        return new Response(JSON.stringify({ error: roleError.message }), {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      // Create profile so coach appears in lists immediately
-      if (name) {
-        await adminClient.from("profiles").upsert({
-          user_id: newUser.user.id,
-          name,
-        }, { onConflict: "user_id" });
-      }
-
-      return new Response(JSON.stringify({ success: true, email }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
     }
 
     if (action === "delete") {
