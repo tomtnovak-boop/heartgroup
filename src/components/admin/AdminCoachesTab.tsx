@@ -318,6 +318,9 @@ function CoachTableRow({ row, isSelf, onDelete }: { row: CoachRow; isSelf: boole
     >
       <td style={{ padding: '14px 16px' }}>
         <span style={{ fontWeight: 500, color: '#fff' }}>{row.name}</span>
+        {row.email && (
+          <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>{row.email}</div>
+        )}
       </td>
       <td style={{ padding: '14px 16px' }}>
         <span
