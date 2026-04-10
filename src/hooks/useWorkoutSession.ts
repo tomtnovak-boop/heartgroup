@@ -93,24 +93,28 @@ export function useWorkoutSession() {
     return code;
   }, []);
 
-  // Restore session on mount — or auto-create a code if none exists
+  // Restore session on mount — read existing session by created_by, never auto-create
   useEffect(() => {
     const restoreSession = async () => {
       try {
-        // Check for active session code
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData.user) return;
+
+        // Only read sessions created by this coach
         const { data: activeSession } = await supabase
           .from('active_sessions')
           .select('session_code')
+          .eq('created_by', userData.user.id)
           .is('ended_at', null)
-          .order('started_at', { ascending: false })
+          .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
 
         if (activeSession) {
+          console.log('[useWorkoutSession] restored session code:', activeSession.session_code);
           setSessionCode(activeSession.session_code);
         } else {
-          // No active session — auto-create one
-          await ensureSessionCode();
+          console.log('[useWorkoutSession] no active session found for user, not auto-creating');
         }
 
         const { data: openWorkouts, error } = await supabase
