@@ -150,6 +150,36 @@ export function useWorkoutSession() {
     restoreSession();
   }, []);
 
+  // Realtime sync: update session code when any device creates/ends a session
+  useEffect(() => {
+    const channel = supabase
+      .channel('session-code-sync')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'active_sessions' },
+        async () => {
+          const { data } = await supabase
+            .from('active_sessions')
+            .select('session_code')
+            .is('ended_at', null)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (data?.session_code) {
+            setSessionCode(data.session_code);
+          } else {
+            setSessionCode(null);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, []);
+
   // Subscribe to lobby for current session code
   useEffect(() => {
     if (!sessionCode) {
