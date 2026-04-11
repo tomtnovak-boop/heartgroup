@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, LogOut, BarChart3, LayoutGrid, Users, Shield, TrendingUp, Radio } from 'lucide-react';
+import { Heart, LogOut, BarChart3, LayoutGrid, Users, Shield, TrendingUp, Radio, Layers, Bell } from 'lucide-react';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -27,6 +27,8 @@ export default function CoachHub() {
     { key: 'cdash', icon: Radio, title: 'Coach Dashboard', sub: 'Session · Control', route: '/coach-dashboard' },
     { key: 'fancy', icon: LayoutGrid, title: 'Dashboard Fancy', sub: 'Live HR · Zonen', route: '/coach/fancy' },
     { key: 'neutral', icon: BarChart3, title: 'Dashboard Neutral', sub: 'Live HR · Zonen', route: '/coach/neutral' },
+    { key: 'zone-focus', icon: Layers, title: 'Zone Focus', sub: 'Live HR · Sortiert', route: '/coach/zone-focus' },
+    { key: 'coach-alert', icon: Bell, title: 'Coach Alert', sub: 'Alerts · Zonen', route: '/coach/coach-alert' },
     { key: 'training', icon: Heart, title: 'Mein Training', sub: 'Übersicht · Stats', route: '/participant' },
     { key: 'stats', icon: TrendingUp, title: 'Statistiken', sub: 'Sessions · Zonen', route: '/admin/stats' },
     ...(isAdmin ? [
@@ -76,7 +78,7 @@ export default function CoachHub() {
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '16px',
+            gap: '12px',
           }}>
             {cards.map(card => (
               <button
@@ -84,17 +86,17 @@ export default function CoachHub() {
                 onClick={() => navigate(card.route)}
                 style={{
                   background: '#111', border: '1px solid #1f1f1f', borderRadius: '16px',
-                  padding: '32px', cursor: 'pointer', textAlign: 'left',
+                  padding: '16px 18px', cursor: 'pointer', textAlign: 'left',
                   transition: 'border-color 0.15s, transform 0.15s',
-                  color: '#fff', display: 'flex', flexDirection: 'column', gap: '12px',
+                  color: '#fff', display: 'flex', flexDirection: 'column', gap: '8px',
                 }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = '#ff4425'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = '#1f1f1f'; e.currentTarget.style.transform = 'translateY(0)'; }}
               >
-                <card.icon style={{ width: 32, height: 32, color: '#ff4425' }} />
+                <card.icon style={{ width: 24, height: 24, color: '#ff4425' }} />
                 <div>
-                  <div style={{ fontSize: '18px', fontWeight: 700 }}>{card.title}</div>
-                  <div style={{ fontSize: '13px', color: '#666', marginTop: '4px' }}>{card.sub}</div>
+                  <div style={{ fontSize: '16px', fontWeight: 700 }}>{card.title}</div>
+                  <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>{card.sub}</div>
                 </div>
               </button>
             ))}
