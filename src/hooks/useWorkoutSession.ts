@@ -31,6 +31,7 @@ export function useWorkoutSession() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startedAtRef = useRef<Date | null>(null);
   const sessionCodeRef = useRef<string | null>(null);
+  const isCreatingCodeRef = useRef(false);
 
   // Sync refs with state
   useEffect(() => {
@@ -61,40 +62,47 @@ export function useWorkoutSession() {
 
   // Helper: create a new active_sessions record and set sessionCode
   const ensureSessionCode = useCallback(async () => {
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) {
-      console.error('ensureSessionCode: No authenticated user');
-      return;
-    }
+    if (isCreatingCodeRef.current) return;
+    isCreatingCodeRef.current = true;
 
-    // Check for ANY active session globally (no created_by filter)
-    const { data: existing } = await supabase
-      .from('active_sessions')
-      .select('session_code')
-      .is('ended_at', null)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        console.error('ensureSessionCode: No authenticated user');
+        return;
+      }
 
-    if (existing?.session_code) {
-      console.log('[ensureSessionCode] reusing existing code:', existing.session_code);
-      setSessionCode(existing.session_code);
-      return existing.session_code;
-    }
+      // Check for ANY active session globally (no created_by filter)
+      const { data: existing } = await supabase
+        .from('active_sessions')
+        .select('session_code')
+        .is('ended_at', null)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-    // Only create new code if truly none exists
-    const code = generateSessionCode();
-    const { error } = await supabase.from('active_sessions').insert({
-      session_code: code,
-      created_by: userData.user.id,
-    });
-    if (error) {
-      console.error('ensureSessionCode: Insert failed', error);
-      return;
+      if (existing?.session_code) {
+        console.log('[ensureSessionCode] reusing existing code:', existing.session_code);
+        setSessionCode(existing.session_code);
+        return existing.session_code;
+      }
+
+      // Only create new code if truly none exists
+      const code = generateSessionCode();
+      const { error } = await supabase.from('active_sessions').insert({
+        session_code: code,
+        created_by: userData.user.id,
+      });
+      if (error) {
+        console.error('ensureSessionCode: Insert failed', error);
+        return;
+      }
+      console.log('[ensureSessionCode] created new code:', code);
+      setSessionCode(code);
+      return code;
+    } finally {
+      isCreatingCodeRef.current = false;
     }
-    console.log('[ensureSessionCode] created new code:', code);
-    setSessionCode(code);
-    return code;
   }, []);
 
   // Restore session on mount — read existing session by created_by, never auto-create
@@ -159,29 +167,43 @@ export function useWorkoutSession() {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'active_sessions' },
-        async () => {
-           const { data } = await supabase
-            .from('active_sessions')
-            .select('session_code, auto_end_at')
-            .is('ended_at', null)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-
-          if (data?.session_code) {
-            setSessionCode(data.session_code);
-            setAutoEndAt((data as any).auto_end_at ? new Date((data as any).auto_end_at) : null);
-          } else {
+        async (payload) => {
+          const row = payload.new as any;
+          if (row?.ended_at) {
             setSessionCode(null);
             setAutoEndAt(null);
+            return;
+          }
+          if (row?.session_code) {
+            setSessionCode(row.session_code);
+            setAutoEndAt(row.auto_end_at ? new Date(row.auto_end_at) : null);
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+          console.log('[useWorkoutSession] Realtime disconnected — refetching session');
+          const refetch = async () => {
+            const { data } = await supabase
+              .from('active_sessions')
+              .select('session_code, auto_end_at')
+              .is('ended_at', null)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            if (data?.session_code) {
+              setSessionCode(data.session_code);
+              setAutoEndAt((data as any).auto_end_at ? new Date((data as any).auto_end_at) : null);
+            } else {
+              setSessionCode(null);
+              setAutoEndAt(null);
+            }
+          };
+          void refetch();
+        }
+      });
 
-    return () => {
-      void supabase.removeChannel(channel);
-    };
+    return () => { void supabase.removeChannel(channel); };
   }, []);
 
   // Subscribe to lobby for current session code
