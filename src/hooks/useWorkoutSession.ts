@@ -22,6 +22,7 @@ export function useWorkoutSession() {
     activeWorkouts: new Map(),
   });
   const [sessionCode, setSessionCode] = useState<string | null>(null);
+  const [autoEndAt, setAutoEndAt] = useState<Date | null>(null);
   const [lobbyCount, setLobbyCount] = useState(0);
   const [lobbyProfileIds, setLobbyProfileIds] = useState<string[]>([]);
 
@@ -217,7 +218,7 @@ export function useWorkoutSession() {
   // createSessionCode is no longer needed — codes are auto-managed
   const createSessionCode = ensureSessionCode;
 
-  const startSession = useCallback(async (participants: LiveHRData[]) => {
+  const startSession = useCallback(async (participants: LiveHRData[], durMin?: number) => {
     const code = sessionCodeRef.current;
     console.log('startSession called, code:', code, 'participants passed:', participants.length);
     if (!code) {
@@ -236,12 +237,24 @@ export function useWorkoutSession() {
         .update({ started_at: new Date().toISOString() })
         .eq('session_code', code)
         .is('ended_at', null)
-        .select();
+      .select();
       console.log('session start update result:', { error: sessionStartError, data: sessionUpdateData, count });
 
       if (sessionStartError) {
         console.error('startSession: Failed to update active_sessions', sessionStartError);
         throw sessionStartError;
+      }
+
+      // Write auto_end_at if timer duration is set
+      if (durMin && durMin > 0) {
+        const autoEnd = new Date(Date.now() + durMin * 60 * 1000);
+        await supabase
+          .from('active_sessions')
+          .update({ auto_end_at: autoEnd.toISOString() } as any)
+          .eq('session_code', code)
+          .is('ended_at', null);
+        setAutoEndAt(autoEnd);
+        console.log('[startSession] auto_end_at set to', autoEnd.toISOString());
       }
 
       // Insert session code into session_lobby so companion app can find it
