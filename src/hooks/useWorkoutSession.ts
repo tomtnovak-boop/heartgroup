@@ -99,8 +99,6 @@ export function useWorkoutSession() {
   useEffect(() => {
     const restoreSession = async () => {
       try {
-        const { data: userData } = await supabase.auth.getUser();
-        if (!userData.user) return;
 
         // Only read sessions created by this coach
         const { data: activeSession } = await supabase
