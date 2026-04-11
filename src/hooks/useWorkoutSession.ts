@@ -69,7 +69,6 @@ export function useWorkoutSession() {
     const { data: existing } = await supabase
       .from('active_sessions')
       .select('session_code')
-      .eq('created_by', userData.user.id)
       .is('ended_at', null)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -109,7 +108,6 @@ export function useWorkoutSession() {
         const { data: activeSession } = await supabase
           .from('active_sessions')
           .select('session_code')
-          .eq('created_by', userData.user.id)
           .is('ended_at', null)
           .order('created_at', { ascending: false })
           .limit(1)
