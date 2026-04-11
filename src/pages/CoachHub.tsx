@@ -70,7 +70,7 @@ export default function CoachHub() {
 
       {/* Content */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 20px' }}>
-        <div style={{ width: '100%', maxWidth: '640px' }}>
+        <div style={{ width: '100%', maxWidth: '720px' }}>
           <div style={{ marginBottom: '32px', textAlign: 'center' }}>
             <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0 }}>
               Willkommen{firstName ? `, ${firstName}` : ''}.
@@ -78,28 +78,79 @@ export default function CoachHub() {
             <p style={{ color: '#666', fontSize: '15px', marginTop: '6px' }}>Wähle eine Ansicht.</p>
           </div>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '12px',
-          }}>
-            {cards.map(card => (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+            {/* Section: Daten & Verwaltung */}
+            <div style={{ gridColumn: 'span 4', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', marginBottom: '2px' }}>
+              Daten &amp; Verwaltung
+            </div>
+            {cards.filter(c => ['training', 'stats', 'teilnehmer', 'coaches'].includes(c.key)).map(card => (
               <button
                 key={card.key}
                 onClick={() => navigate(card.route)}
                 style={{
-                  background: '#111', border: '1px solid #1f1f1f', borderRadius: '16px',
-                  padding: '16px 18px', cursor: 'pointer', textAlign: 'left',
+                  background: '#111', border: '1px solid #1f1f1f', borderRadius: '12px',
+                  padding: '12px', cursor: 'pointer', textAlign: 'left',
                   transition: 'border-color 0.15s, transform 0.15s',
-                  color: '#fff', display: 'flex', flexDirection: 'column', gap: '8px',
+                  color: '#fff', display: 'flex', flexDirection: 'column', gap: '6px', width: '100%',
                 }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = '#ff4425'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = '#1f1f1f'; e.currentTarget.style.transform = 'translateY(0)'; }}
               >
-                <card.icon style={{ width: 24, height: 24, color: '#ff4425' }} />
+                <card.icon style={{ width: 20, height: 20, color: '#ff4425' }} />
                 <div>
-                  <div style={{ fontSize: '16px', fontWeight: 700 }}>{card.title}</div>
-                  <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>{card.sub}</div>
+                  <div style={{ fontSize: '14px', fontWeight: 700 }}>{card.title}</div>
+                  <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>{card.sub}</div>
+                </div>
+              </button>
+            ))}
+
+            {/* Section: Live Ansichten */}
+            <div style={{ gridColumn: 'span 4', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', marginTop: '8px', marginBottom: '2px' }}>
+              Live Ansichten
+            </div>
+            {cards.filter(c => ['fancy', 'neutral', 'zone-focus', 'coach-alert'].includes(c.key)).map(card => (
+              <button
+                key={card.key}
+                onClick={() => navigate(card.route)}
+                style={{
+                  background: '#111', border: '1px solid #1f1f1f', borderRadius: '12px',
+                  padding: '12px', cursor: 'pointer', textAlign: 'left',
+                  transition: 'border-color 0.15s, transform 0.15s',
+                  color: '#fff', display: 'flex', flexDirection: 'column', gap: '6px', width: '100%',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = '#ff4425'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = '#1f1f1f'; e.currentTarget.style.transform = 'translateY(0)'; }}
+              >
+                <card.icon style={{ width: 20, height: 20, color: '#ff4425' }} />
+                <div>
+                  <div style={{ fontSize: '14px', fontWeight: 700 }}>{card.title}</div>
+                  <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>{card.sub}</div>
+                </div>
+              </button>
+            ))}
+
+            {/* Section: Session */}
+            <div style={{ gridColumn: 'span 4', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', marginTop: '8px', marginBottom: '2px' }}>
+              Session
+            </div>
+            {cards.filter(c => c.key === 'cdash').map(card => (
+              <button
+                key={card.key}
+                onClick={() => navigate(card.route)}
+                style={{
+                  gridColumn: 'span 4',
+                  background: '#111', border: '1px solid #1f1f1f', borderRadius: '12px',
+                  padding: '16px', cursor: 'pointer', textAlign: 'left',
+                  transition: 'border-color 0.15s, transform 0.15s',
+                  color: '#fff', display: 'flex', flexDirection: 'column', gap: '6px', width: '100%',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = '#ff4425'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = '#1f1f1f'; e.currentTarget.style.transform = 'translateY(0)'; }}
+              >
+                <card.icon style={{ width: 20, height: 20, color: '#ff4425' }} />
+                <div>
+                  <div style={{ fontSize: '14px', fontWeight: 700 }}>{card.title}</div>
+                  <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>{card.sub}</div>
                 </div>
               </button>
             ))}
