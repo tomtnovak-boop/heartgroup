@@ -12,12 +12,9 @@ import {
 } from '@/lib/heartRateUtils';
 
 const ZONE_COLORS = ['', '#9CA3AF', '#00BFFF', '#22C55E', '#F59E0B', '#EF4444'];
-const AMBIG_FREE = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 
-function genCode() {
-  let c = '';
-  for (let i = 0; i < 4; i++) c += AMBIG_FREE[Math.floor(Math.random() * AMBIG_FREE.length)];
-  return c;
+function genCode(): string {
+  return String(Math.floor(1000 + Math.random() * 9000));
 }
 
 interface SessionRow {
