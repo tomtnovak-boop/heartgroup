@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+
 import { supabase } from '@/integrations/supabase/client';
 import { LiveHRData } from '@/hooks/useLiveHR';
 
@@ -21,6 +22,7 @@ export function useWorkoutSession() {
     activeWorkouts: new Map(),
   });
   const [sessionCode, setSessionCode] = useState<string | null>(null);
+  const [autoEndAt, setAutoEndAt] = useState<Date | null>(null);
   const [lobbyCount, setLobbyCount] = useState(0);
   const [lobbyProfileIds, setLobbyProfileIds] = useState<string[]>([]);
 
@@ -158,9 +160,9 @@ export function useWorkoutSession() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'active_sessions' },
         async () => {
-          const { data } = await supabase
+           const { data } = await supabase
             .from('active_sessions')
-            .select('session_code')
+            .select('session_code, auto_end_at')
             .is('ended_at', null)
             .order('created_at', { ascending: false })
             .limit(1)
@@ -168,8 +170,10 @@ export function useWorkoutSession() {
 
           if (data?.session_code) {
             setSessionCode(data.session_code);
+            setAutoEndAt((data as any).auto_end_at ? new Date((data as any).auto_end_at) : null);
           } else {
             setSessionCode(null);
+            setAutoEndAt(null);
           }
         }
       )
@@ -216,7 +220,7 @@ export function useWorkoutSession() {
   // createSessionCode is no longer needed — codes are auto-managed
   const createSessionCode = ensureSessionCode;
 
-  const startSession = useCallback(async (participants: LiveHRData[]) => {
+  const startSession = useCallback(async (participants: LiveHRData[], durMin?: number) => {
     const code = sessionCodeRef.current;
     console.log('startSession called, code:', code, 'participants passed:', participants.length);
     if (!code) {
@@ -235,12 +239,24 @@ export function useWorkoutSession() {
         .update({ started_at: new Date().toISOString() })
         .eq('session_code', code)
         .is('ended_at', null)
-        .select();
+      .select();
       console.log('session start update result:', { error: sessionStartError, data: sessionUpdateData, count });
 
       if (sessionStartError) {
         console.error('startSession: Failed to update active_sessions', sessionStartError);
         throw sessionStartError;
+      }
+
+      // Write auto_end_at if timer duration is set
+      if (durMin && durMin > 0) {
+        const autoEnd = new Date(Date.now() + durMin * 60 * 1000);
+        await supabase
+          .from('active_sessions')
+          .update({ auto_end_at: autoEnd.toISOString() } as any)
+          .eq('session_code', code)
+          .is('ended_at', null);
+        setAutoEndAt(autoEnd);
+        console.log('[startSession] auto_end_at set to', autoEnd.toISOString());
       }
 
       // Insert session code into session_lobby so companion app can find it
@@ -474,6 +490,44 @@ export function useWorkoutSession() {
     }
   }, []);
 
+  // Auto-stop watcher: check auto_end_at and stop session when time is up
+  useEffect(() => {
+    if (!session.isActive || !sessionCode) return;
+
+    let timeout: ReturnType<typeof setTimeout> | null = null;
+
+    const checkAutoStop = async () => {
+      const { data } = await supabase
+        .from('active_sessions')
+        .select('auto_end_at')
+        .eq('session_code', sessionCode)
+        .is('ended_at', null)
+        .maybeSingle();
+
+      const autoEnd = (data as any)?.auto_end_at;
+      if (autoEnd) {
+        const endTime = new Date(autoEnd).getTime();
+        const now = Date.now();
+        if (now >= endTime) {
+          console.log('[useWorkoutSession] auto_end_at reached, stopping session');
+          void stopSession();
+        } else {
+          const delay = endTime - now;
+          console.log('[useWorkoutSession] auto-stop scheduled in', Math.round(delay / 1000), 'seconds');
+          timeout = setTimeout(() => {
+            void stopSession();
+          }, delay);
+        }
+      }
+    };
+
+    void checkAutoStop();
+
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [session.isActive, sessionCode, stopSession]);
+
   return {
     isActive: session.isActive,
     startedAt: session.startedAt,
@@ -481,6 +535,7 @@ export function useWorkoutSession() {
     activeWorkoutCount: session.activeWorkouts.size,
     activeWorkoutProfileIds: Array.from(session.activeWorkouts.keys()),
     sessionCode,
+    autoEndAt,
     lobbyCount,
     lobbyProfileIds,
     createSessionCode,

@@ -1,0 +1,1 @@
+ALTER TABLE active_sessions ADD COLUMN IF NOT EXISTS auto_end_at TIMESTAMPTZ;
