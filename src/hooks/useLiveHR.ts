@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { getEffectiveMaxHR, calculateZone, calculateHRPercentage } from '@/lib/heartRateUtils';
@@ -23,15 +23,21 @@ export interface LiveHRData {
 export function useLiveHR(onNewData?: (data: { profile_id: string; bpm: number; zone: number; hr_percentage: number; timestamp: string }) => void) {
   const [participants, setParticipants] = useState<Map<string, LiveHRData>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
+  const profileCacheRef = useRef<Map<string, any>>(new Map());
+
+  const loadProfiles = useCallback(async () => {
+    const { data } = await supabase.from('profiles').select('*');
+    if (data) {
+      data.forEach(p => profileCacheRef.current.set(p.id, p));
+    }
+  }, []);
 
   const fetchLatestData = useCallback(async () => {
     try {
-      // Get profiles with their latest heart rate data
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*');
-
-      if (profilesError) throw profilesError;
+      // Ensure profile cache is populated
+      if (profileCacheRef.current.size === 0) {
+        await loadProfiles();
+      }
 
       // Get latest HR data for each profile
       const { data: liveData, error: liveError } = await supabase
@@ -44,7 +50,7 @@ export function useLiveHR(onNewData?: (data: { profile_id: string; bpm: number; 
       // Create map with latest data per profile
       const latestByProfile = new Map<string, LiveHRData>();
       
-      if (liveData && profiles) {
+      if (liveData) {
         // Get latest entry per profile
         const latestEntries = new Map<string, typeof liveData[0]>();
         liveData.forEach(entry => {
@@ -59,7 +65,7 @@ export function useLiveHR(onNewData?: (data: { profile_id: string; bpm: number; 
         
         latestEntries.forEach((entry, profileId) => {
           if (new Date(entry.timestamp) > thirtySecondsAgo) {
-            const profile = profiles.find(p => p.id === profileId);
+            const profile = profileCacheRef.current.get(profileId);
             if (profile) {
               const effectiveMaxHR = getEffectiveMaxHR(profile.age, profile.custom_max_hr);
               const recalcZone = calculateZone(entry.bpm, effectiveMaxHR);
@@ -88,10 +94,11 @@ export function useLiveHR(onNewData?: (data: { profile_id: string; bpm: number; 
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [loadProfiles]);
 
   useEffect(() => {
-    fetchLatestData();
+    void loadProfiles();
+    void fetchLatestData();
 
     // Set up realtime subscription
     const channel: RealtimeChannel = supabase
@@ -114,12 +121,16 @@ export function useLiveHR(onNewData?: (data: { profile_id: string; bpm: number; 
             timestamp: string;
           };
           
-          // Fetch profile data for this entry
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', newData.profile_id)
-            .single();
+          // Use cached profile instead of DB query
+          let profile = profileCacheRef.current.get(newData.profile_id);
+          if (!profile) {
+            // Not in cache — fetch and cache it
+            const { data } = await supabase.from('profiles').select('*').eq('id', newData.profile_id).single();
+            if (data) {
+              profileCacheRef.current.set(data.id, data);
+              profile = data;
+            }
+          }
 
           if (profile) {
             const effectiveMaxHR = getEffectiveMaxHR(profile.age, profile.custom_max_hr);
@@ -157,7 +168,15 @@ export function useLiveHR(onNewData?: (data: { profile_id: string; bpm: number; 
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('[useLiveHR] Realtime connected');
+        }
+        if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+          console.log('[useLiveHR] Realtime disconnected — refetching data');
+          void fetchLatestData();
+        }
+      });
 
     // Cleanup stale participants every 10 seconds
     const cleanupInterval = setInterval(() => {
@@ -177,7 +196,7 @@ export function useLiveHR(onNewData?: (data: { profile_id: string; bpm: number; 
       channel.unsubscribe();
       clearInterval(cleanupInterval);
     };
-  }, [fetchLatestData]);
+  }, [fetchLatestData, loadProfiles]);
 
   const participantsList = Array.from(participants.values());
   
