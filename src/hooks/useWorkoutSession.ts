@@ -65,7 +65,7 @@ export function useWorkoutSession() {
       return;
     }
 
-    // Check if there's already an active session for THIS coach
+    // Check for ANY active session globally (no created_by filter)
     const { data: existing } = await supabase
       .from('active_sessions')
       .select('session_code')
@@ -74,15 +74,13 @@ export function useWorkoutSession() {
       .limit(1)
       .maybeSingle();
 
-    if (existing) {
-      if (/^\d{4}$/.test(existing.session_code)) {
-        console.log('[ensureSessionCode] found existing numeric code:', existing.session_code);
-        setSessionCode(existing.session_code);
-        return existing.session_code;
-      }
-      console.log('[ensureSessionCode] ignoring non-numeric code:', existing.session_code);
+    if (existing?.session_code) {
+      console.log('[ensureSessionCode] reusing existing code:', existing.session_code);
+      setSessionCode(existing.session_code);
+      return existing.session_code;
     }
 
+    // Only create new code if truly none exists
     const code = generateSessionCode();
     const { error } = await supabase.from('active_sessions').insert({
       session_code: code,
@@ -101,8 +99,6 @@ export function useWorkoutSession() {
   useEffect(() => {
     const restoreSession = async () => {
       try {
-        const { data: userData } = await supabase.auth.getUser();
-        if (!userData.user) return;
 
         // Only read sessions created by this coach
         const { data: activeSession } = await supabase
@@ -152,6 +148,36 @@ export function useWorkoutSession() {
     };
 
     restoreSession();
+  }, []);
+
+  // Realtime sync: update session code when any device creates/ends a session
+  useEffect(() => {
+    const channel = supabase
+      .channel('session-code-sync')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'active_sessions' },
+        async () => {
+          const { data } = await supabase
+            .from('active_sessions')
+            .select('session_code')
+            .is('ended_at', null)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (data?.session_code) {
+            setSessionCode(data.session_code);
+          } else {
+            setSessionCode(null);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
   }, []);
 
   // Subscribe to lobby for current session code
