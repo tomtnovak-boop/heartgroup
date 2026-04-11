@@ -14,8 +14,9 @@ import { logParticipantRedirect } from '@/lib/roleRouting';
 import { AdminParticipantsTab } from '@/components/admin/AdminParticipantsTab';
 import { AdminCoachesTab } from '@/components/admin/AdminCoachesTab';
 import { CoachAlertDashboard } from '@/components/dashboard/CoachAlertDashboard';
+import { ZoneFocusDashboard } from '@/components/dashboard/ZoneFocusDashboard';
 
-type WorkspaceTab = 'fancy' | 'neutral' | 'coach-alert' | 'participants' | 'coaches';
+type WorkspaceTab = 'fancy' | 'neutral' | 'zone-focus' | 'coach-alert' | 'participants' | 'coaches';
 
 export default function CoachWorkspace() {
   const { isAdmin, isCoach, user, signOut } = useAuthContext();
@@ -119,11 +120,12 @@ export default function CoachWorkspace() {
     await signOut();
   };
 
-  const isDashboardTab = activeTab === 'fancy' || activeTab === 'neutral' || activeTab === 'coach-alert';
+  const isDashboardTab = activeTab === 'fancy' || activeTab === 'neutral' || activeTab === 'zone-focus' || activeTab === 'coach-alert';
 
   const tabs: { key: WorkspaceTab; label: string; adminOnly?: boolean }[] = [
     { key: 'fancy', label: 'Dashboard Fancy' },
     { key: 'neutral', label: 'Dashboard Neutral' },
+    { key: 'zone-focus', label: 'Zone Focus' },
     { key: 'coach-alert', label: 'Coach Alert' },
     { key: 'participants', label: 'Teilnehmer', adminOnly: true },
     { key: 'coaches', label: 'Coaches', adminOnly: true },
@@ -258,6 +260,15 @@ export default function CoachWorkspace() {
             sessionCode={sessionCode}
             isLoading={isLoading}
             isSessionActive={sessionActive}
+          />
+        )}
+        {activeTab === 'zone-focus' && (
+          <ZoneFocusDashboard
+            participants={participants}
+            isLoading={isLoading}
+            isSessionActive={sessionActive}
+            sessionCode={sessionCode}
+            lobbyProfileIds={lobbyProfileIds}
           />
         )}
         {activeTab === 'coach-alert' && (
