@@ -52,6 +52,7 @@ export type Database = {
           last_seen: string | null
           profile_id: string
           timestamp: string
+          updated_at: string | null
           zone: number
         }
         Insert: {
@@ -61,6 +62,7 @@ export type Database = {
           last_seen?: string | null
           profile_id: string
           timestamp?: string
+          updated_at?: string | null
           zone: number
         }
         Update: {
@@ -70,6 +72,7 @@ export type Database = {
           last_seen?: string | null
           profile_id?: string
           timestamp?: string
+          updated_at?: string | null
           zone?: number
         }
         Relationships: [
