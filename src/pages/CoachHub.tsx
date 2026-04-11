@@ -24,17 +24,20 @@ export default function CoachHub() {
   const initials = user?.email?.slice(0, 2).toUpperCase() || 'U';
 
   const cards = [
-    { key: 'cdash', icon: Radio, title: 'Coach Dashboard', sub: 'Session · Control', route: '/coach-dashboard' },
-    { key: 'fancy', icon: LayoutGrid, title: 'Dashboard Fancy', sub: 'Live HR · Zonen', route: '/coach/fancy' },
-    { key: 'neutral', icon: BarChart3, title: 'Dashboard Neutral', sub: 'Live HR · Zonen', route: '/coach/neutral' },
-    { key: 'zone-focus', icon: Layers, title: 'Zone Focus', sub: 'Live HR · Sortiert', route: '/coach/zone-focus' },
-    { key: 'coach-alert', icon: Bell, title: 'Coach Alert', sub: 'Alerts · Zonen', route: '/coach/coach-alert' },
+    // Row 1 — Data & management
     { key: 'training', icon: Heart, title: 'Mein Training', sub: 'Übersicht · Stats', route: '/participant' },
     { key: 'stats', icon: TrendingUp, title: 'Statistiken', sub: 'Sessions · Zonen', route: '/admin/stats' },
     ...(isAdmin ? [
       { key: 'teilnehmer', icon: Users, title: 'Teilnehmer', sub: 'Verwalten', route: '/admin/teilnehmer' },
       { key: 'coaches', icon: Shield, title: 'Coaches', sub: 'Verwalten', route: '/admin/coaches' },
     ] : []),
+    // Row 2 — Live views
+    { key: 'fancy', icon: LayoutGrid, title: 'Dashboard Fancy', sub: 'Live HR · Zonen', route: '/coach/fancy' },
+    { key: 'neutral', icon: BarChart3, title: 'Dashboard Neutral', sub: 'Live HR · Zonen', route: '/coach/neutral' },
+    { key: 'zone-focus', icon: Layers, title: 'Zone Focus', sub: 'Live HR · Sortiert', route: '/coach/zone-focus' },
+    { key: 'coach-alert', icon: Bell, title: 'Coach Alert', sub: 'Alerts · Zonen', route: '/coach/coach-alert' },
+    // Row 3 — Session control
+    { key: 'cdash', icon: Radio, title: 'Coach Dashboard', sub: 'Session · Control', route: '/coach-dashboard' },
   ];
 
   return (
