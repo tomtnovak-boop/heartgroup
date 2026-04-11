@@ -65,7 +65,7 @@ export function useWorkoutSession() {
       return;
     }
 
-    // Check if there's already an active session for THIS coach
+    // Check for ANY active session globally (no created_by filter)
     const { data: existing } = await supabase
       .from('active_sessions')
       .select('session_code')
@@ -74,15 +74,13 @@ export function useWorkoutSession() {
       .limit(1)
       .maybeSingle();
 
-    if (existing) {
-      if (/^\d{4}$/.test(existing.session_code)) {
-        console.log('[ensureSessionCode] found existing numeric code:', existing.session_code);
-        setSessionCode(existing.session_code);
-        return existing.session_code;
-      }
-      console.log('[ensureSessionCode] ignoring non-numeric code:', existing.session_code);
+    if (existing?.session_code) {
+      console.log('[ensureSessionCode] reusing existing code:', existing.session_code);
+      setSessionCode(existing.session_code);
+      return existing.session_code;
     }
 
+    // Only create new code if truly none exists
     const code = generateSessionCode();
     const { error } = await supabase.from('active_sessions').insert({
       session_code: code,
