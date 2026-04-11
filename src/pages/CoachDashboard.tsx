@@ -12,12 +12,9 @@ import {
 } from '@/lib/heartRateUtils';
 
 const ZONE_COLORS = ['', '#9CA3AF', '#00BFFF', '#22C55E', '#F59E0B', '#EF4444'];
-const AMBIG_FREE = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 
-function genCode() {
-  let c = '';
-  for (let i = 0; i < 4; i++) c += AMBIG_FREE[Math.floor(Math.random() * AMBIG_FREE.length)];
-  return c;
+function genCode(): string {
+  return String(Math.floor(1000 + Math.random() * 9000));
 }
 
 interface SessionRow {
@@ -71,14 +68,16 @@ export default function CoachDashboard() {
       .then(({ data }) => { if (data?.name) setCoachName(data.name); });
 
     supabase.from('active_sessions').select('*')
-      .eq('created_by', user.id).is('ended_at', null)
+      .is('ended_at', null)
       .order('created_at', { ascending: false }).limit(1).maybeSingle()
       .then(({ data }) => {
         if (data) {
-          setSession(data as SessionRow);
-          // If started_at differs from created_at by > 2s, treat as running
-          const diff = new Date(data.started_at).getTime() - new Date(data.created_at).getTime();
-          if (diff > 2000) setIsRunning(true);
+          // Only use sessions with valid 4-digit numeric codes
+          if (/^\d{4}$/.test(data.session_code)) {
+            setSession(data as SessionRow);
+            const diff = new Date(data.started_at).getTime() - new Date(data.created_at).getTime();
+            if (diff > 2000) setIsRunning(true);
+          }
         }
       });
   }, [user]);
@@ -92,7 +91,6 @@ export default function CoachDashboard() {
         event: '*',
         schema: 'public',
         table: 'active_sessions',
-        filter: `created_by=eq.${user.id}`,
       }, (payload: any) => {
         const row = payload.new;
         if (!row) return;
@@ -222,6 +220,18 @@ export default function CoachDashboard() {
 
   const createNewSession = useCallback(async () => {
     if (!user) return;
+    // Check for any existing active session globally first
+    const { data: existing } = await supabase.from('active_sessions').select('*')
+      .is('ended_at', null)
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
+    if (existing && /^\d{4}$/.test(existing.session_code)) {
+      setSession(existing as SessionRow);
+      setIsRunning(false);
+      setRemainSec(-1);
+      setDurMin(0);
+      toast({ title: `Reusing session: ${existing.session_code}` });
+      return;
+    }
     const code = genCode();
     const { data, error } = await supabase.from('active_sessions')
       .insert({ created_by: user.id, session_code: code })
