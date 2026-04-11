@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       active_sessions: {
         Row: {
+          auto_end_at: string | null
           created_at: string
           created_by: string
           ended_at: string | null
@@ -24,6 +25,7 @@ export type Database = {
           started_at: string
         }
         Insert: {
+          auto_end_at?: string | null
           created_at?: string
           created_by: string
           ended_at?: string | null
@@ -32,6 +34,7 @@ export type Database = {
           started_at?: string
         }
         Update: {
+          auto_end_at?: string | null
           created_at?: string
           created_by?: string
           ended_at?: string | null
