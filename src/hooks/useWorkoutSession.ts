@@ -76,9 +76,12 @@ export function useWorkoutSession() {
       .maybeSingle();
 
     if (existing) {
-      console.log('[ensureSessionCode] found existing code:', existing.session_code);
-      setSessionCode(existing.session_code);
-      return existing.session_code;
+      if (/^\d{4}$/.test(existing.session_code)) {
+        console.log('[ensureSessionCode] found existing numeric code:', existing.session_code);
+        setSessionCode(existing.session_code);
+        return existing.session_code;
+      }
+      console.log('[ensureSessionCode] ignoring non-numeric code:', existing.session_code);
     }
 
     const code = generateSessionCode();
