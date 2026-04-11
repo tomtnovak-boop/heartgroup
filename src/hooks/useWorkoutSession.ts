@@ -160,9 +160,9 @@ export function useWorkoutSession() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'active_sessions' },
         async () => {
-          const { data } = await supabase
+           const { data } = await supabase
             .from('active_sessions')
-            .select('session_code')
+            .select('session_code, auto_end_at')
             .is('ended_at', null)
             .order('created_at', { ascending: false })
             .limit(1)
@@ -170,8 +170,10 @@ export function useWorkoutSession() {
 
           if (data?.session_code) {
             setSessionCode(data.session_code);
+            setAutoEndAt((data as any).auto_end_at ? new Date((data as any).auto_end_at) : null);
           } else {
             setSessionCode(null);
+            setAutoEndAt(null);
           }
         }
       )
@@ -488,6 +490,44 @@ export function useWorkoutSession() {
     }
   }, []);
 
+  // Auto-stop watcher: check auto_end_at and stop session when time is up
+  useEffect(() => {
+    if (!session.isActive || !sessionCode) return;
+
+    let timeout: ReturnType<typeof setTimeout> | null = null;
+
+    const checkAutoStop = async () => {
+      const { data } = await supabase
+        .from('active_sessions')
+        .select('auto_end_at')
+        .eq('session_code', sessionCode)
+        .is('ended_at', null)
+        .maybeSingle();
+
+      const autoEnd = (data as any)?.auto_end_at;
+      if (autoEnd) {
+        const endTime = new Date(autoEnd).getTime();
+        const now = Date.now();
+        if (now >= endTime) {
+          console.log('[useWorkoutSession] auto_end_at reached, stopping session');
+          void stopSession();
+        } else {
+          const delay = endTime - now;
+          console.log('[useWorkoutSession] auto-stop scheduled in', Math.round(delay / 1000), 'seconds');
+          timeout = setTimeout(() => {
+            void stopSession();
+          }, delay);
+        }
+      }
+    };
+
+    void checkAutoStop();
+
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [session.isActive, sessionCode, stopSession]);
+
   return {
     isActive: session.isActive,
     startedAt: session.startedAt,
@@ -495,6 +535,7 @@ export function useWorkoutSession() {
     activeWorkoutCount: session.activeWorkouts.size,
     activeWorkoutProfileIds: Array.from(session.activeWorkouts.keys()),
     sessionCode,
+    autoEndAt,
     lobbyCount,
     lobbyProfileIds,
     createSessionCode,
