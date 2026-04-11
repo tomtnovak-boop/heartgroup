@@ -72,11 +72,21 @@ export default function CoachDashboard() {
       .order('created_at', { ascending: false }).limit(1).maybeSingle()
       .then(({ data }) => {
         if (data) {
-          // Only use sessions with valid 4-digit numeric codes
           if (/^\d{4}$/.test(data.session_code)) {
             setSession(data as SessionRow);
             const diff = new Date(data.started_at).getTime() - new Date(data.created_at).getTime();
             if (diff > 2000) setIsRunning(true);
+            // Restore timer from auto_end_at
+            const autoEnd = (data as any).auto_end_at;
+            if (autoEnd && diff > 2000) {
+              const remaining = Math.max(0, Math.round((new Date(autoEnd).getTime() - Date.now()) / 1000));
+              if (remaining > 0) {
+                setRemainSec(remaining);
+              } else {
+                // Timer already expired — auto-stop
+                setRemainSec(-1);
+              }
+            }
           }
         }
       });
@@ -95,13 +105,21 @@ export default function CoachDashboard() {
         const row = payload.new;
         if (!row) return;
         if (!row.ended_at) {
-          // New or updated active session
           console.log('[CoachDashboard] realtime session update:', row.session_code);
           setSession(row as SessionRow);
           const diff = new Date(row.started_at).getTime() - new Date(row.created_at).getTime();
           setIsRunning(diff > 2000);
+          // Sync timer from auto_end_at
+          const autoEnd = (row as any).auto_end_at;
+          if (autoEnd && diff > 2000) {
+            const remaining = Math.max(0, Math.round((new Date(autoEnd).getTime() - Date.now()) / 1000));
+            if (remaining > 0) {
+              setRemainSec(remaining);
+            } else {
+              setRemainSec(-1);
+            }
+          }
         } else {
-          // Session ended
           console.log('[CoachDashboard] realtime session ended');
           setSession(null);
           setIsRunning(false);
@@ -201,6 +219,14 @@ export default function CoachDashboard() {
       .update({ started_at: new Date().toISOString() })
       .eq('id', session.id);
     if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return; }
+    // Write auto_end_at if timer is set
+    if (durMin > 0) {
+      const autoEndAt = new Date(Date.now() + durMin * 60 * 1000).toISOString();
+      await supabase.from('active_sessions')
+        .update({ auto_end_at: autoEndAt } as any)
+        .eq('id', session.id);
+      console.log('[CoachDashboard] auto_end_at set to', autoEndAt);
+    }
     setIsRunning(true);
     if (durMin > 0) setRemainSec(durMin * 60);
   }, [session, user, durMin, toast]);
