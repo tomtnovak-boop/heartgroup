@@ -22,7 +22,7 @@ export type Database = {
           ended_at: string | null
           id: string
           session_code: string
-          started_at: string
+          started_at: string | null
         }
         Insert: {
           auto_end_at?: string | null
@@ -31,7 +31,7 @@ export type Database = {
           ended_at?: string | null
           id?: string
           session_code: string
-          started_at?: string
+          started_at?: string | null
         }
         Update: {
           auto_end_at?: string | null
@@ -40,7 +40,7 @@ export type Database = {
           ended_at?: string | null
           id?: string
           session_code?: string
-          started_at?: string
+          started_at?: string | null
         }
         Relationships: []
       }

@@ -372,6 +372,9 @@ export default function CoachDashboard() {
               <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', marginBottom: 4 }}>Minutes</div>
               <input
                 type="number"
+                name="session-timer-minutes"
+                autoComplete="off"
+                inputMode="numeric"
                 value={durMin || ''}
                 onChange={e => { const v = Math.max(0, parseInt(e.target.value) || 0); setDurMin(v); }}
                 disabled={isRunning}
