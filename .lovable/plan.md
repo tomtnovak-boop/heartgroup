@@ -1,42 +1,23 @@
 
 
-## Fix Three Session State Bugs in Participant Page
+## Fix: Detect External Session Starts via Realtime
 
-### Overview
-Three bugs cause stale state, delayed session-end detection, and stuck lobby joins. All fixes are in `src/pages/Participant.tsx` plus one migration for Realtime.
+### Problem
+`useWorkoutSession` only sets `isActive = true` when the local coach clicks Start or on mount restore. If the companion app starts a session, the web app doesn't react.
 
-### Changes
+### Change
+**File:** `src/hooks/useWorkoutSession.ts` only
 
-**1. Database Migration — Enable Realtime on `active_sessions`**
-New migration file with:
-```sql
-ALTER PUBLICATION supabase_realtime ADD TABLE public.active_sessions;
-```
+Add one new `useEffect` (after the lobby subscription at line 240) with a Realtime subscription on two tables:
 
-**2. `src/pages/Participant.tsx` — Bug 1: Stale state on mount (lines 311-326)**
-In the `checkOwnWorkout` useEffect:
-- After finding an open workout (`ended_at = null`), verify an active coach session exists in `active_sessions` (where `ended_at IS NULL` and `started_at` within last 4 hours).
-- If no active coach session: auto-close the stale workout (update `ended_at`, `duration_seconds: 0`) and do NOT set `currentWorkoutId`/`activeSession`.
-- Add `cleanupStaleLobby()` call that removes `session_lobby` entries for this profile where the session code no longer has an active session.
+1. **`active_sessions` UPDATE** — When `started_at` is set and `!isActiveRef.current`, fetch open workouts from DB, build the workout map, set `sessionCode`, and set `session.isActive = true`. When `ended_at` is set and session is active, reset session state.
 
-**3. `src/pages/Participant.tsx` — Bug 2: Delayed session-end detection (lines 290-308)**
-In the `checkCoachSession` useEffect, add a Realtime subscription on `active_sessions`:
-- On `UPDATE` where `ended_at` is set: immediately `setCoachSessionActive(false)`.
-- On `INSERT`: trigger `checkCoachSession()` to pick up new sessions.
-- Clean up subscription in the useEffect return alongside the interval.
+2. **`workouts` INSERT** — When a new workout row appears while session is active, add it to the `activeWorkouts` map via `setSession`.
 
-**4. `src/pages/Participant.tsx` — Bug 3: Stuck in lobby (lines 354-377)**
-In `handleEnterLobby`, after the `session_lobby` upsert:
-- Check if the session is already running (open workouts exist within last 3 hours).
-- If yes: set `coachSessionActive(true)`, mark `joinDialogShownRef`, and call `handleJoinSession()` directly.
-- If no: set `lobbyJoined(true)` as before.
-
-### Files modified
-- `src/pages/Participant.tsx` — three targeted changes as described
-- New migration file for Realtime enablement
+The subscription uses refs (`isActiveRef`) to avoid stale closures and runs once on mount (empty dependency array). Cleanup removes the channel.
 
 ### What stays unchanged
-- All UI layout, branding, styles
-- Coach-side code, routing, auth
-- `stopSession()`, HR recording, workout finalization logic
+- `startSession()`, `stopSession()`, `restoreSession()`, `recordHRData`, lobby logic
+- All UI components, styling, routing
+- The existing `session-code-sync` channel (handles `sessionCode` state — the new subscription handles `session` state)
 
