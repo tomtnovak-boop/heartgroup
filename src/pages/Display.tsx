@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useLiveHR } from '@/hooks/useLiveHR';
 import { useWorkoutSession } from '@/hooks/useWorkoutSession';
+import { NeutralDashboard } from '@/components/dashboard/NeutralDashboard';
 import { ZoneColumn, ZONE_HEADER_HEIGHT, FIXED_GAP } from '@/components/dashboard/ZoneColumn';
 import { HexTile } from '@/components/dashboard/HexTile';
 import { LiveHRData } from '@/hooks/useLiveHR';
@@ -258,17 +259,75 @@ function LiveDisplay() {
   );
 }
 
+function NeutralLiveDisplay() {
+  const { participants, isLoading } = useLiveHR(() => {});
+  const { isActive: sessionActive, sessionCode, lobbyProfileIds } = useWorkoutSession();
+  const [allProfiles, setAllProfiles] = useState<{ id: string; name: string; nickname?: string | null; created_at: string }[]>([]);
+
+  useEffect(() => {
+    supabase.from('profiles').select('id, name, nickname, created_at')
+      .order('created_at', { ascending: true })
+      .then(({ data }) => { if (data) setAllProfiles(data); });
+  }, []);
+
+  // Wake lock
+  useEffect(() => {
+    let wl: WakeLockSentinel | null = null;
+    navigator.wakeLock?.request('screen').then(w => { wl = w; }).catch(() => {});
+    return () => { wl?.release(); };
+  }, []);
+
+  if (!sessionActive) {
+    return (
+      <div className="w-screen h-screen flex flex-col items-center justify-center gap-6" style={{ background: '#0a0a0a' }}>
+        <Heart className="w-20 h-20 text-primary animate-pulse" fill="currentColor" />
+        <h2 className="text-2xl font-black text-white">Waiting for session...</h2>
+        <p className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>
+          The display will activate when the coach starts a session
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-screen h-screen flex flex-col overflow-hidden" style={{ background: '#0a0a0a' }}>
+      <NeutralDashboard
+        participants={participants}
+        allProfiles={allProfiles}
+        lobbyProfileIds={lobbyProfileIds}
+        sessionCode={sessionCode}
+        isLoading={isLoading}
+        isSessionActive={sessionActive}
+      />
+    </div>
+  );
+}
+
 export default function Display() {
   const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem('display_unlocked') === 'true');
   const [checking, setChecking] = useState(!unlocked);
+  const [displayView, setDisplayViewState] = useState<'fancy' | 'neutral'>('fancy');
 
   useEffect(() => {
-    if (unlocked) return;
+    if (unlocked) {
+      supabase
+        .from('active_sessions')
+        .select('display_view')
+        .is('ended_at', null)
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+        .then(({ data }) => {
+          if ((data as any)?.display_view === 'neutral') setDisplayViewState('neutral');
+          else setDisplayViewState('fancy');
+        });
+      return;
+    }
 
     const checkAndUnlock = async () => {
       const { data } = await supabase
         .from('active_sessions')
-        .select('session_code')
+        .select('session_code, display_view')
         .is('ended_at', null)
         .order('started_at', { ascending: false })
         .limit(1)
@@ -276,6 +335,7 @@ export default function Display() {
 
       if (data) {
         sessionStorage.setItem('display_unlocked', 'true');
+        if ((data as any).display_view === 'neutral') setDisplayViewState('neutral');
         setUnlocked(true);
       }
       setChecking(false);
@@ -289,12 +349,34 @@ export default function Display() {
         event: 'INSERT',
         schema: 'public',
         table: 'active_sessions',
-      }, () => {
+      }, (payload) => {
         sessionStorage.setItem('display_unlocked', 'true');
+        if ((payload.new as any)?.display_view === 'neutral') setDisplayViewState('neutral');
+        else setDisplayViewState('fancy');
         setUnlocked(true);
       })
       .subscribe();
 
+    return () => { supabase.removeChannel(sub); };
+  }, [unlocked]);
+
+  // Subscribe to display_view changes when unlocked
+  useEffect(() => {
+    if (!unlocked) return;
+    const sub = supabase
+      .channel('display-view-sync')
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'active_sessions',
+      }, (payload) => {
+        const row = payload.new as any;
+        if (row.ended_at) return;
+        if (row.display_view === 'fancy' || row.display_view === 'neutral') {
+          setDisplayViewState(row.display_view);
+        }
+      })
+      .subscribe();
     return () => { supabase.removeChannel(sub); };
   }, [unlocked]);
 
@@ -310,5 +392,5 @@ export default function Display() {
     return <PinGate onUnlock={() => setUnlocked(true)} />;
   }
 
-  return <LiveDisplay />;
+  return displayView === 'neutral' ? <NeutralLiveDisplay /> : <LiveDisplay />;
 }
