@@ -9,6 +9,7 @@ import { useWorkoutSession } from '@/hooks/useWorkoutSession';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { logParticipantRedirect } from '@/lib/roleRouting';
+import { setDisplayView } from '@/lib/displaySync';
 
 export default function CoachNeutral() {
   const { viewMode, changeView } = useViewMode('coach');
@@ -35,6 +36,8 @@ export default function CoachNeutral() {
     supabase.from('profiles').select('id, name, nickname, created_at').order('created_at', { ascending: true })
       .then(({ data }) => { if (data) setAllProfiles(data); });
   }, []);
+
+  useEffect(() => { setDisplayView('neutral'); }, []);
 
   useEffect(() => {
     if (prevSessionActive.current && !sessionActive) {
