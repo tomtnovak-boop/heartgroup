@@ -239,6 +239,92 @@ export function useWorkoutSession() {
     return () => { supabase.removeChannel(sub); };
   }, [sessionCode]);
 
+  // Detect externally started/stopped sessions via Realtime
+  useEffect(() => {
+    const handleActiveSessionChange = async (payload: any) => {
+      const row = payload.new;
+      if (!row) return;
+
+      if (row.ended_at !== null) {
+        if (isActiveRef.current) {
+          setSession(prev => ({
+            ...prev,
+            isActive: false,
+            startedAt: null,
+            elapsedSeconds: 0,
+            activeWorkouts: new Map(),
+          }));
+        }
+        return;
+      }
+
+      if (row.started_at && !isActiveRef.current) {
+        setSessionCode(row.session_code);
+
+        const { data: openWorkouts } = await supabase
+          .from('workouts')
+          .select('id, profile_id, started_at')
+          .is('ended_at', null);
+
+        if (!openWorkouts || openWorkouts.length === 0) {
+          setSession({
+            isActive: true,
+            startedAt: new Date(row.started_at),
+            elapsedSeconds: Math.floor((Date.now() - new Date(row.started_at).getTime()) / 1000),
+            activeWorkouts: new Map(),
+          });
+          return;
+        }
+
+        const workoutMap = new Map<string, string>();
+        let earliestStart: Date | null = null;
+        openWorkouts.forEach(w => {
+          workoutMap.set(w.profile_id, w.id);
+          const d = new Date(w.started_at);
+          if (!earliestStart || d < earliestStart) earliestStart = d;
+        });
+
+        setSession({
+          isActive: true,
+          startedAt: earliestStart ?? new Date(row.started_at),
+          elapsedSeconds: earliestStart
+            ? Math.floor((Date.now() - earliestStart.getTime()) / 1000)
+            : 0,
+          activeWorkouts: workoutMap,
+        });
+      }
+    };
+
+    const handleWorkoutInsert = async (payload: any) => {
+      const row = payload.new;
+      if (!row || !isActiveRef.current) return;
+
+      setSession(prev => {
+        const newMap = new Map(prev.activeWorkouts);
+        if (!newMap.has(row.profile_id)) {
+          newMap.set(row.profile_id, row.id);
+        }
+        return { ...prev, activeWorkouts: newMap };
+      });
+    };
+
+    const sub = supabase
+      .channel('external-session-changes')
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'active_sessions',
+      }, handleActiveSessionChange)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'workouts',
+      }, handleWorkoutInsert)
+      .subscribe();
+
+    return () => { supabase.removeChannel(sub); };
+  }, []);
+
   // createSessionCode is no longer needed — codes are auto-managed
   const createSessionCode = ensureSessionCode;
 
