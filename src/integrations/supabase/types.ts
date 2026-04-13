@@ -19,6 +19,7 @@ export type Database = {
           auto_end_at: string | null
           created_at: string
           created_by: string
+          display_view: string
           ended_at: string | null
           id: string
           session_code: string
@@ -28,6 +29,7 @@ export type Database = {
           auto_end_at?: string | null
           created_at?: string
           created_by: string
+          display_view?: string
           ended_at?: string | null
           id?: string
           session_code: string
@@ -37,6 +39,7 @@ export type Database = {
           auto_end_at?: string | null
           created_at?: string
           created_by?: string
+          display_view?: string
           ended_at?: string | null
           id?: string
           session_code?: string
