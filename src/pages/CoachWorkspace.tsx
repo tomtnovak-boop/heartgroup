@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { logParticipantRedirect } from '@/lib/roleRouting';
+import { setDisplayView } from '@/lib/displaySync';
 import { AdminParticipantsTab } from '@/components/admin/AdminParticipantsTab';
 import { AdminCoachesTab } from '@/components/admin/AdminCoachesTab';
 import { CoachAlertDashboard } from '@/components/dashboard/CoachAlertDashboard';
@@ -189,7 +190,10 @@ export default function CoachWorkspace() {
         {visibleTabs.map(t => (
           <button
             key={t.key}
-            onClick={() => setActiveTab(t.key)}
+            onClick={() => {
+              setActiveTab(t.key);
+              if (t.key === 'fancy' || t.key === 'neutral') setDisplayView(t.key);
+            }}
             style={{
               background: activeTab === t.key ? '#ff4425' : '#1a1a1a',
               color: activeTab === t.key ? '#fff' : '#666',

@@ -9,6 +9,7 @@ import { useWorkoutSession } from '@/hooks/useWorkoutSession';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { logParticipantRedirect } from '@/lib/roleRouting';
+import { setDisplayView } from '@/lib/displaySync';
 
 export default function CoachFancy() {
   const { viewMode, changeView } = useViewMode('coach');
@@ -42,6 +43,8 @@ export default function CoachFancy() {
     const interval = setInterval(cleanup, 15000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => { setDisplayView('fancy'); }, []);
 
   useEffect(() => {
     if (prevSessionActive.current && !sessionActive) {
