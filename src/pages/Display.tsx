@@ -260,6 +260,51 @@ function LiveDisplay() {
 
 export default function Display() {
   const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem('display_unlocked') === 'true');
+  const [checking, setChecking] = useState(!unlocked);
+
+  useEffect(() => {
+    if (unlocked) return;
+
+    const checkAndUnlock = async () => {
+      const { data } = await supabase
+        .from('active_sessions')
+        .select('session_code')
+        .is('ended_at', null)
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (data) {
+        sessionStorage.setItem('display_unlocked', 'true');
+        setUnlocked(true);
+      }
+      setChecking(false);
+    };
+
+    checkAndUnlock();
+
+    const sub = supabase
+      .channel('display-auto-unlock')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'active_sessions',
+      }, () => {
+        sessionStorage.setItem('display_unlocked', 'true');
+        setUnlocked(true);
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(sub); };
+  }, [unlocked]);
+
+  if (checking) {
+    return (
+      <div className="w-screen h-screen flex items-center justify-center" style={{ background: '#0a0a0a' }}>
+        <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '14px' }}>Loading...</div>
+      </div>
+    );
+  }
 
   if (!unlocked) {
     return <PinGate onUnlock={() => setUnlocked(true)} />;
