@@ -302,9 +302,34 @@ export default function Participant() {
     };
 
     checkCoachSession();
-    // Poll every 15 seconds to detect when coach starts a session
+    // Poll every 15 seconds as fallback
     const interval = setInterval(checkCoachSession, 15000);
-    return () => clearInterval(interval);
+
+    // Realtime subscription for instant session start/stop detection
+    const sessionSub = supabase
+      .channel('active-session-changes')
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'active_sessions',
+      }, (payload) => {
+        if (payload.new && (payload.new as any).ended_at !== null) {
+          setCoachSessionActive(false);
+        }
+      })
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'active_sessions',
+      }, () => {
+        checkCoachSession();
+      })
+      .subscribe();
+
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(sessionSub);
+    };
   }, [profile]);
 
   // Check if participant already has an active workout
@@ -318,11 +343,51 @@ export default function Participant() {
         .is('ended_at', null)
         .limit(1);
       if (data && data.length > 0) {
-        setCurrentWorkoutId(data[0].id);
-        setActiveSession(true);
+        // Verify there is an active coach session (within last 4 hours)
+        const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString();
+        const { data: activeCoachSession } = await supabase
+          .from('active_sessions')
+          .select('session_code')
+          .is('ended_at', null)
+          .gte('started_at', fourHoursAgo)
+          .limit(1)
+          .maybeSingle();
+
+        if (activeCoachSession) {
+          setCurrentWorkoutId(data[0].id);
+          setActiveSession(true);
+        } else {
+          // Stale workout — close it
+          await supabase.from('workouts')
+            .update({ ended_at: new Date().toISOString(), duration_seconds: 0 })
+            .eq('id', data[0].id);
+        }
       }
     };
+
+    const cleanupStaleLobby = async () => {
+      const { data: lobbyEntries } = await supabase
+        .from('session_lobby')
+        .select('session_code')
+        .eq('profile_id', profile.id);
+      if (!lobbyEntries || lobbyEntries.length === 0) return;
+      for (const entry of lobbyEntries) {
+        const { data: activeSession } = await supabase
+          .from('active_sessions')
+          .select('session_code')
+          .eq('session_code', entry.session_code)
+          .is('ended_at', null)
+          .maybeSingle();
+        if (!activeSession) {
+          await supabase.from('session_lobby').delete()
+            .eq('session_code', entry.session_code)
+            .eq('profile_id', profile.id);
+        }
+      }
+    };
+
     checkOwnWorkout();
+    cleanupStaleLobby();
   }, [profile]);
 
   // Handle joining a session
@@ -373,8 +438,24 @@ export default function Participant() {
       last_seen: new Date().toISOString(),
     });
 
-    setLobbyJoined(true);
-  }, [profile]);
+    // Check if session is already running (open workouts exist)
+    const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
+    const { data: openWorkouts } = await supabase
+      .from('workouts')
+      .select('id')
+      .is('ended_at', null)
+      .gte('started_at', threeHoursAgo)
+      .limit(1);
+
+    if (openWorkouts && openWorkouts.length > 0) {
+      // Session is already running — join immediately
+      setCoachSessionActive(true);
+      joinDialogShownRef.current = true;
+      await handleJoinSession();
+    } else {
+      setLobbyJoined(true);
+    }
+  }, [profile, handleJoinSession]);
 
   // Heartbeat: update last_seen in session_lobby every 10 seconds
   useEffect(() => {
