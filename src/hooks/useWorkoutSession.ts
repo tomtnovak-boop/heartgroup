@@ -576,6 +576,11 @@ export function useWorkoutSession() {
     }));
   }, []);
 
+  // Keep stopSessionRef in sync with stopSession
+  useEffect(() => {
+    stopSessionRef.current = stopSession;
+  }, [stopSession]);
+
   // Called on every new live_hr realtime event
   const recordHRData = useCallback(async (data: { profile_id: string; bpm: number; zone: number; hr_percentage: number; timestamp: string }) => {
     if (!isActiveRef.current) return;
