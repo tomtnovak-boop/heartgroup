@@ -28,6 +28,7 @@ export default function Dashboard() {
     activeWorkoutProfileIds,
     sessionCode,
     lobbyCount,
+    lobbyProfileIds,
     createSessionCode,
     startSession,
     stopSession,
@@ -157,6 +158,8 @@ export default function Dashboard() {
           activeTab={activeTab}
           averageBPM={averageBPM}
           isSessionActive={sessionActive}
+          sessionCode={sessionCode}
+          lobbyProfileIds={lobbyProfileIds}
         />
       </div>
 

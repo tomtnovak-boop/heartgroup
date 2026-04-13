@@ -250,6 +250,8 @@ export default function CoachWorkspace() {
             activeTab="live"
             averageBPM={averageBPM}
             isSessionActive={sessionActive}
+            sessionCode={sessionCode}
+            lobbyProfileIds={lobbyProfileIds}
           />
         )}
         {activeTab === 'neutral' && (
