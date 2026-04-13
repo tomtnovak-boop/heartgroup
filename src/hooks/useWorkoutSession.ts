@@ -32,6 +32,7 @@ export function useWorkoutSession() {
   const startedAtRef = useRef<Date | null>(null);
   const sessionCodeRef = useRef<string | null>(null);
   const isCreatingCodeRef = useRef(false);
+  const stopSessionRef = useRef<() => Promise<void>>(async () => {});
 
   // Sync refs with state
   useEffect(() => {
@@ -247,13 +248,10 @@ export function useWorkoutSession() {
 
       if (row.ended_at !== null) {
         if (isActiveRef.current) {
-          setSession(prev => ({
-            ...prev,
-            isActive: false,
-            startedAt: null,
-            elapsedSeconds: 0,
-            activeWorkouts: new Map(),
-          }));
+          // Session ended externally — call stopSession() to finalize workouts
+          // stopSession() will try to update active_sessions but the .is('ended_at', null)
+          // filter will match nothing (already set), which is harmless.
+          stopSessionRef.current();
         }
         return;
       }
@@ -577,6 +575,11 @@ export function useWorkoutSession() {
       }).eq('id', ws.workoutId);
     }));
   }, []);
+
+  // Keep stopSessionRef in sync with stopSession
+  useEffect(() => {
+    stopSessionRef.current = stopSession;
+  }, [stopSession]);
 
   // Called on every new live_hr realtime event
   const recordHRData = useCallback(async (data: { profile_id: string; bpm: number; zone: number; hr_percentage: number; timestamp: string }) => {
