@@ -186,15 +186,8 @@ export function useWorkoutSession() {
           const updated = payload.new;
           console.log('[active-sessions-sync] UPDATE received, ended_at:', updated?.ended_at, 'isActiveRef:', isActiveRef.current);
           if (updated?.ended_at) {
-            // Session was stopped on another device — always stop locally
-            console.log('[active-sessions-sync] Remote stop detected — setting isActive: false');
-            setSession({
-              isActive: false,
-              startedAt: null,
-              elapsedSeconds: 0,
-              activeWorkouts: new Map(),
-            });
-            // Do NOT call ensureSessionCode here — leaderboard dismiss handles that
+            console.log('[active-sessions-sync] Remote stop detected — calling stopSession()');
+            stopSessionRef.current();
           } else {
             // Session was started or updated — sync state
             console.log('[active-sessions-sync] Remote start/update detected — calling restoreSession');
@@ -550,11 +543,23 @@ export function useWorkoutSession() {
       setSessionCode(null);
     }
 
-    if (workouts.size === 0) return;
+    // If no local workouts, fetch from DB (session was started on another device)
+    let finalWorkouts = workouts;
+    if (workouts.size === 0) {
+      const { data: dbWorkouts } = await supabase
+        .from('workouts')
+        .select('id, profile_id, started_at')
+        .is('ended_at', null);
+
+      if (!dbWorkouts || dbWorkouts.length === 0) return;
+
+      finalWorkouts = new Map<string, string>();
+      dbWorkouts.forEach(w => finalWorkouts.set(w.profile_id, w.id));
+    }
 
     // Finalize workouts in background
     const now = new Date().toISOString();
-    const entries = Array.from(workouts.entries());
+    const entries = Array.from(finalWorkouts.entries());
 
     const workoutStats: { workoutId: string; avgBpm: number; maxBpm: number; updatePayload: Record<string, any> }[] = [];
 
