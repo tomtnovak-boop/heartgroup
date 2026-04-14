@@ -32,6 +32,7 @@ export function useWorkoutSession() {
   const startedAtRef = useRef<Date | null>(null);
   const sessionCodeRef = useRef<string | null>(null);
   const isCreatingCodeRef = useRef(false);
+  const ensureSessionCodeLock = useRef(false);
   const stopSessionRef = useRef<() => Promise<void>>(async () => {});
 
   // Sync refs with state
@@ -63,10 +64,12 @@ export function useWorkoutSession() {
 
   // Helper: create a new active_sessions record and set sessionCode
   const ensureSessionCode = useCallback(async () => {
+    if (ensureSessionCodeLock.current) {
+      console.log('[ensureSessionCode] locked — skipping concurrent call');
+      return;
+    }
+    ensureSessionCodeLock.current = true;
     console.log('[ensureSessionCode] called');
-    if (isCreatingCodeRef.current) return;
-    isCreatingCodeRef.current = true;
-
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) {
@@ -104,6 +107,7 @@ export function useWorkoutSession() {
       return code;
     } finally {
       isCreatingCodeRef.current = false;
+      ensureSessionCodeLock.current = false;
     }
   }, []);
 
