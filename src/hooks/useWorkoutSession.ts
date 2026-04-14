@@ -124,18 +124,7 @@ export function useWorkoutSession() {
           console.log('[useWorkoutSession] restored session code:', activeSession.session_code);
           setSessionCode(activeSession.session_code);
         } else {
-          // No active session found — if we thought one was running, stop it now
-          if (isActiveRef.current) {
-            setSession({
-              isActive: false,
-              startedAt: null,
-              elapsedSeconds: 0,
-              activeWorkouts: new Map(),
-            });
-          }
-          // Auto-create a new session code for next session
           await ensureSessionCode();
-          return;
         }
 
         const { data: openWorkouts, error } = await supabase
@@ -188,8 +177,24 @@ export function useWorkoutSession() {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'active_sessions' },
-        () => {
-          restoreSession();
+        (payload: any) => {
+          const updated = payload.new;
+          if (updated.ended_at) {
+            // Session was stopped on another device
+            if (isActiveRef.current) {
+              setSession({
+                isActive: false,
+                startedAt: null,
+                elapsedSeconds: 0,
+                activeWorkouts: new Map(),
+              });
+            }
+            // Create a fresh session code for next session
+            ensureSessionCode();
+          } else {
+            // Session was started (or otherwise updated) — restore full state
+            restoreSession();
+          }
         }
       )
       .subscribe();
