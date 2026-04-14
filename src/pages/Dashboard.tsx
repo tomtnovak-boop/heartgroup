@@ -56,15 +56,24 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (prevSessionActive.current && !sessionActive) {
+      const fetchAndShowLeaderboard = async () => {
+        const thirtySecsAgo = new Date(Date.now() - 35000).toISOString();
+        const { data: workouts } = await supabase
+          .from('workouts')
+          .select('profile_id, avg_bpm, max_bpm, duration_seconds, total_calories, started_at, ended_at')
+          .not('ended_at', 'is', null)
+          .gte('ended_at', thirtySecsAgo);
+        return workouts && workouts.length > 0 ? workouts : null;
+      };
       const timer = setTimeout(async () => {
         try {
-          const thirtySecsAgo = new Date(Date.now() - 30000).toISOString();
-          const { data: workouts } = await supabase
-            .from('workouts')
-            .select('profile_id, avg_bpm, max_bpm, duration_seconds, total_calories, started_at, ended_at')
-            .not('ended_at', 'is', null)
-            .gte('ended_at', thirtySecsAgo);
-
+          // First attempt at 3s
+          let workouts = await fetchAndShowLeaderboard();
+          // Retry once at 5s if no data yet
+          if (!workouts) {
+            await new Promise(res => setTimeout(res, 2000));
+            workouts = await fetchAndShowLeaderboard();
+          }
           if (!workouts || workouts.length === 0) return;
 
           const profileIds = [...new Set(workouts.map(w => w.profile_id))];
@@ -92,7 +101,7 @@ export default function Dashboard() {
         } catch (err) {
           console.error('Error fetching leaderboard:', err);
         }
-      }, 5000);
+      }, 3000);
       return () => clearTimeout(timer);
     }
     prevSessionActive.current = sessionActive;
