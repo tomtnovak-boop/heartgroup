@@ -114,7 +114,7 @@ export function useWorkoutSession() {
         // Only read sessions created by this coach
         const { data: activeSession } = await supabase
           .from('active_sessions')
-          .select('session_code')
+          .select('session_code, started_at')
           .is('ended_at', null)
           .order('created_at', { ascending: false })
           .limit(1)
@@ -131,6 +131,17 @@ export function useWorkoutSession() {
           .from('workouts')
           .select('id, profile_id, started_at')
           .is('ended_at', null);
+
+        // If session has started_at set but no workouts yet, mark as active with empty workout map
+        if (activeSession?.started_at && (!openWorkouts || openWorkouts.length === 0)) {
+          setSession({
+            isActive: true,
+            startedAt: new Date(activeSession.started_at),
+            elapsedSeconds: Math.floor((Date.now() - new Date(activeSession.started_at).getTime()) / 1000),
+            activeWorkouts: new Map(),
+          });
+          return;
+        }
 
         if (error || !openWorkouts || openWorkouts.length === 0) return;
 
