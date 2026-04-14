@@ -176,7 +176,7 @@ export function useWorkoutSession() {
       .channel('active-sessions-sync')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'active_sessions' },
+    { event: 'UPDATE', schema: 'public', table: 'active_sessions' },
         (payload: any) => {
           const updated = payload.new;
           console.log('[active-sessions-sync] event:', payload.eventType, 'ended_at:', updated?.ended_at);
