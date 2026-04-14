@@ -63,6 +63,7 @@ export function useWorkoutSession() {
 
   // Helper: create a new active_sessions record and set sessionCode
   const ensureSessionCode = useCallback(async () => {
+    console.log('[ensureSessionCode] called');
     if (isCreatingCodeRef.current) return;
     isCreatingCodeRef.current = true;
 
@@ -176,24 +177,23 @@ export function useWorkoutSession() {
       .channel('active-sessions-sync')
       .on(
         'postgres_changes',
-    { event: 'UPDATE', schema: 'public', table: 'active_sessions' },
+        { event: 'UPDATE', schema: 'public', table: 'active_sessions' },
         (payload: any) => {
           const updated = payload.new;
-          console.log('[active-sessions-sync] event:', payload.eventType, 'ended_at:', updated?.ended_at);
+          console.log('[active-sessions-sync] UPDATE received, ended_at:', updated?.ended_at, 'isActiveRef:', isActiveRef.current);
           if (updated?.ended_at) {
-            // Session was stopped on another device
-            if (isActiveRef.current) {
-              setSession({
-                isActive: false,
-                startedAt: null,
-                elapsedSeconds: 0,
-                activeWorkouts: new Map(),
-              });
-            }
-            // Create a fresh session code for next session
-            ensureSessionCode();
+            // Session was stopped on another device — always stop locally
+            console.log('[active-sessions-sync] Remote stop detected — setting isActive: false');
+            setSession({
+              isActive: false,
+              startedAt: null,
+              elapsedSeconds: 0,
+              activeWorkouts: new Map(),
+            });
+            // Do NOT call ensureSessionCode here — leaderboard dismiss handles that
           } else {
-            // Session was started (or otherwise updated) — restore full state
+            // Session was started or updated — sync state
+            console.log('[active-sessions-sync] Remote start/update detected — calling restoreSession');
             restoreSession();
           }
         }
