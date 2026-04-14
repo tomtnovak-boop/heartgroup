@@ -159,6 +159,22 @@ export function useWorkoutSession() {
     };
 
     restoreSession();
+
+    // Sync session state when another device/browser starts or stops a session
+    const sub = supabase
+      .channel('active-sessions-sync')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'active_sessions' },
+        () => {
+          restoreSession();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(sub);
+    };
   }, []);
 
   // Realtime sync: update session code when any device creates/ends a session
