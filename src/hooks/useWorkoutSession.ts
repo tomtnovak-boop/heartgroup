@@ -124,7 +124,18 @@ export function useWorkoutSession() {
           console.log('[useWorkoutSession] restored session code:', activeSession.session_code);
           setSessionCode(activeSession.session_code);
         } else {
-          console.log('[useWorkoutSession] no active session found for user, not auto-creating');
+          // No active session found — if we thought one was running, stop it now
+          if (isActiveRef.current) {
+            setSession({
+              isActive: false,
+              startedAt: null,
+              elapsedSeconds: 0,
+              activeWorkouts: new Map(),
+            });
+          }
+          // Auto-create a new session code for next session
+          await ensureSessionCode();
+          return;
         }
 
         const { data: openWorkouts, error } = await supabase
