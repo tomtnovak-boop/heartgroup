@@ -301,6 +301,7 @@ export type Database = {
     }
     Functions: {
       cleanup_old_live_hr: { Args: never; Returns: undefined }
+      cleanup_stale_lobby: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
