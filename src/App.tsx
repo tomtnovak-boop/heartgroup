@@ -20,6 +20,8 @@ import ResetPassword from "./pages/ResetPassword";
 import AdminStats from "./pages/AdminStats";
 import Display from "./pages/Display";
 import ProfileEdit from "./pages/ProfileEdit";
+import Datenschutz from "./pages/Datenschutz";
+import Impressum from "./pages/Impressum";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,6 +63,8 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/display" element={<Display />} />
               <Route path="/profile/edit" element={<ProtectedRoute><ProfileEdit /></ProtectedRoute>} />
+              <Route path="/datenschutz" element={<Datenschutz />} />
+              <Route path="/impressum" element={<Impressum />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
