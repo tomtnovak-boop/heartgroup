@@ -311,7 +311,8 @@ export function NeutralDashboard({ participants, allProfiles, lobbyProfileIds, s
       <div style={{ flex: 1, overflow: 'hidden', position: 'relative', zIndex: 1 }}>
         {rows.map((row) => {
           const isHighZone = row.zone && row.zone >= 4;
-          const isReady = !row.isLive; // In lobby but no live HR yet
+          const isReady = !row.isLive && !row.isDisconnected; // In lobby but no live HR yet
+          const isDisconnected = row.isDisconnected;
           return (
             <div
               key={row.profileId}
@@ -320,14 +321,15 @@ export function NeutralDashboard({ participants, allProfiles, lobbyProfileIds, s
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
-                paddingLeft: row.isLive && row.zone ? '9px' : '12px',
+                paddingLeft: row.isLive && row.zone && !isDisconnected ? '9px' : '12px',
                 paddingRight: '12px',
                 borderBottom: '1px solid rgba(255,255,255,0.04)',
                 background: 'transparent',
-                borderLeft: row.isLive && row.zone ? `3px solid ${LEFT_BORDER_COLORS[row.zone]}` : '3px solid transparent',
-                opacity: row.isLive ? 1 : 0.5,
+                borderLeft: row.isLive && row.zone && !isDisconnected ? `3px solid ${LEFT_BORDER_COLORS[row.zone]}` : '3px solid transparent',
+                opacity: isDisconnected ? 0.45 : (row.isLive ? 1 : 0.5),
+                filter: isDisconnected ? 'grayscale(0.8)' : undefined,
                 overflow: 'hidden',
-                transition: 'background-color 1s ease, border-left 1s ease, opacity 0.5s ease',
+                transition: 'background-color 1s ease, border-left 1s ease, opacity 0.5s ease, filter 0.5s ease',
               }}
             >
               {/* Number */}
@@ -350,9 +352,24 @@ export function NeutralDashboard({ participants, allProfiles, lobbyProfileIds, s
                 whiteSpace: 'nowrap',
                 fontSize: 'clamp(11px, 1.5vh, 18px)',
                 fontWeight: 700,
-                color: isHighZone ? 'white' : 'rgba(255,255,255,0.85)',
+                color: isHighZone && !isDisconnected ? 'white' : 'rgba(255,255,255,0.85)',
+                display: 'flex',
+                flexDirection: 'column',
+                lineHeight: 1.1,
               }}>
-                {row.name}
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{row.name}</span>
+                {isDisconnected && (
+                  <span style={{
+                    fontSize: '9px',
+                    fontWeight: 600,
+                    color: '#F59E0B',
+                    letterSpacing: '0.04em',
+                    textTransform: 'uppercase',
+                    marginTop: 2,
+                  }}>
+                    ⚠ Verbindung verloren
+                  </span>
+                )}
               </div>
 
               {/* Zone Bar */}
@@ -377,7 +394,7 @@ export function NeutralDashboard({ participants, allProfiles, lobbyProfileIds, s
                   />
                 ))}
 
-                {row.isLive && row.hrPercentage !== null && row.zone !== null && (
+                {row.isLive && !isDisconnected && row.hrPercentage !== null && row.zone !== null && (
                   <div
                     style={{
                       position: 'absolute',
@@ -408,15 +425,17 @@ export function NeutralDashboard({ participants, allProfiles, lobbyProfileIds, s
                   fontWeight: isReady ? 600 : 800,
                   fontSize: isReady ? 'clamp(10px, 1.4vh, 13px)' : 'clamp(16px, 2.8vh, 36px)',
                   fontVariantNumeric: 'tabular-nums',
-                  color: isReady
-                    ? 'rgba(255,255,255,0.35)'
-                    : (row.zone ? ZONE_COLORS[row.zone] : 'rgba(255,255,255,0.2)'),
+                  color: isDisconnected
+                    ? 'rgba(255,255,255,0.4)'
+                    : isReady
+                      ? 'rgba(255,255,255,0.35)'
+                      : (row.zone ? ZONE_COLORS[row.zone] : 'rgba(255,255,255,0.2)'),
                   transition: 'color 1s ease',
                   textTransform: isReady ? 'uppercase' : 'none',
                   letterSpacing: isReady ? '0.05em' : undefined,
                 }}
               >
-                {isReady ? 'Ready' : (row.bpm !== null ? row.bpm : '--')}
+                {isDisconnected ? '—' : (isReady ? 'Ready' : (row.bpm !== null ? row.bpm : '--'))}
               </div>
             </div>
           );
