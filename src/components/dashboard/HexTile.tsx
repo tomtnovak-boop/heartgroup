@@ -53,7 +53,8 @@ export function HexTile({ data, isSelected = false, tileSize = 72 }: HexTileProp
   return (
     <div
       className="relative flex flex-col items-center"
-      style={{ width: tileSize, gap: 2 }}
+      style={{ width: tileSize, gap: 2, opacity: isDisconnected ? 0.5 : 1, transition: 'opacity 0.5s ease' }}
+      title={isDisconnected ? 'Verbindung verloren' : undefined}
     >
       {/* Hexagon */}
       <div
