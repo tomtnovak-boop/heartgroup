@@ -44,8 +44,13 @@ export function CoachAlertDashboard({
   const zoneTimers = useRef<Map<string, ZoneTimer>>(new Map());
   const [alerts, setAlerts] = useState<AlertInfo[]>([]);
 
-  // Update zone timers and compute alerts every second
+  // Update zone timers and compute alerts every second — only when session is active
   useEffect(() => {
+    if (!isSessionActive) {
+      zoneTimers.current.clear();
+      setAlerts([]);
+      return;
+    }
     const interval = setInterval(() => {
       const now = Date.now();
       const currentAlerts: AlertInfo[] = [];
@@ -79,7 +84,7 @@ export function CoachAlertDashboard({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [participants]);
+  }, [participants, isSessionActive]);
 
   const alertMap = useMemo(() => {
     const m = new Map<string, AlertInfo>();
