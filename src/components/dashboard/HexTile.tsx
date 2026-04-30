@@ -14,9 +14,10 @@ interface HexTileProps {
   data: LiveHRData;
   isSelected?: boolean;
   tileSize?: number;
+  isInLobby?: boolean;
 }
 
-export function HexTile({ data, isSelected = false, tileSize = 72 }: HexTileProps) {
+export function HexTile({ data, isSelected = false, tileSize = 72, isInLobby = false }: HexTileProps) {
   const isDisconnected = data.connection_status === 'disconnected';
   const color = isDisconnected ? '#888888' : (ZONE_COLORS[data.zone] || ZONE_COLORS[1]);
   const displayName = data.profile?.nickname || data.profile?.name?.split(' ')[0] || '???';
