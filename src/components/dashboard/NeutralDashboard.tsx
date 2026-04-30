@@ -173,7 +173,7 @@ export function NeutralDashboard({ participants, allProfiles, lobbyProfileIds, s
     );
   }
 
-  const showLobbyOverlay = !isSessionActive && !!sessionCode;
+  const showLobbyOverlay = !isSessionActive && !!sessionCode && rows.length === 0;
 
   const rowCount = Math.max(rows.length, 1);
   const rowHeight = `calc((100dvh - 56px - 40px - 28px) / ${rowCount})`;
