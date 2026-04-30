@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState, useMemo } from 'react';
 import { LiveHRData } from '@/hooks/useLiveHR';
-import { Users } from 'lucide-react';
+import { SessionCodeOverlay } from '@/components/SessionCodeOverlay';
 
 interface CoachAlertDashboardProps {
   participants: LiveHRData[];
@@ -106,26 +106,13 @@ export function CoachAlertDashboard({
     ? Math.round(participants.reduce((s, p) => s + p.bpm, 0) / participants.length)
     : 0;
 
-  const showLobby = !isSessionActive && lobbyProfileIds.length > 0 && sessionCode && participants.length === 0;
-
-  return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#0a0a0a', color: '#fff', overflow: 'hidden' }}>
-      {/* Lobby overlay */}
-      {showLobby && (
-        <div style={{
-          position: 'absolute', inset: 0, zIndex: 50,
-          background: 'rgba(10,10,10,0.92)', display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center', gap: 16,
-        }}>
-          <Users style={{ width: 32, height: 32, color: '#666' }} />
-          <div style={{ fontSize: 14, color: '#666' }}>
-            {lobbyProfileIds.length} Teilnehmer in der Lobby
-          </div>
-          <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: '0.2em', color: '#fff' }}>
-            {sessionCode}
-          </div>
-        </div>
-      )}
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#0a0a0a', color: '#fff', overflow: 'hidden', position: 'relative' }}>
+      {/* Session code overlay (z-index 10, pointer-events none) */}
+      <SessionCodeOverlay
+        sessionCode={sessionCode}
+        sessionStarted={isSessionActive}
+        participantCount={lobbyProfileIds.length}
+      />
 
       {/* Scrollable content */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px' }}>
