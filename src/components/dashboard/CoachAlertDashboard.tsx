@@ -106,6 +106,7 @@ export function CoachAlertDashboard({
     ? Math.round(participants.reduce((s, p) => s + p.bpm, 0) / participants.length)
     : 0;
 
+  return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#0a0a0a', color: '#fff', overflow: 'hidden', position: 'relative' }}>
       {/* Session code overlay (z-index 10, pointer-events none) */}
       <SessionCodeOverlay
