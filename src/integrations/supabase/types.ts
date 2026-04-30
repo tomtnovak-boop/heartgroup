@@ -306,6 +306,12 @@ export type Database = {
       cleanup_disconnected_users: { Args: never; Returns: undefined }
       cleanup_old_live_hr: { Args: never; Returns: undefined }
       cleanup_stale_lobby: { Args: never; Returns: undefined }
+      get_user_session_codes: {
+        Args: { _user_id: string }
+        Returns: {
+          session_code: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
