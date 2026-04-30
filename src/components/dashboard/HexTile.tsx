@@ -54,8 +54,8 @@ export function HexTile({ data, isSelected = false, tileSize = 72, isInLobby = f
   return (
     <div
       className="relative flex flex-col items-center"
-      style={{ width: tileSize, gap: 2, opacity: isDisconnected ? 0.5 : 1, transition: 'opacity 0.5s ease' }}
-      title={isDisconnected ? 'Verbindung verloren' : undefined}
+      style={{ width: tileSize, gap: 2, opacity: isDisconnected ? 0.5 : (isInLobby ? 0.5 : 1), transition: 'opacity 0.5s ease' }}
+      title={isDisconnected ? 'Verbindung verloren' : (isInLobby ? 'In der Lobby' : undefined)}
     >
       {/* Hexagon */}
       <div
