@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import type { LiveHRData } from '@/hooks/useLiveHR';
+import { SessionCodeOverlay } from '@/components/SessionCodeOverlay';
 
 interface Props {
   participants: LiveHRData[];
@@ -33,7 +34,7 @@ export function ZoneFocusDashboard({ participants, isLoading, isSessionActive, s
     ? Math.round(participants.reduce((s, p) => s + p.bpm, 0) / participants.length)
     : 0;
 
-  const showLobby = !isSessionActive && sessionCode && participants.length === 0;
+  // Lobby overlay handled by SessionCodeOverlay component
 
   if (isLoading) {
     return (
@@ -45,24 +46,12 @@ export function ZoneFocusDashboard({ participants, isLoading, isSessionActive, s
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#0a0a0a', overflow: 'hidden', position: 'relative' }}>
-      {/* Lobby overlay */}
-      {showLobby && (
-        <div style={{
-          position: 'absolute', inset: 0, zIndex: 20,
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          background: 'rgba(10,10,10,0.85)',
-        }}>
-          <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.15em', color: '#666', marginBottom: 8 }}>Session Code</div>
-          <div style={{ fontSize: '72px', fontWeight: 900, color: '#fff', letterSpacing: '0.2em', textShadow: '0 0 40px rgba(255,255,255,0.15)' }}>
-            {sessionCode}
-          </div>
-          {lobbyProfileIds.length > 0 && (
-            <div style={{ marginTop: 16, fontSize: '13px', color: '#666' }}>
-              {lobbyProfileIds.length} im Wartebereich
-            </div>
-          )}
-        </div>
-      )}
+      {/* Session code overlay (z-index 10, pointer-events none) */}
+      <SessionCodeOverlay
+        sessionCode={sessionCode}
+        sessionStarted={isSessionActive}
+        participantCount={lobbyProfileIds.length}
+      />
 
       {/* Zone rows */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '12px 16px 4px' }}>
