@@ -17,7 +17,8 @@ interface HexTileProps {
 }
 
 export function HexTile({ data, isSelected = false, tileSize = 72 }: HexTileProps) {
-  const color = ZONE_COLORS[data.zone] || ZONE_COLORS[1];
+  const isDisconnected = data.connection_status === 'disconnected';
+  const color = isDisconnected ? '#888888' : (ZONE_COLORS[data.zone] || ZONE_COLORS[1]);
   const displayName = data.profile?.nickname || data.profile?.name?.split(' ')[0] || '???';
 
   const hexClip = 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)';
@@ -52,7 +53,8 @@ export function HexTile({ data, isSelected = false, tileSize = 72 }: HexTileProp
   return (
     <div
       className="relative flex flex-col items-center"
-      style={{ width: tileSize, gap: 2 }}
+      style={{ width: tileSize, gap: 2, opacity: isDisconnected ? 0.5 : 1, transition: 'opacity 0.5s ease' }}
+      title={isDisconnected ? 'Verbindung verloren' : undefined}
     >
       {/* Hexagon */}
       <div
