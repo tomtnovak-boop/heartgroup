@@ -10,6 +10,8 @@ export interface LiveHRData {
   zone: number;
   hr_percentage: number;
   timestamp: string;
+  connection_status?: 'active' | 'disconnected';
+  last_seen?: string;
   profile?: {
     id: string;
     name: string;
