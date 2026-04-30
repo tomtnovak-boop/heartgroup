@@ -76,6 +76,7 @@ export function useLiveHR(onNewData?: (data: { profile_id: string; bpm: number; 
                 ...entry,
                 zone: recalcZone,
                 hr_percentage: recalcHRPct,
+                connection_status: (entry as any).connection_status === 'disconnected' ? 'disconnected' : 'active',
                 profile: {
                   id: profile.id,
                   name: profile.name,
