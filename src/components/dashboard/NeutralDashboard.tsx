@@ -85,6 +85,7 @@ export function NeutralDashboard({ participants, allProfiles, lobbyProfileIds, s
         hrPercentage: realHRPercent,
         zone: realZone,
         isLive: !!live && live.bpm > 0,
+        isDisconnected: live?.connection_status === 'disconnected',
       };
     });
   }, [lobbyProfileIds, allProfiles, participants]);
