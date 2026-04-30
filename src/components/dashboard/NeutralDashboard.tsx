@@ -173,7 +173,7 @@ export function NeutralDashboard({ participants, allProfiles, lobbyProfileIds, s
     );
   }
 
-  const showLobbyOverlay = !isSessionActive && !!sessionCode;
+  const showLobbyOverlay = !isSessionActive && !!sessionCode && rows.length === 0;
 
   const rowCount = Math.max(rows.length, 1);
   const rowHeight = `calc((100dvh - 56px - 40px - 28px) / ${rowCount})`;
@@ -313,6 +313,7 @@ export function NeutralDashboard({ participants, allProfiles, lobbyProfileIds, s
           const isHighZone = row.zone && row.zone >= 4;
           const isReady = !row.isLive && !row.isDisconnected; // In lobby but no live HR yet
           const isDisconnected = row.isDisconnected;
+          const isInLobby = !isSessionActive;
           return (
             <div
               key={row.profileId}
@@ -326,7 +327,7 @@ export function NeutralDashboard({ participants, allProfiles, lobbyProfileIds, s
                 borderBottom: '1px solid rgba(255,255,255,0.04)',
                 background: 'transparent',
                 borderLeft: row.isLive && row.zone && !isDisconnected ? `3px solid ${LEFT_BORDER_COLORS[row.zone]}` : '3px solid transparent',
-                opacity: isDisconnected ? 0.45 : (row.isLive ? 1 : 0.5),
+                opacity: isDisconnected ? 0.45 : (isInLobby ? 0.5 : (row.isLive ? 1 : 0.5)),
                 filter: isDisconnected ? 'grayscale(0.8)' : undefined,
                 overflow: 'hidden',
                 transition: 'background-color 1s ease, border-left 1s ease, opacity 0.5s ease, filter 0.5s ease',

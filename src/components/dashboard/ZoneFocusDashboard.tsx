@@ -33,7 +33,7 @@ export function ZoneFocusDashboard({ participants, isLoading, isSessionActive, s
     ? Math.round(participants.reduce((s, p) => s + p.bpm, 0) / participants.length)
     : 0;
 
-  const showLobby = !isSessionActive && sessionCode;
+  const showLobby = !isSessionActive && sessionCode && participants.length === 0;
 
   if (isLoading) {
     return (
@@ -85,6 +85,7 @@ export function ZoneFocusDashboard({ participants, isLoading, isSessionActive, s
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, minHeight: 28 }}>
                 {list.map((p, i) => {
                   const chipOpacity = maxBpm > 0 ? 0.6 + 0.4 * (p.bpm / maxBpm) : 1;
+                  const finalOpacity = isSessionActive ? chipOpacity : chipOpacity * 0.5;
                   return (
                     <div key={p.profile_id} style={{
                       background: color,
@@ -93,7 +94,8 @@ export function ZoneFocusDashboard({ participants, isLoading, isSessionActive, s
                       display: 'flex',
                       alignItems: 'center',
                       gap: 6,
-                      opacity: chipOpacity,
+                      opacity: finalOpacity,
+                      transition: 'opacity 0.5s ease',
                     }}>
                       <span style={{ fontSize: '12px', fontWeight: 700, color: '#fff' }}>
                         {p.profile?.nickname || p.profile?.name || '?'}

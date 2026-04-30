@@ -44,8 +44,13 @@ export function CoachAlertDashboard({
   const zoneTimers = useRef<Map<string, ZoneTimer>>(new Map());
   const [alerts, setAlerts] = useState<AlertInfo[]>([]);
 
-  // Update zone timers and compute alerts every second
+  // Update zone timers and compute alerts every second — only when session is active
   useEffect(() => {
+    if (!isSessionActive) {
+      zoneTimers.current.clear();
+      setAlerts([]);
+      return;
+    }
     const interval = setInterval(() => {
       const now = Date.now();
       const currentAlerts: AlertInfo[] = [];
@@ -79,7 +84,7 @@ export function CoachAlertDashboard({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [participants]);
+  }, [participants, isSessionActive]);
 
   const alertMap = useMemo(() => {
     const m = new Map<string, AlertInfo>();
@@ -101,7 +106,7 @@ export function CoachAlertDashboard({
     ? Math.round(participants.reduce((s, p) => s + p.bpm, 0) / participants.length)
     : 0;
 
-  const showLobby = !isSessionActive && lobbyProfileIds.length > 0 && sessionCode;
+  const showLobby = !isSessionActive && lobbyProfileIds.length > 0 && sessionCode && participants.length === 0;
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#0a0a0a', color: '#fff', overflow: 'hidden' }}>
@@ -205,7 +210,7 @@ export function CoachAlertDashboard({
                     const alert = alertMap.get(p.profile_id);
                     const name = p.profile?.nickname || p.profile?.name || '?';
                     return (
-                      <div key={p.profile_id} style={{ position: 'relative' }}>
+                      <div key={p.profile_id} style={{ position: 'relative', opacity: isSessionActive ? 1 : 0.5, transition: 'opacity 0.5s ease' }}>
                         <div style={{
                           display: 'flex', alignItems: 'center', gap: 4,
                           background: `${cfg.color}22`, border: `1px solid ${cfg.color}44`,

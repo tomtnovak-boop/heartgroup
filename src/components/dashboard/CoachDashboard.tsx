@@ -202,14 +202,15 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
                 data={p}
                 isSelected={p.profile_id === selectedProfileId}
                 tileSize={FIXED_TILE_SIZE}
+                isInLobby={!isSessionActive}
               />
             </div>
           );
         })}
       </div>
 
-      {/* Session code lobby overlay */}
-      {showLobbyOverlay && (
+      {/* Session code lobby overlay — only when no one in lobby yet */}
+      {showLobbyOverlay && allTiles.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 30 }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', textAlign: 'center' }}>
             <p style={{
