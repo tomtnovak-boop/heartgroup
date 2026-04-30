@@ -5,6 +5,7 @@ import { HRHistoryStrip } from './HRHistoryStrip';
 import { Heart } from 'lucide-react';
 import { LiveHRData } from '@/hooks/useLiveHR';
 import { supabase } from '@/integrations/supabase/client';
+import { SessionCodeOverlay } from '@/components/SessionCodeOverlay';
 
 interface CoachDashboardProps {
   participants: LiveHRData[];
@@ -209,41 +210,11 @@ export function CoachDashboard({ participants, isLoading, activeTab, selectedPro
         })}
       </div>
 
-      {/* Session code lobby overlay — only when no one in lobby yet */}
-      {showLobbyOverlay && allTiles.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 30 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', textAlign: 'center' }}>
-            <p style={{
-              color: 'rgba(255,255,255,0.6)',
-              fontSize: '12px',
-              fontWeight: 600,
-              letterSpacing: '0.25em',
-              textTransform: 'uppercase',
-            }}>
-              SESSION CODE
-            </p>
-            <p style={{
-              color: 'white',
-              fontSize: 'clamp(48px, 10vw, 96px)',
-              fontWeight: 900,
-              letterSpacing: '0.2em',
-              lineHeight: 1,
-              textShadow: '0 0 40px rgba(255,68,37,0.4), 0 0 80px rgba(255,68,37,0.2)',
-            }}>
-              {sessionCode}
-            </p>
-            <p style={{
-              color: 'rgba(255,255,255,0.5)',
-              fontSize: '13px',
-              fontWeight: 400,
-            }}>
-              {lobbyProfileIds.length > 0
-                ? `${lobbyProfileIds.length} participant${lobbyProfileIds.length !== 1 ? 's' : ''} ready`
-                : 'Share this code with participants'}
-            </p>
-          </div>
-        </div>
-      )}
+      <SessionCodeOverlay
+        sessionCode={sessionCode ?? null}
+        sessionStarted={isSessionActive}
+        participantCount={lobbyProfileIds.length}
+      />
 
       <HRHistoryStrip averageBPM={averageBPM} isSessionActive={isSessionActive} />
 
