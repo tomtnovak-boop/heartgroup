@@ -93,7 +93,7 @@ export function AppHeader({
                   textTransform: 'uppercase',
                   color: 'rgba(255,255,255,0.4)',
                 }}>
-                  {sessionActive ? 'Session' : 'Next'}
+                  {sessionActive ? 'Code' : 'Next'}
                 </span>
                 <span style={{
                   fontSize: '22px',
@@ -104,16 +104,18 @@ export function AppHeader({
                 }}>
                   {sessionCode}
                 </span>
-                {!sessionActive && (
-                  <span style={{
-                    fontSize: '9px',
-                    fontWeight: 500,
-                    color: lobbyCount > 0 ? 'hsl(145 80% 45%)' : 'rgba(255,255,255,0.3)',
-                    letterSpacing: '0.05em',
-                  }}>
-                    {lobbyCount > 0 ? `${lobbyCount} ready` : 'waiting...'}
-                  </span>
-                )}
+                <span style={{
+                  fontSize: '9px',
+                  fontWeight: 600,
+                  color: sessionActive
+                    ? 'hsl(145 80% 45%)'
+                    : (lobbyCount > 0 ? 'hsl(145 80% 45%)' : 'rgba(255,255,255,0.3)'),
+                  letterSpacing: '0.05em',
+                }}>
+                  {sessionActive
+                    ? '● LIVE'
+                    : (lobbyCount > 0 ? `${lobbyCount} waiting...` : 'waiting...')}
+                </span>
               </div>
             )}
             {!sessionCode && !sessionActive && (
