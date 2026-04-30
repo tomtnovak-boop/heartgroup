@@ -50,6 +50,7 @@ export type Database = {
       live_hr: {
         Row: {
           bpm: number
+          connection_status: string
           hr_percentage: number
           id: string
           last_seen: string | null
@@ -60,6 +61,7 @@ export type Database = {
         }
         Insert: {
           bpm: number
+          connection_status?: string
           hr_percentage: number
           id?: string
           last_seen?: string | null
@@ -70,6 +72,7 @@ export type Database = {
         }
         Update: {
           bpm?: number
+          connection_status?: string
           hr_percentage?: number
           id?: string
           last_seen?: string | null
@@ -300,6 +303,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_disconnected_users: { Args: never; Returns: undefined }
       cleanup_old_live_hr: { Args: never; Returns: undefined }
       cleanup_stale_lobby: { Args: never; Returns: undefined }
       has_role: {
