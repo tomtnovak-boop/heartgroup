@@ -33,7 +33,7 @@ export function ZoneFocusDashboard({ participants, isLoading, isSessionActive, s
     ? Math.round(participants.reduce((s, p) => s + p.bpm, 0) / participants.length)
     : 0;
 
-  const showLobby = !isSessionActive && sessionCode;
+  const showLobby = !isSessionActive && sessionCode && participants.length === 0;
 
   if (isLoading) {
     return (
