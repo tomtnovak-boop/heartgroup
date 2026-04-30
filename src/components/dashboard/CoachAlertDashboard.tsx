@@ -210,7 +210,7 @@ export function CoachAlertDashboard({
                     const alert = alertMap.get(p.profile_id);
                     const name = p.profile?.nickname || p.profile?.name || '?';
                     return (
-                      <div key={p.profile_id} style={{ position: 'relative' }}>
+                      <div key={p.profile_id} style={{ position: 'relative', opacity: isSessionActive ? 1 : 0.5, transition: 'opacity 0.5s ease' }}>
                         <div style={{
                           display: 'flex', alignItems: 'center', gap: 4,
                           background: `${cfg.color}22`, border: `1px solid ${cfg.color}44`,
