@@ -122,6 +122,7 @@ export function useLiveHR(onNewData?: (data: { profile_id: string; bpm: number; 
             zone: number;
             hr_percentage: string | number;
             timestamp: string;
+            connection_status?: string;
           };
           
           // Use cached profile instead of DB query
@@ -148,6 +149,7 @@ export function useLiveHR(onNewData?: (data: { profile_id: string; bpm: number; 
                 zone: recalcZone,
                 hr_percentage: recalcHRPct,
                 timestamp: newData.timestamp,
+                connection_status: newData.connection_status === 'disconnected' ? 'disconnected' : 'active',
                 profile: {
                   id: profile.id,
                   name: profile.name,
