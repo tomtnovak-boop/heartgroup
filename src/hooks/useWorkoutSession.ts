@@ -223,6 +223,26 @@ export function useWorkoutSession() {
 
   // Realtime sync: update session code when any device creates/ends a session
   useEffect(() => {
+    const refetchCode = async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
+      const { data } = await supabase
+        .from('active_sessions')
+        .select('session_code, auto_end_at')
+        .eq('created_by', userData.user.id)
+        .is('ended_at', null)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data?.session_code) {
+        setSessionCode(data.session_code);
+        setAutoEndAt((data as any).auto_end_at ? new Date((data as any).auto_end_at) : null);
+      } else {
+        setSessionCode(null);
+        setAutoEndAt(null);
+      }
+    };
+
     const channel = supabase
       .channel('session-code-sync')
       .on(
@@ -242,29 +262,22 @@ export function useWorkoutSession() {
         }
       )
       .subscribe((status) => {
-        if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
-          console.log('[useWorkoutSession] Realtime disconnected — refetching session');
-          const refetch = async () => {
-            const { data } = await supabase
-              .from('active_sessions')
-              .select('session_code, auto_end_at')
-              .is('ended_at', null)
-              .order('created_at', { ascending: false })
-              .limit(1)
-              .maybeSingle();
-            if (data?.session_code) {
-              setSessionCode(data.session_code);
-              setAutoEndAt((data as any).auto_end_at ? new Date((data as any).auto_end_at) : null);
-            } else {
-              setSessionCode(null);
-              setAutoEndAt(null);
-            }
-          };
-          void refetch();
+        if (status === 'SUBSCRIBED' || status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+          void refetchCode();
         }
       });
 
-    return () => { void supabase.removeChannel(channel); };
+    const resync = () => {
+      if (document.visibilityState === 'visible') void refetchCode();
+    };
+    document.addEventListener('visibilitychange', resync);
+    window.addEventListener('focus', resync);
+
+    return () => {
+      document.removeEventListener('visibilitychange', resync);
+      window.removeEventListener('focus', resync);
+      void supabase.removeChannel(channel);
+    };
   }, []);
 
   // Subscribe to lobby for current session code
