@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 
 import { supabase } from '@/integrations/supabase/client';
 import { LiveHRData } from '@/hooks/useLiveHR';
+import { calculateCaloriesPerMinute } from '@/lib/heartRateUtils';
 
 interface WorkoutSession {
   isActive: boolean;
@@ -77,10 +78,11 @@ export function useWorkoutSession() {
         return;
       }
 
-      // Check for ANY active session globally (no created_by filter)
+      // Only reuse sessions created by this coach
       const { data: existing } = await supabase
         .from('active_sessions')
         .select('session_code')
+        .eq('created_by', userData.user.id)
         .is('ended_at', null)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -594,8 +596,9 @@ export function useWorkoutSession() {
 
         const weight = profile?.weight || 75;
         const age = profile?.age || 30;
+        const gender: 'male' | 'female' = profile?.gender === 'female' ? 'female' : 'male';
         const totalCalories = Math.round(
-          (durationSeconds / 60) * (0.6309 * avgBpm - 55.0969 + 0.1988 * weight + 0.2017 * age) / 4.184
+          (durationSeconds / 60) * calculateCaloriesPerMinute(avgBpm, weight, age, gender)
         );
 
         workoutStats.push({
