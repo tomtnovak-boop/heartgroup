@@ -710,10 +710,8 @@ export default function Participant() {
     return h > 0 ? `${h}h ${m}m` : `${m}m`;
   };
 
-  // If in training mode, show HeartRateDisplay
-  if (isTrainingActive && profile) {
-    return <HeartRateDisplay profile={profile} onBack={() => setIsTrainingActive(false)} />;
-  }
+
+
 
 
 
