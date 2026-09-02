@@ -322,10 +322,20 @@ export default function Participant() {
       }, () => {
         checkCoachSession();
       })
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') checkCoachSession();
+      });
+
+    const resync = () => {
+      if (document.visibilityState === 'visible') checkCoachSession();
+    };
+    document.addEventListener('visibilitychange', resync);
+    window.addEventListener('focus', resync);
 
     return () => {
       clearInterval(interval);
+      document.removeEventListener('visibilitychange', resync);
+      window.removeEventListener('focus', resync);
       supabase.removeChannel(sessionSub);
     };
   }, [profile]);

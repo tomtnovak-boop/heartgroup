@@ -355,9 +355,21 @@ export default function Display() {
         else setDisplayViewState('fancy');
         setUnlocked(true);
       })
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') checkAndUnlock();
+      });
 
-    return () => { supabase.removeChannel(sub); };
+    const resync = () => {
+      if (document.visibilityState === 'visible') checkAndUnlock();
+    };
+    document.addEventListener('visibilitychange', resync);
+    window.addEventListener('focus', resync);
+
+    return () => {
+      document.removeEventListener('visibilitychange', resync);
+      window.removeEventListener('focus', resync);
+      supabase.removeChannel(sub);
+    };
   }, [unlocked]);
 
   // Subscribe to display_view changes when unlocked

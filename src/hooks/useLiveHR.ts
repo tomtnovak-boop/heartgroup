@@ -205,6 +205,8 @@ export function useLiveHR(onNewData?: (data: { profile_id: string; bpm: number; 
     }, 10000);
 
     return () => {
+      document.removeEventListener('visibilitychange', resync);
+      window.removeEventListener('focus', resync);
       channel.unsubscribe();
       clearInterval(cleanupInterval);
     };
