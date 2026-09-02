@@ -119,9 +119,13 @@ export function useWorkoutSession() {
       try {
 
         // Only read sessions created by this coach
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData.user) return;
+
         const { data: activeSession } = await supabase
           .from('active_sessions')
           .select('session_code, started_at')
+          .eq('created_by', userData.user.id)
           .is('ended_at', null)
           .order('created_at', { ascending: false })
           .limit(1)
@@ -197,9 +201,22 @@ export function useWorkoutSession() {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('[active-sessions-sync] subscribed — resyncing from DB');
+          restoreSession();
+        }
+      });
+
+    const resync = () => {
+      if (document.visibilityState === 'visible') restoreSession();
+    };
+    document.addEventListener('visibilitychange', resync);
+    window.addEventListener('focus', resync);
 
     return () => {
+      document.removeEventListener('visibilitychange', resync);
+      window.removeEventListener('focus', resync);
       supabase.removeChannel(sub);
     };
   }, []);
