@@ -253,26 +253,36 @@ function CreateParticipantModal({ open, onOpenChange, onCreated }: {
     }
     setIsSubmitting(true);
 
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email: email.trim(), password: pw,
-      options: { emailRedirectTo: window.location.origin },
-    });
-    if (signUpError || !signUpData.user) {
-      toast({ title: 'Fehler', description: signUpError?.message || 'User konnte nicht erstellt werden', variant: 'destructive' });
-      setIsSubmitting(false); return;
-    }
-
-    const userId = signUpData.user.id;
     const fullName = `${firstName.trim()} ${lastName.trim()}`;
     const age = calculateAgeFromBirthDate(birthDate);
     const maxHr = calculateMaxHR(age);
 
-    await supabase.from('profiles').upsert({
-      user_id: userId, name: fullName, nickname: nickname.trim() || null,
-      birth_date: format(birthDate, 'yyyy-MM-dd'), age, max_hr: maxHr,
-      custom_max_hr: maxHrOverride ? parseInt(maxHrOverride, 10) : null,
-      weight: parseInt(weight, 10), gender,
+    const { data, error } = await supabase.functions.invoke('manage-coach', {
+      body: {
+        action: 'create-participant',
+        email: email.trim(),
+        password: pw,
+        name: fullName,
+        nickname: nickname.trim() || null,
+        birth_date: format(birthDate, 'yyyy-MM-dd'),
+        age,
+        max_hr: maxHr,
+        custom_max_hr: maxHrOverride ? parseInt(maxHrOverride, 10) : null,
+        weight: parseInt(weight, 10),
+        gender,
+      },
     });
+
+    if (error || (data as any)?.error) {
+      toast({
+        title: 'Fehler',
+        description: (data as any)?.error || error?.message || 'User konnte nicht erstellt werden',
+        variant: 'destructive',
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
 
     toast({ title: 'Teilnehmer erstellt', description: `${fullName} wurde erfolgreich angelegt.` });
     setIsSubmitting(false); reset(); onOpenChange(false); onCreated();
