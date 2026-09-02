@@ -1,1 +1,3 @@
 project_id = "hrmmurxlyguzthdbsaec"
+[functions.cleanup-stale-participants]
+verify_jwt = true

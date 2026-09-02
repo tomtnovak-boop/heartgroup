@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 
 import { supabase } from '@/integrations/supabase/client';
 import { LiveHRData } from '@/hooks/useLiveHR';
+import { calculateCaloriesPerMinute } from '@/lib/heartRateUtils';
 
 interface WorkoutSession {
   isActive: boolean;
@@ -77,10 +78,11 @@ export function useWorkoutSession() {
         return;
       }
 
-      // Check for ANY active session globally (no created_by filter)
+      // Only reuse sessions created by this coach
       const { data: existing } = await supabase
         .from('active_sessions')
         .select('session_code')
+        .eq('created_by', userData.user.id)
         .is('ended_at', null)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -117,9 +119,13 @@ export function useWorkoutSession() {
       try {
 
         // Only read sessions created by this coach
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData.user) return;
+
         const { data: activeSession } = await supabase
           .from('active_sessions')
           .select('session_code, started_at')
+          .eq('created_by', userData.user.id)
           .is('ended_at', null)
           .order('created_at', { ascending: false })
           .limit(1)
@@ -195,15 +201,48 @@ export function useWorkoutSession() {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('[active-sessions-sync] subscribed — resyncing from DB');
+          restoreSession();
+        }
+      });
+
+    const resync = () => {
+      if (document.visibilityState === 'visible') restoreSession();
+    };
+    document.addEventListener('visibilitychange', resync);
+    window.addEventListener('focus', resync);
 
     return () => {
+      document.removeEventListener('visibilitychange', resync);
+      window.removeEventListener('focus', resync);
       supabase.removeChannel(sub);
     };
   }, []);
 
   // Realtime sync: update session code when any device creates/ends a session
   useEffect(() => {
+    const refetchCode = async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
+      const { data } = await supabase
+        .from('active_sessions')
+        .select('session_code, auto_end_at')
+        .eq('created_by', userData.user.id)
+        .is('ended_at', null)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data?.session_code) {
+        setSessionCode(data.session_code);
+        setAutoEndAt((data as any).auto_end_at ? new Date((data as any).auto_end_at) : null);
+      } else {
+        setSessionCode(null);
+        setAutoEndAt(null);
+      }
+    };
+
     const channel = supabase
       .channel('session-code-sync')
       .on(
@@ -223,29 +262,22 @@ export function useWorkoutSession() {
         }
       )
       .subscribe((status) => {
-        if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
-          console.log('[useWorkoutSession] Realtime disconnected — refetching session');
-          const refetch = async () => {
-            const { data } = await supabase
-              .from('active_sessions')
-              .select('session_code, auto_end_at')
-              .is('ended_at', null)
-              .order('created_at', { ascending: false })
-              .limit(1)
-              .maybeSingle();
-            if (data?.session_code) {
-              setSessionCode(data.session_code);
-              setAutoEndAt((data as any).auto_end_at ? new Date((data as any).auto_end_at) : null);
-            } else {
-              setSessionCode(null);
-              setAutoEndAt(null);
-            }
-          };
-          void refetch();
+        if (status === 'SUBSCRIBED' || status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+          void refetchCode();
         }
       });
 
-    return () => { void supabase.removeChannel(channel); };
+    const resync = () => {
+      if (document.visibilityState === 'visible') void refetchCode();
+    };
+    document.addEventListener('visibilitychange', resync);
+    window.addEventListener('focus', resync);
+
+    return () => {
+      document.removeEventListener('visibilitychange', resync);
+      window.removeEventListener('focus', resync);
+      void supabase.removeChannel(channel);
+    };
   }, []);
 
   // Subscribe to lobby for current session code
@@ -594,8 +626,9 @@ export function useWorkoutSession() {
 
         const weight = profile?.weight || 75;
         const age = profile?.age || 30;
+        const gender: 'male' | 'female' = profile?.gender === 'female' ? 'female' : 'male';
         const totalCalories = Math.round(
-          (durationSeconds / 60) * (0.6309 * avgBpm - 55.0969 + 0.1988 * weight + 0.2017 * age) / 4.184
+          (durationSeconds / 60) * calculateCaloriesPerMinute(avgBpm, weight, age, gender)
         );
 
         workoutStats.push({

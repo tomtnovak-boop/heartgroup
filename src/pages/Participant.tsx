@@ -6,7 +6,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { HeartRateDisplay } from '@/components/participant/HeartRateDisplay';
 import { WorkoutHistory } from '@/components/participant/WorkoutHistory';
 import { SessionLeaderboard } from '@/components/dashboard/SessionLeaderboard';
 import { useBluetoothHR } from '@/hooks/useBluetoothHR';
@@ -64,7 +63,6 @@ export default function Participant() {
   const [isLoading, setIsLoading] = useState(true);
   
   const [showHistory, setShowHistory] = useState(false);
-  const [isTrainingActive, setIsTrainingActive] = useState(false);
   const [monthlyWorkouts, setMonthlyWorkouts] = useState<Workout[]>([]);
   const [prevMonthWorkouts, setPrevMonthWorkouts] = useState<Workout[]>([]);
   const [recentWorkouts, setRecentWorkouts] = useState<Workout[]>([]);
@@ -324,10 +322,20 @@ export default function Participant() {
       }, () => {
         checkCoachSession();
       })
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') checkCoachSession();
+      });
+
+    const resync = () => {
+      if (document.visibilityState === 'visible') checkCoachSession();
+    };
+    document.addEventListener('visibilitychange', resync);
+    window.addEventListener('focus', resync);
 
     return () => {
       clearInterval(interval);
+      document.removeEventListener('visibilitychange', resync);
+      window.removeEventListener('focus', resync);
       supabase.removeChannel(sessionSub);
     };
   }, [profile]);
@@ -710,10 +718,8 @@ export default function Participant() {
     return h > 0 ? `${h}h ${m}m` : `${m}m`;
   };
 
-  // If in training mode, show HeartRateDisplay
-  if (isTrainingActive && profile) {
-    return <HeartRateDisplay profile={profile} onBack={() => setIsTrainingActive(false)} />;
-  }
+
+
 
 
 

@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1788382108188,
+      "tag": "0000_tighten_workout_hr_data_insert_and_active_sessions_select",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788382131731,
+      "tag": "0001_allow_coach_admin_read_all_active_sessions",
+      "breakpoints": true
+    }
+  ]
+}

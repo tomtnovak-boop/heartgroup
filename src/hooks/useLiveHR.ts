@@ -175,13 +175,20 @@ export function useLiveHR(onNewData?: (data: { profile_id: string; bpm: number; 
       )
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          console.log('[useLiveHR] Realtime connected');
+          console.log('[useLiveHR] Realtime connected — resyncing');
+          void fetchLatestData();
         }
         if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
           console.log('[useLiveHR] Realtime disconnected — refetching data');
           void fetchLatestData();
         }
       });
+
+    const resync = () => {
+      if (document.visibilityState === 'visible') void fetchLatestData();
+    };
+    document.addEventListener('visibilitychange', resync);
+    window.addEventListener('focus', resync);
 
     // Cleanup stale participants every 10 seconds
     const cleanupInterval = setInterval(() => {
@@ -198,6 +205,8 @@ export function useLiveHR(onNewData?: (data: { profile_id: string; bpm: number; 
     }, 10000);
 
     return () => {
+      document.removeEventListener('visibilitychange', resync);
+      window.removeEventListener('focus', resync);
       channel.unsubscribe();
       clearInterval(cleanupInterval);
     };

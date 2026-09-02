@@ -141,7 +141,68 @@ Deno.serve(async (req) => {
       }
     }
 
+    if (action === "create-participant") {
+      try {
+        const {
+          email, password, name, nickname, birth_date,
+          age, max_hr, custom_max_hr, weight, gender,
+        } = payload;
+
+        if (!email || !password || !name) {
+          return new Response(JSON.stringify({ error: "email, password and name required" }), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
+          email,
+          password,
+          email_confirm: true,
+        });
+
+        if (createError || !newUser?.user) {
+          return new Response(JSON.stringify({ error: createError?.message || "User creation failed" }), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        const newUserId = newUser.user.id;
+
+        const { error: profileError } = await adminClient.from("profiles").upsert({
+          user_id: newUserId,
+          name,
+          nickname: nickname || null,
+          birth_date: birth_date || null,
+          age: age ?? 30,
+          max_hr: max_hr ?? null,
+          custom_max_hr: custom_max_hr ?? null,
+          weight: weight ?? null,
+          gender: gender ?? null,
+        }, { onConflict: "user_id" });
+
+        if (profileError) {
+          return new Response(JSON.stringify({ error: profileError.message }), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        return new Response(JSON.stringify({ success: true, user_id: newUserId, email }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return new Response(JSON.stringify({ error: msg }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     if (action === "delete") {
+
       const { user_id: targetUserId } = payload;
       if (!targetUserId) {
         return new Response(JSON.stringify({ error: "user_id required" }), {
