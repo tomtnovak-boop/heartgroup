@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, LogOut, BarChart3, LayoutGrid, Users, Shield, TrendingUp, Radio, Layers, Bell } from 'lucide-react';
+import { Heart, LogOut, BarChart3, LayoutGrid, Users, Shield, TrendingUp, Radio, Layers, Bell, Target } from 'lucide-react';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -32,10 +32,8 @@ export default function CoachHub() {
       { key: 'coaches', icon: Shield, title: 'Coaches', sub: 'Verwalten', route: '/admin/coaches' },
     ] : []),
     // Row 2 — Live views
-    { key: 'fancy', icon: LayoutGrid, title: 'Dashboard Fancy', sub: 'Live HR · Zonen', route: '/coach/fancy' },
-    { key: 'neutral', icon: BarChart3, title: 'Dashboard Neutral', sub: 'Live HR · Zonen', route: '/coach/neutral' },
-    { key: 'zone-focus', icon: Layers, title: 'Zone Focus', sub: 'Live HR · Sortiert', route: '/coach/zone-focus' },
-    { key: 'coach-alert', icon: Bell, title: 'Coach Alert', sub: 'Alerts · Zonen', route: '/coach/coach-alert' },
+    { key: 'namegrid', icon: LayoutGrid, title: 'Übersicht', sub: 'Live · Name + Zone', route: '/coach/namegrid' },
+    { key: 'target', icon: Target, title: 'Ziel-Fokus', sub: 'Live · Ziel-Zone', route: '/coach/target' },
     // Row 3 — Session control
     { key: 'cdash', icon: Radio, title: 'Coach Dashboard', sub: 'Session · Control', route: '/coach-dashboard' },
   ];
@@ -108,7 +106,7 @@ export default function CoachHub() {
             <div style={{ gridColumn: 'span 4', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', marginTop: '8px', marginBottom: '2px' }}>
               Live Ansichten
             </div>
-            {cards.filter(c => ['fancy', 'neutral', 'zone-focus', 'coach-alert'].includes(c.key)).map(card => (
+            {cards.filter(c => ['namegrid', 'target'].includes(c.key)).map(card => (
               <button
                 key={card.key}
                 onClick={() => navigate(card.route)}
