@@ -15,6 +15,13 @@
       "when": 1788382131731,
       "tag": "0001_allow_coach_admin_read_all_active_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789580412410,
+      "tag": "0002_add_target_zones_to_active_sessions",
+      "breakpoints": true
     }
   ]
 }
