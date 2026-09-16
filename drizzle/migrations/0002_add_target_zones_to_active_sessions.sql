@@ -1,0 +1,1 @@
+ALTER TABLE public.active_sessions ADD COLUMN IF NOT EXISTS target_zones text;

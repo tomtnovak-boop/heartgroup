@@ -24,6 +24,7 @@ export type Database = {
           id: string
           session_code: string
           started_at: string | null
+          target_zones: string | null
         }
         Insert: {
           auto_end_at?: string | null
@@ -34,6 +35,7 @@ export type Database = {
           id?: string
           session_code: string
           started_at?: string | null
+          target_zones?: string | null
         }
         Update: {
           auto_end_at?: string | null
@@ -44,6 +46,7 @@ export type Database = {
           id?: string
           session_code?: string
           started_at?: string | null
+          target_zones?: string | null
         }
         Relationships: []
       }
