@@ -12,6 +12,8 @@ import CoachHub from "./pages/CoachHub";
 import CoachDashboard from "./pages/CoachDashboard";
 import CoachFancy from "./pages/CoachFancy";
 import CoachNeutral from "./pages/CoachNeutral";
+import CoachNamegrid from "./pages/CoachNamegrid";
+import CoachTarget from "./pages/CoachTarget";
 import CoachZoneFocus from "./pages/CoachZoneFocus";
 import CoachAlert from "./pages/CoachAlert";
 import AdminTeilnehmer from "./pages/AdminTeilnehmer";
