@@ -12,6 +12,8 @@ import CoachHub from "./pages/CoachHub";
 import CoachDashboard from "./pages/CoachDashboard";
 import CoachFancy from "./pages/CoachFancy";
 import CoachNeutral from "./pages/CoachNeutral";
+import CoachNamegrid from "./pages/CoachNamegrid";
+import CoachTarget from "./pages/CoachTarget";
 import CoachZoneFocus from "./pages/CoachZoneFocus";
 import CoachAlert from "./pages/CoachAlert";
 import AdminTeilnehmer from "./pages/AdminTeilnehmer";
@@ -55,6 +57,8 @@ const App = () => (
               <Route path="/coach-dashboard" element={<ProtectedRoute requireCoach><CoachDashboard /></ProtectedRoute>} />
               <Route path="/coach/fancy" element={<ProtectedRoute requireCoach><CoachFancy /></ProtectedRoute>} />
               <Route path="/coach/neutral" element={<ProtectedRoute requireCoach><CoachNeutral /></ProtectedRoute>} />
+              <Route path="/coach/namegrid" element={<ProtectedRoute requireCoach><CoachNamegrid /></ProtectedRoute>} />
+              <Route path="/coach/target" element={<ProtectedRoute requireCoach><CoachTarget /></ProtectedRoute>} />
               <Route path="/coach/zone-focus" element={<ProtectedRoute requireCoach><CoachZoneFocus /></ProtectedRoute>} />
               <Route path="/coach/coach-alert" element={<ProtectedRoute requireCoach><CoachAlert /></ProtectedRoute>} />
               <Route path="/admin/teilnehmer" element={<ProtectedRoute requireCoach><AdminTeilnehmer /></ProtectedRoute>} />
