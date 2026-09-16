@@ -1,7 +1,7 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { Monitor, LogOut, Heart } from 'lucide-react';
-import { CoachDashboard } from '@/components/dashboard/CoachDashboard';
-import { NeutralDashboard } from '@/components/dashboard/NeutralDashboard';
+import { NameGridDashboard } from '@/components/dashboard/NameGridDashboard';
+import { TargetFocusDashboard } from '@/components/dashboard/TargetFocusDashboard';
 import { SessionLeaderboard, LeaderboardEntry } from '@/components/dashboard/SessionLeaderboard';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { useViewMode } from '@/hooks/useViewMode';
@@ -11,19 +11,38 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { logParticipantRedirect } from '@/lib/roleRouting';
-import { setDisplayView } from '@/lib/displaySync';
+import { setDisplayView, setTargetZones } from '@/lib/displaySync';
 import { AdminParticipantsTab } from '@/components/admin/AdminParticipantsTab';
 import { AdminCoachesTab } from '@/components/admin/AdminCoachesTab';
-import { CoachAlertDashboard } from '@/components/dashboard/CoachAlertDashboard';
-import { ZoneFocusDashboard } from '@/components/dashboard/ZoneFocusDashboard';
+// Alte Ansichten (CoachDashboard/Fancy, NeutralDashboard, ZoneFocusDashboard, CoachAlertDashboard)
+// sind ausgeblendet – Dateien/Seiten bleiben bestehen und sind notfalls per URL erreichbar.
 
-type WorkspaceTab = 'fancy' | 'neutral' | 'zone-focus' | 'coach-alert' | 'participants' | 'coaches';
+type WorkspaceTab = 'namegrid' | 'target' | 'participants' | 'coaches';
+
+const ZONES = [
+  { n: 1, name: 'Recovery', pct: '50–60%', color: '#94A3B8' },
+  { n: 2, name: 'Fat Burn', pct: '60–70%', color: '#0EA5E9' },
+  { n: 3, name: 'Aerobic', pct: '70–80%', color: '#22C55E' },
+  { n: 4, name: 'Cardio', pct: '80–90%', color: '#FBBF24' },
+  { n: 5, name: 'Max', pct: '90–100%', color: '#EF4444' },
+];
+
+const PRESETS = [
+  { label: 'Aufwärmen', zones: [1, 2] },
+  { label: 'Fettverbrennung', zones: [2, 3] },
+  { label: 'Cardio', zones: [3, 4] },
+  { label: 'Peak/HIIT', zones: [4, 5] },
+];
+
+const zoneNames = (min: number, max: number) =>
+  ZONES.filter(z => z.n >= min && z.n <= max).map(z => z.name).join(' · ');
 
 export default function CoachWorkspace() {
   const { isAdmin, isCoach, user, signOut } = useAuthContext();
   const { viewMode, changeView } = useViewMode('coach');
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<WorkspaceTab>('fancy');
+  const [activeTab, setActiveTab] = useState<WorkspaceTab>('namegrid');
+  const [selectedZones, setSelectedZones] = useState<number[]>([3, 4]);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
   const [leaderboardDuration, setLeaderboardDuration] = useState(0);
@@ -59,6 +78,26 @@ export default function CoachWorkspace() {
       if (data) setAllProfiles(data);
     }
     fetchProfiles();
+  }, []);
+
+  // Offene Session lesen: aktiven Modus + Ziel-Zonen initial übernehmen
+  useEffect(() => {
+    (async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
+      const { data } = await supabase
+        .from('active_sessions')
+        .select('display_view, target_zones')
+        .eq('created_by', userData.user.id)
+        .is('ended_at', null)
+        .maybeSingle();
+      if (!data) return;
+      if (data.display_view === 'target') setActiveTab('target');
+      if (data.target_zones) {
+        const parsed = data.target_zones.split(',').map(Number).filter(n => n >= 1 && n <= 5);
+        if (parsed.length) setSelectedZones([Math.min(...parsed), Math.max(...parsed)]);
+      }
+    })();
   }, []);
 
   useEffect(() => {
@@ -115,19 +154,58 @@ export default function CoachWorkspace() {
 
   const handleStartSession = () => {
     startSession(participants);
+    // Standard beim Session-Start: Übersicht (namegrid)
+    setActiveTab('namegrid');
+    setDisplayView('namegrid');
   };
 
   const handleSignOut = async () => {
     await signOut();
   };
 
-  const isDashboardTab = activeTab === 'fancy' || activeTab === 'neutral' || activeTab === 'zone-focus' || activeTab === 'coach-alert';
+  const applyZones = (next: number[]) => {
+    setSelectedZones(next);
+    setTargetZones(next);
+  };
+
+  const toggleZone = (n: number) => {
+    const [min, max] = selectedZones;
+    let next: number[];
+    if (n < min) next = [n, max];
+    else if (n > max) next = [min, n];
+    else if (n === min && min < max) next = [min + 1, max];
+    else if (n === max && max > min) next = [min, max - 1];
+    else next = [n, n];
+    applyZones(next);
+  };
+
+  // „Braucht Aufmerksamkeit": Live-Teilnehmer unterhalb/oberhalb des Zielbereichs
+  const attention = useMemo(() => {
+    const [tmin, tmax] = selectedZones;
+    const prof = new Map(allProfiles.map(p => [p.id, p]));
+    const lobby = new Set(lobbyProfileIds);
+    const low: { id: string; name: string; bpm: number }[] = [];
+    const high: typeof low = [];
+    participants.forEach(p => {
+      if (lobby.has(p.profile_id)) return;
+      if (p.connection_status === 'disconnected' || !p.bpm) return;
+      const z = Math.max(1, Math.min(5, p.zone));
+      const name = prof.get(p.profile_id)?.nickname || prof.get(p.profile_id)?.name?.split(' ')[0] || '???';
+      if (z < tmin) low.push({ id: p.profile_id, name, bpm: p.bpm });
+      else if (z > tmax) high.push({ id: p.profile_id, name, bpm: p.bpm });
+    });
+    return { low, high };
+  }, [participants, allProfiles, lobbyProfileIds, selectedZones]);
+
+  const isDashboardTab = activeTab === 'namegrid' || activeTab === 'target';
 
   const tabs: { key: WorkspaceTab; label: string; adminOnly?: boolean }[] = [
-    { key: 'fancy', label: 'Dashboard Fancy' },
-    { key: 'neutral', label: 'Dashboard Neutral' },
-    { key: 'zone-focus', label: 'Zone Focus' },
-    { key: 'coach-alert', label: 'Coach Alert' },
+    { key: 'namegrid', label: 'Übersicht' },
+    { key: 'target', label: 'Ziel-Fokus' },
+    // { key: 'fancy', label: 'Dashboard Fancy' },      // ausgeblendet – Seite bleibt per URL erreichbar
+    // { key: 'neutral', label: 'Dashboard Neutral' },  // ausgeblendet – Seite bleibt per URL erreichbar
+    // { key: 'zone-focus', label: 'Zone Focus' },      // ausgeblendet – Seite bleibt per URL erreichbar
+    // { key: 'coach-alert', label: 'Coach Alert' },    // ausgeblendet – Seite bleibt per URL erreichbar
     { key: 'participants', label: 'Teilnehmer', adminOnly: true },
     { key: 'coaches', label: 'Coaches', adminOnly: true },
   ];
@@ -178,7 +256,7 @@ export default function CoachWorkspace() {
         </div>
       </header>
 
-      {/* Tab Bar */}
+      {/* Tab Bar – nur noch zwei Anzeige-Modi */}
       <div style={{
         display: 'flex',
         gap: '4px',
@@ -192,7 +270,7 @@ export default function CoachWorkspace() {
             key={t.key}
             onClick={() => {
               setActiveTab(t.key);
-              if (t.key === 'fancy' || t.key === 'neutral') setDisplayView(t.key);
+              if (t.key === 'namegrid' || t.key === 'target') setDisplayView(t.key);
             }}
             style={{
               background: activeTab === t.key ? '#ff4425' : '#1a1a1a',
@@ -246,45 +324,141 @@ export default function CoachWorkspace() {
       )}
 
       {/* Content */}
-      <div className="flex-1 min-h-0 overflow-hidden">
-        {activeTab === 'fancy' && (
-          <CoachDashboard
-            participants={participants}
-            isLoading={isLoading}
-            activeTab="live"
-            averageBPM={averageBPM}
-            isSessionActive={sessionActive}
-            sessionCode={sessionCode}
-            lobbyProfileIds={lobbyProfileIds}
-          />
+      <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+        {activeTab === 'namegrid' && (
+          <div className="flex-1 min-h-0">
+            <NameGridDashboard
+              participants={participants}
+              allProfiles={allProfiles}
+              lobbyProfileIds={lobbyProfileIds}
+              sessionCode={sessionCode}
+              isLoading={isLoading}
+              isSessionActive={sessionActive}
+            />
+          </div>
         )}
-        {activeTab === 'neutral' && (
-          <NeutralDashboard
-            participants={participants}
-            allProfiles={allProfiles}
-            lobbyProfileIds={lobbyProfileIds}
-            sessionCode={sessionCode}
-            isLoading={isLoading}
-            isSessionActive={sessionActive}
-          />
-        )}
-        {activeTab === 'zone-focus' && (
-          <ZoneFocusDashboard
-            participants={participants}
-            isLoading={isLoading}
-            isSessionActive={sessionActive}
-            sessionCode={sessionCode}
-            lobbyProfileIds={lobbyProfileIds}
-          />
-        )}
-        {activeTab === 'coach-alert' && (
-          <CoachAlertDashboard
-            participants={participants}
-            isLoading={isLoading}
-            isSessionActive={sessionActive}
-            sessionCode={sessionCode}
-            lobbyProfileIds={lobbyProfileIds}
-          />
+        {activeTab === 'target' && (
+          <>
+            {/* Ziel-Zonen-Auswahl */}
+            <div style={{
+              flexShrink: 0,
+              padding: '12px 16px',
+              borderBottom: '1px solid #1f1f1f',
+              background: '#0a0a0a',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                {ZONES.map(z => {
+                  const on = z.n >= selectedZones[0] && z.n <= selectedZones[1];
+                  return (
+                    <button
+                      key={z.n}
+                      onClick={() => toggleZone(z.n)}
+                      style={{
+                        background: on ? z.color : '#1a1a1a',
+                        color: on ? '#0a0a0a' : '#666',
+                        border: `1px solid ${on ? z.color : '#2a2a2a'}`,
+                        borderRadius: 8,
+                        padding: '6px 12px',
+                        fontWeight: 700,
+                        fontSize: 12,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                      }}
+                      title={`${z.name} (${z.pct})`}
+                    >
+                      {z.name} <span style={{ opacity: 0.7, fontWeight: 500 }}>{z.pct}</span>
+                    </button>
+                  );
+                })}
+                <span style={{ width: 1, height: 22, background: '#2a2a2a', margin: '0 4px' }} />
+                {PRESETS.map(p => {
+                  const active = p.zones[0] === selectedZones[0] && p.zones[1] === selectedZones[1];
+                  return (
+                    <button
+                      key={p.label}
+                      onClick={() => applyZones(p.zones)}
+                      style={{
+                        background: active ? '#2a2a2a' : '#1a1a1a',
+                        color: active ? '#fff' : '#888',
+                        border: '1px solid #2a2a2a',
+                        borderRadius: 8,
+                        padding: '6px 12px',
+                        fontWeight: 600,
+                        fontSize: 12,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {p.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ marginTop: 8, fontSize: 12, color: '#888' }}>
+                Aktiv: <span style={{ color: '#fff', fontWeight: 700 }}>{zoneNames(selectedZones[0], selectedZones[1])}</span>
+              </div>
+            </div>
+
+            {/* Braucht Aufmerksamkeit */}
+            {(attention.low.length > 0 || attention.high.length > 0) && (
+              <div style={{
+                flexShrink: 0,
+                display: 'flex',
+                gap: 16,
+                padding: '10px 16px',
+                borderBottom: '1px solid #1f1f1f',
+                background: '#111',
+                overflowX: 'auto',
+              }}>
+                {attention.low.length > 0 && (
+                  <div style={{ minWidth: 0 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                      Zu niedrig
+                    </span>
+                    <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+                      {attention.low.map(m => (
+                        <span key={m.id} style={{
+                          background: 'rgba(148,163,184,0.12)', border: '1px solid rgba(148,163,184,0.3)',
+                          borderRadius: 6, padding: '2px 8px', fontSize: 12, color: '#cbd5e1', whiteSpace: 'nowrap',
+                        }}>
+                          {m.name} · {m.bpm}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {attention.high.length > 0 && (
+                  <div style={{ minWidth: 0 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#EF4444', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                      Zu hoch
+                    </span>
+                    <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+                      {attention.high.map(m => (
+                        <span key={m.id} style={{
+                          background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)',
+                          borderRadius: 6, padding: '2px 8px', fontSize: 12, color: '#fca5a5', whiteSpace: 'nowrap',
+                        }}>
+                          {m.name} · {m.bpm}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex-1 min-h-0">
+              <TargetFocusDashboard
+                participants={participants}
+                allProfiles={allProfiles}
+                lobbyProfileIds={lobbyProfileIds}
+                targetZones={selectedZones}
+                sessionCode={sessionCode}
+                isLoading={isLoading}
+                isSessionActive={sessionActive}
+              />
+            </div>
+          </>
         )}
         {activeTab === 'participants' && isAdmin && (
           <div style={{ height: '100%', overflow: 'auto', padding: '16px' }}>
