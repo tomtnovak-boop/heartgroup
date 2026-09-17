@@ -12,7 +12,7 @@ interface Props {
 }
 const ZNAMES = ['', 'Recovery', 'Fat Burn', 'Aerobic', 'Cardio', 'Max'];
 
-export function TargetFocusDashboard({ participants, allProfiles, lobbyProfileIds, targetZones }: Props) {
+export function TargetFocusDashboard({ participants, allProfiles, lobbyProfileIds, targetZones, sessionCode, isSessionActive }: Props) {
   const tz = targetZones.length ? targetZones : [3, 4];
   const tmin = Math.min(...tz), tmax = Math.max(...tz);
 

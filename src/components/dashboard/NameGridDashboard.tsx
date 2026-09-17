@@ -21,7 +21,7 @@ const ZONE: Record<number, { bg: string; fg: string; name: string }> = {
 };
 const TOPBAR = 84, GAP = 6;
 
-export function NameGridDashboard({ participants, allProfiles, lobbyProfileIds }: Props) {
+export function NameGridDashboard({ participants, allProfiles, lobbyProfileIds, sessionCode, isSessionActive }: Props) {
   const rows = useMemo(() => {
     const live = new Map(participants.map(p => [p.profile_id, p]));
     const prof = new Map(allProfiles.map(p => [p.id, p]));
