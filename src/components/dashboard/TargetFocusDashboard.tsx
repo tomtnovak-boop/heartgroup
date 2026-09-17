@@ -87,6 +87,45 @@ export function TargetFocusDashboard({ participants, allProfiles, lobbyProfileId
     </div>
   );
 
+  // Warte-Zustand: Session erstellt, aber noch nicht gestartet → großer Session-Code mittig
+  if (!isSessionActive && sessionCode) {
+    return (
+      <div style={{
+        height: '100dvh', width: '100%', background: '#0a0a0a',
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'center', gap: '2vh', fontFamily: 'system-ui, sans-serif',
+        textAlign: 'center', padding: '4vh 4vw',
+      }}>
+        <div style={{
+          fontSize: 'clamp(18px, 3vw, 40px)', fontWeight: 800, letterSpacing: '0.15em',
+          textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)',
+        }}>
+          Session-Code
+        </div>
+        <div style={{
+          fontSize: 'min(38vw, 46vh)', lineHeight: 0.95, fontWeight: 900, color: '#fff',
+          letterSpacing: '0.08em', fontVariantNumeric: 'tabular-nums',
+        }}>
+          {sessionCode}
+        </div>
+        <div style={{
+          fontSize: 'clamp(16px, 2.2vw, 30px)', fontWeight: 600, color: 'rgba(255,255,255,0.6)',
+          maxWidth: '80%',
+        }}>
+          Gib diesen Code in der Bheart-App ein, um beizutreten
+        </div>
+        <div style={{
+          marginTop: '2vh', fontSize: 'clamp(14px, 1.8vw, 24px)', fontWeight: 700,
+          color: lobbyProfileIds.length > 0 ? '#22C55E' : 'rgba(255,255,255,0.35)',
+        }}>
+          {lobbyProfileIds.length > 0
+            ? `${lobbyProfileIds.length} bereit`
+            : 'Warte auf Teilnehmer …'}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ width: '100%', height: '100dvh', background: '#0a0a0a', color: '#ffffff', display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       {/* Topbar */}
