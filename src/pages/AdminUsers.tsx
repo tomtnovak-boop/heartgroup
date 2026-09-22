@@ -112,12 +112,13 @@ export default function AdminUsers() {
     if (!deleteUser) return;
     setIsDeleting(true);
 
-    // Delete profiles entry
-    await supabase.from('profiles').delete().eq('id', deleteUser.id);
-
-    // Delete user_roles if user_id exists
-    if (deleteUser.user_id) {
-      await supabase.from('user_roles').delete().eq('user_id', deleteUser.user_id);
+    const { data, error } = await supabase.functions.invoke('manage-coach', {
+      body: { action: 'deleteParticipant', profile_id: deleteUser.id, user_id: deleteUser.user_id || null },
+    });
+    if (error || data?.error) {
+      toast({ title: 'Fehler beim Löschen', description: data?.error || error?.message, variant: 'destructive' });
+      setIsDeleting(false);
+      return;
     }
 
     toast({ title: 'User gelöscht', description: `${deleteUser.name} wurde entfernt.` });
