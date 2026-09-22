@@ -98,6 +98,13 @@ export function RegisterForm({ onSwitchToLogin, onRegistered }: RegisterFormProp
       return;
     }
 
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    if (signInError) {
+      toast({ title: 'Login fehlgeschlagen', description: signInError.message, variant: 'destructive' });
+      setIsLoading(false);
+      return;
+    }
+
     const maxHr = calculateMaxHR(age);
     const customMaxHrNum = customMaxHr ? parseInt(customMaxHr) : null;
     const parsedWeight = weight ? parseInt(weight, 10) : null;
@@ -119,7 +126,7 @@ export function RegisterForm({ onSwitchToLogin, onRegistered }: RegisterFormProp
     }
 
     setIsLoading(false);
-    onRegistered(email);
+    toast({ title: 'Willkommen!', description: 'Dein Konto ist bereit.' });
   };
 
   return (
