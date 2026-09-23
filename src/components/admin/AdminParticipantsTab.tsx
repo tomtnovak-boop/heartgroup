@@ -353,7 +353,7 @@ function CreateParticipantModal({ open, onOpenChange, onCreated }: {
         <DialogFooter>
           <Button variant="outline" onClick={() => { reset(); onOpenChange(false); }}>Cancel</Button>
           <Button onClick={handleCreate} disabled={isSubmitting} style={{ background: '#ff4425', color: '#fff' }}>
-            {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Erstellen
+            {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Create
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -422,7 +422,7 @@ function EditParticipantModal({ user, open, onOpenChange, onUpdated }: {
             <div className="space-y-1.5">
               <Label>Gender</Label>
               <Select value={gender} onValueChange={setGender}>
-                <SelectTrigger><SelectValue placeholder="Wählen" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="male">Male</SelectItem>
                   <SelectItem value="female">Female</SelectItem>

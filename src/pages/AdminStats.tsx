@@ -106,7 +106,7 @@ export default function AdminStats() {
   // Chart data
   const chartData = useMemo(() => {
     if (mode === 'year') {
-      const months = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       return months.map((label, i) => {
         const mSessions = relevantSessions.filter(s => new Date(s.started_at).getMonth() === i);
         const mWorkouts = workouts.filter(w => new Date(w.started_at).getMonth() === i);

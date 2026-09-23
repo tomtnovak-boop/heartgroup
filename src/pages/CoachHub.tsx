@@ -79,7 +79,7 @@ export default function CoachHub() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
             {/* Section: Data & Management */}
             <div style={{ gridColumn: 'span 4', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', marginBottom: '2px' }}>
-              Daten &amp; Verwaltung
+              Data &amp; Management
             </div>
             {cards.filter(c => ['training', 'stats', 'teilnehmer', 'coaches'].includes(c.key)).map(card => (
               <button

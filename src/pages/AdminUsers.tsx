@@ -144,13 +144,13 @@ export default function AdminUsers() {
             <span style={{ color: '#ff4425', fontWeight: 'bold' }}>heart</span>
           </span>
         </div>
-        <Button
+        {tab !== 'classes' && <Button
           onClick={() => { setShowCreate(true); setCreateTab(tab === 'coaches' ? 'coach' : 'participant'); }}
           style={{ background: '#ff4425', color: '#fff', borderRadius: '10px', fontWeight: 700, height: '40px', border: 'none' }}
           className="gap-1.5"
         >
           <Plus className="w-4 h-4" /> New User
-        </Button>
+        </Button>}
       </header>
 
       {/* Tabs */}
@@ -237,7 +237,7 @@ export default function AdminUsers() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete User</AlertDialogTitle>
             <AlertDialogDescription>
-              User <strong>{deleteUser?.name}</strong> Are you sure you want to delete This action cannot be undone.
+              Are you sure you want to delete <strong>{deleteUser?.name}</strong>? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -572,7 +572,7 @@ function CreateUserModal({ open, onOpenChange, tab, onTabChange, onCreated }: {
                 <div className="space-y-1.5">
                   <Label>Gender *</Label>
                   <Select value={gender} onValueChange={setGender}>
-                    <SelectTrigger><SelectValue placeholder="Wählen" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="male">Male</SelectItem>
                       <SelectItem value="female">Female</SelectItem>
@@ -719,7 +719,7 @@ function EditUserModal({ user, open, onOpenChange, onUpdated }: {
             <div className="space-y-1.5">
               <Label>Gender</Label>
               <Select value={gender} onValueChange={setGender}>
-                <SelectTrigger><SelectValue placeholder="Wählen" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="male">Male</SelectItem>
                   <SelectItem value="female">Female</SelectItem>
