@@ -16,7 +16,7 @@ import CoachNamegrid from "./pages/CoachNamegrid";
 import CoachTarget from "./pages/CoachTarget";
 import CoachZoneFocus from "./pages/CoachZoneFocus";
 import CoachAlert from "./pages/CoachAlert";
-import AdminParticipants from "./pages/AdminParticipants";
+import AdminParticipants from "./pages/AdminTeilnehmer";
 import AdminCoaches from "./pages/AdminCoaches";
 import ResetPassword from "./pages/ResetPassword";
 import AdminStats from "./pages/AdminStats";
@@ -68,7 +68,7 @@ const App = () => (
               <Route path="/display" element={<Display />} />
               <Route path="/profile/edit" element={<ProtectedRoute><ProfileEdit /></ProtectedRoute>} />
               <Route path="/datenschutz" element={<Datenschutz />} />
-              <Route path="/impressum" element={<Legal Notice />} />
+              <Route path="/impressum" element={<Impressum />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
