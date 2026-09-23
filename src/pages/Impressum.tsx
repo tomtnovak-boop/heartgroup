@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Heart, ArrowLeft } from 'lucide-react';
 
-export default function Legal Notice() {
+export default function Impressum() {
   const navigate = useNavigate();
 
   return (

@@ -23,7 +23,7 @@ import AdminStats from "./pages/AdminStats";
 import Display from "./pages/Display";
 import ProfileEdit from "./pages/ProfileEdit";
 import Datenschutz from "./pages/Datenschutz";
-import Legal Notice from "./pages/Legal Notice";
+import Impressum from "./pages/Impressum";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
