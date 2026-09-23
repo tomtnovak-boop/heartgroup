@@ -39,7 +39,7 @@ export function ZoneFocusDashboard({ participants, isLoading, isSessionActive, s
   if (isLoading) {
     return (
       <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a0a', color: '#666' }}>
-        Lade…
+        Loading…
       </div>
     );
   }
@@ -103,7 +103,7 @@ export function ZoneFocusDashboard({ participants, isLoading, isSessionActive, s
 
       {/* Bottom bar */}
       <div style={{ padding: '8px 16px', textAlign: 'center', fontSize: '12px', color: 'rgba(255,255,255,0.4)', flexShrink: 0 }}>
-        Ø {avgBPM} bpm · {participants.length} aktiv
+        Ø {avgBPM} bpm · {participants.length} active
       </div>
     </div>
   );

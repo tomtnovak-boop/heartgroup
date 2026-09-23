@@ -57,7 +57,7 @@ export function NameGridDashboard({ participants, allProfiles, lobbyProfileIds, 
   const connected = rows.filter(r => r.bpm != null);
   const avg = connected.length ? Math.round(connected.reduce((s, r) => s + (r.bpm || 0), 0) / connected.length) : null;
 
-  // Warte-Zustand: Session erstellt, aber noch nicht gestartet → großer Session-Code mittig
+  // Warte-Zustand: Session erstellt, aber noch nicht gestartet → großer Session Code mittig
   if (!isSessionActive && sessionCode) {
     return (
       <div style={{
@@ -70,7 +70,7 @@ export function NameGridDashboard({ participants, allProfiles, lobbyProfileIds, 
           fontSize: 'clamp(18px, 3vw, 40px)', fontWeight: 800, letterSpacing: '0.15em',
           textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)',
         }}>
-          Session-Code
+          Session Code
         </div>
         <div style={{
           fontSize: 'min(38vw, 46vh)', lineHeight: 0.95, fontWeight: 900, color: '#fff',
@@ -82,15 +82,15 @@ export function NameGridDashboard({ participants, allProfiles, lobbyProfileIds, 
           fontSize: 'clamp(16px, 2.2vw, 30px)', fontWeight: 600, color: 'rgba(255,255,255,0.6)',
           maxWidth: '80%',
         }}>
-          Gib diesen Code in der Bheart-App ein, um beizutreten
+          Enter this code in the Bheart app to join
         </div>
         <div style={{
           marginTop: '2vh', fontSize: 'clamp(14px, 1.8vw, 24px)', fontWeight: 700,
           color: lobbyProfileIds.length > 0 ? '#22C55E' : 'rgba(255,255,255,0.35)',
         }}>
           {lobbyProfileIds.length > 0
-            ? `${lobbyProfileIds.length} bereit`
-            : 'Warte auf Teilnehmer …'}
+            ? `${lobbyProfileIds.length} ready`
+            : 'Waiting for participants…'}
         </div>
       </div>
     );
@@ -105,7 +105,7 @@ export function NameGridDashboard({ participants, allProfiles, lobbyProfileIds, 
           <span style={{ color: '#ff4425' }}>heart</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
-          <div style={{ fontSize: 16, fontWeight: 600, color: '#8a8a8a', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Ø Puls</div>
+          <div style={{ fontSize: 16, fontWeight: 600, color: '#8a8a8a', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Avg BPM</div>
           <div style={{ fontSize: 40, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{avg ?? '–'}</div>
         </div>
       </div>
@@ -124,7 +124,7 @@ export function NameGridDashboard({ participants, allProfiles, lobbyProfileIds, 
         }}
       >
         {rows.map(r => {
-          const c = r.zone ? ZONE[r.zone] : { bg: '#1c1c1c', fg: '#ffffff', name: 'BEREIT' };
+          const c = r.zone ? ZONE[r.zone] : { bg: '#1c1c1c', fg: '#ffffff', name: 'READY' };
           return (
             <div
               key={r.id}

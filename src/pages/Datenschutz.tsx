@@ -14,7 +14,7 @@ export default function Datenschutz() {
             className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Zurück
+            Back
           </button>
 
           <div className="flex items-center gap-2">
@@ -34,32 +34,32 @@ export default function Datenschutz() {
       {/* Content */}
       <main className="max-w-3xl mx-auto px-6 py-10 space-y-8">
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold">Datenschutzerklärung</h1>
-          <p className="text-sm text-muted-foreground">Letzte Aktualisierung: [DATUM EINFÜGEN]</p>
+          <h1 className="text-3xl font-bold">Privacy Policy</h1>
+          <p className="text-sm text-muted-foreground">Last updated: [INSERT DATE]</p>
         </div>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold">1. Verantwortliche Stelle</h2>
+          <h2 className="text-xl font-semibold">1. Data Controller</h2>
           <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
 {`[DEIN NAME / FIRMA]
 [STRASSE UND HAUSNUMMER]
 [PLZ UND ORT]
-Schweiz
+Switzerland
 
 E-Mail: tom@balboamove.ch`}
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold">2. Welche Daten wir verarbeiten</h2>
+          <h2 className="text-xl font-semibold">2. Data We Process</h2>
           <p className="text-muted-foreground leading-relaxed">
             Bei der Nutzung von Bheart verarbeiten wir folgende personenbezogene Daten:
           </p>
           <ul className="list-disc pl-6 space-y-2 text-muted-foreground leading-relaxed">
-            <li><strong className="text-foreground">Account-Daten:</strong> E-Mail-Adresse, verschlüsseltes Passwort, Name, Spitzname</li>
-            <li><strong className="text-foreground">Profildaten:</strong> Geburtsdatum, Gewicht, Geschlecht, ggf. individuelle maximale Herzfrequenz</li>
+            <li><strong className="text-foreground">Account-Daten:</strong> E-Mail-Adresse, verschlüsseltes Password, Name, Spitzname</li>
+            <li><strong className="text-foreground">Profildaten:</strong> Date of Birth, Weight, Gender, ggf. individuelle maximale Herzfrequenz</li>
             <li><strong className="text-foreground">Gesundheitsdaten:</strong> Herzfrequenz-Messwerte während Trainingseinheiten, berechnete Trainingszonen, geschätzter Kalorienverbrauch</li>
-            <li><strong className="text-foreground">Trainingsdaten:</strong> Beginn, Dauer, Durchschnitts- und Maximalpuls einzelner Sessions</li>
+            <li><strong className="text-foreground">Trainingsdaten:</strong> Beginn, Duration, Durchschnitts- und Maximalpuls einzelner Sessions</li>
           </ul>
         </section>
 
@@ -80,7 +80,7 @@ E-Mail: tom@balboamove.ch`}
             Die Verarbeitung erfolgt auf Basis Ihrer ausdrücklichen Einwilligung
             (Art. 6 Abs. 1 lit. a DSGVO bzw. Art. 31 DSG). Da es sich bei
             Herzfrequenz- und Gesundheitsdaten um besonders schützenswerte
-            Personendaten handelt, willigen Sie mit der Registrierung explizit
+            Peopledaten handelt, willigen Sie mit der Registrierung explizit
             in deren Verarbeitung ein.
           </p>
         </section>
@@ -118,7 +118,7 @@ E-Mail: tom@balboamove.ch`}
             <li>Einschränkung der Verarbeitung</li>
             <li>Datenübertragbarkeit</li>
             <li>Widerruf Ihrer Einwilligung mit Wirkung für die Zukunft</li>
-            <li>Beschwerde bei der zuständigen Aufsichtsbehörde (in der Schweiz: Eidgenössischer Datenschutz- und Öffentlichkeitsbeauftragter EDÖB)</li>
+            <li>Beschwerde bei der zuständigen Aufsichtsbehörde (in der Switzerland: Eidgenössischer Datenschutz- und Öffentlichkeitsbeauftragter EDÖB)</li>
           </ul>
           <p className="text-muted-foreground leading-relaxed">
             Zur Ausübung Ihrer Rechte kontaktieren Sie uns bitte unter:{' '}
@@ -132,14 +132,14 @@ E-Mail: tom@balboamove.ch`}
             Ihre Daten werden verschlüsselt übertragen (TLS) und gespeichert.
             Der Zugriff auf Ihre Daten ist durch Authentifizierung und
             Berechtigungs-Policies abgesichert. Coaches sehen Ihre Trainingsdaten
-            nur, wenn Sie aktiv an einer Session teilnehmen.
+            nur, wenn Sie active an einer Session teilnehmen.
           </p>
         </section>
 
         <section className="space-y-3 pb-12">
           <h2 className="text-xl font-semibold">9. Änderungen dieser Erklärung</h2>
           <p className="text-muted-foreground leading-relaxed">
-            Wir behalten uns vor, diese Datenschutzerklärung anzupassen, um sie
+            Wir behalten uns vor, diese Privacy Policy anzupassen, um sie
             an geänderte Rechtslage oder Funktionalitäten anzupassen. Die jeweils
             aktuelle Version ist auf dieser Seite einsehbar.
           </p>

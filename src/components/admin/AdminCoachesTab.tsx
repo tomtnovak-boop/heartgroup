@@ -83,12 +83,12 @@ export function AdminCoachesTab() {
       body: { action: 'deleteParticipant', profile_id: deleteCoach.id, user_id: deleteCoach.user_id || null },
     });
     if (error || data?.error) {
-      toast({ title: 'Fehler beim Löschen', description: data?.error || error?.message, variant: 'destructive' });
+      toast({ title: 'Deletion failed', description: data?.error || error?.message, variant: 'destructive' });
       setIsDeleting(false);
       return;
     }
 
-    toast({ title: 'Coach gelöscht', description: `${deleteCoach.name} wurde entfernt.` });
+    toast({ title: 'Coach deleted', description: `${deleteCoach.name} was removed.` });
     setDeleteCoach(null);
     setIsDeleting(false);
     fetchCoaches();
@@ -110,7 +110,7 @@ export function AdminCoachesTab() {
             display: 'flex', alignItems: 'center', gap: '6px',
           }}
         >
-          <Plus style={{ width: 14, height: 14 }} /> Neuer Coach
+          <Plus style={{ width: 14, height: 14 }} /> New Coach
         </button>
       </div>
 
@@ -121,14 +121,14 @@ export function AdminCoachesTab() {
       ) : coaches.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '48px 0', color: '#666' }}>
           <Shield style={{ width: 48, height: 48, margin: '0 auto 16px', opacity: 0.5 }} />
-          <p>Keine Coaches vorhanden.</p>
+          <p>No coaches available.</p>
         </div>
       ) : (
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid #1a1a1a' }}>
-                {['Name', 'Rolle', 'Aktionen'].map((heading) => (
+                {['Name', 'Role', 'Actions'].map((heading) => (
                   <th
                     key={heading}
                     style={{
@@ -156,14 +156,14 @@ export function AdminCoachesTab() {
       <AlertDialog open={!!deleteCoach} onOpenChange={(open) => !open && setDeleteCoach(null)}>
         <AlertDialogContent style={{ background: '#111', border: '1px solid #2a2a2a' }}>
           <AlertDialogHeader>
-            <AlertDialogTitle>{deleteCoach?.name} wirklich löschen?</AlertDialogTitle>
-            <AlertDialogDescription>Diese Aktion kann nicht rückgängig gemacht werden.</AlertDialogDescription>
+            <AlertDialogTitle>{deleteCoach?.name} Are you sure you want to delete</AlertDialogTitle>
+            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Abbrechen</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} disabled={isDeleting} style={{ background: '#ff4425', color: '#fff' }}>
               {isDeleting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Löschen
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -198,12 +198,12 @@ function CreateCoachModal({ open, onOpenChange, onCreated }: {
 
   const handleCreate = async () => {
     if (!firstName.trim() || !lastName.trim() || !email.trim()) {
-      toast({ title: 'Pflichtfelder ausfüllen', variant: 'destructive' });
+      toast({ title: 'Complete all required fields', variant: 'destructive' });
       return;
     }
 
     if (password.length < 8) {
-      toast({ title: 'Passwort muss mindestens 8 Zeichen haben', variant: 'destructive' });
+      toast({ title: 'Password must be at least 8 characters long', variant: 'destructive' });
       return;
     }
 
@@ -216,15 +216,15 @@ function CreateCoachModal({ open, onOpenChange, onCreated }: {
 
     if (error || data?.error) {
       toast({
-        title: 'Fehler',
-        description: data?.error || error?.message || 'Coach konnte nicht erstellt werden',
+        title: 'Error',
+        description: data?.error || error?.message || 'Could not create coach',
         variant: 'destructive',
       });
       setIsSubmitting(false);
       return;
     }
 
-    toast({ title: 'Coach erstellt', description: `${fullName} wurde als ${role} angelegt.` });
+    toast({ title: 'Coach created', description: `${fullName} was added as ${role} angelegt.` });
     setIsSubmitting(false);
     reset();
     onOpenChange(false);
@@ -235,17 +235,17 @@ function CreateCoachModal({ open, onOpenChange, onCreated }: {
     <Dialog open={open} onOpenChange={(nextOpen) => { if (!nextOpen) reset(); onOpenChange(nextOpen); }}>
       <DialogContent style={{ background: '#111', border: '1px solid #2a2a2a', borderRadius: '16px', maxWidth: '480px' }}>
         <DialogHeader>
-          <DialogTitle>Neuer Coach</DialogTitle>
+          <DialogTitle>New Coach</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Vorname *</Label>
-              <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Vorname" />
+              <Label>First Name *</Label>
+              <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First Name" />
             </div>
             <div className="space-y-1.5">
-              <Label>Nachname *</Label>
-              <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Nachname" />
+              <Label>Last Name *</Label>
+              <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last Name" />
             </div>
           </div>
           <div className="space-y-1.5">
@@ -253,27 +253,27 @@ function CreateCoachModal({ open, onOpenChange, onCreated }: {
             <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@example.com" />
           </div>
           <div className="space-y-1.5">
-            <Label>Passwort *</Label>
+            <Label>Password *</Label>
             <div className="flex gap-1">
               <Input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Mindestens 8 Zeichen"
+                placeholder="At least 8 characters"
               />
               <Button
                 variant="outline"
                 size="icon"
                 className="shrink-0"
                 onClick={() => setShowPassword(!showPassword)}
-                title={showPassword ? 'Verbergen' : 'Anzeigen'}
+                title={showPassword ? 'Hide' : 'Show'}
               >
                 {showPassword ? <EyeOff style={{ width: 14, height: 14 }} /> : <Eye style={{ width: 14, height: 14 }} />}
               </Button>
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label>Rolle *</Label>
+            <Label>Role *</Label>
             <div style={{ display: 'flex', gap: '4px' }}>
               {(['coach', 'admin'] as const).map((nextRole) => (
                 <button
@@ -300,11 +300,11 @@ function CreateCoachModal({ open, onOpenChange, onCreated }: {
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => { reset(); onOpenChange(false); }}>
-            Abbrechen
+            Cancel
           </Button>
           <Button onClick={handleCreate} disabled={isSubmitting} style={{ background: '#ff4425', color: '#fff' }}>
             {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            Coach erstellen
+            Create Coach
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -341,7 +341,7 @@ function CoachTableRow({ row, isSelf, onDelete }: { row: CoachRow; isSelf: boole
       </td>
       <td style={{ padding: '14px 16px' }}>
         {isSelf ? (
-          <span style={{ fontSize: '12px', color: '#666' }} title="Du kannst dich nicht selbst löschen">–</span>
+          <span style={{ fontSize: '12px', color: '#666' }} title="You cannot delete yourself">–</span>
         ) : (
           <button onClick={onDelete} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ff4425', padding: '4px' }}>
             <Trash2 style={{ width: 16, height: 16 }} />

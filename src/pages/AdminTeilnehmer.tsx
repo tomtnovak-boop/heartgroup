@@ -4,7 +4,7 @@ import { ArrowLeft, Heart, LogOut } from 'lucide-react';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { AdminParticipantsTab } from '@/components/admin/AdminParticipantsTab';
 
-export default function AdminTeilnehmer() {
+export default function AdminParticipants() {
   const { isAdmin, isLoading, signOut } = useAuthContext();
   const navigate = useNavigate();
 

@@ -16,14 +16,14 @@ import CoachNamegrid from "./pages/CoachNamegrid";
 import CoachTarget from "./pages/CoachTarget";
 import CoachZoneFocus from "./pages/CoachZoneFocus";
 import CoachAlert from "./pages/CoachAlert";
-import AdminTeilnehmer from "./pages/AdminTeilnehmer";
+import AdminParticipants from "./pages/AdminParticipants";
 import AdminCoaches from "./pages/AdminCoaches";
 import ResetPassword from "./pages/ResetPassword";
 import AdminStats from "./pages/AdminStats";
 import Display from "./pages/Display";
 import ProfileEdit from "./pages/ProfileEdit";
 import Datenschutz from "./pages/Datenschutz";
-import Impressum from "./pages/Impressum";
+import Legal Notice from "./pages/Legal Notice";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,14 +61,14 @@ const App = () => (
               <Route path="/coach/target" element={<ProtectedRoute requireCoach><CoachTarget /></ProtectedRoute>} />
               <Route path="/coach/zone-focus" element={<ProtectedRoute requireCoach><CoachZoneFocus /></ProtectedRoute>} />
               <Route path="/coach/coach-alert" element={<ProtectedRoute requireCoach><CoachAlert /></ProtectedRoute>} />
-              <Route path="/admin/teilnehmer" element={<ProtectedRoute requireCoach><AdminTeilnehmer /></ProtectedRoute>} />
+              <Route path="/admin/teilnehmer" element={<ProtectedRoute requireCoach><AdminParticipants /></ProtectedRoute>} />
               <Route path="/admin/coaches" element={<ProtectedRoute requireCoach><AdminCoaches /></ProtectedRoute>} />
               <Route path="/admin/stats" element={<ProtectedRoute requireCoach><AdminStats /></ProtectedRoute>} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/display" element={<Display />} />
               <Route path="/profile/edit" element={<ProtectedRoute><ProfileEdit /></ProtectedRoute>} />
               <Route path="/datenschutz" element={<Datenschutz />} />
-              <Route path="/impressum" element={<Impressum />} />
+              <Route path="/impressum" element={<Legal Notice />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

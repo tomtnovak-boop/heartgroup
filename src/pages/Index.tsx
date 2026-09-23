@@ -67,7 +67,7 @@ export default function Index() {
 
   const handleForgotPassword = async () => {
     if (!email.trim()) {
-      setError('Bitte E-Mail-Adresse eingeben.');
+      setError('Please enter your email address.');
       return;
     }
     setError('');
@@ -139,7 +139,7 @@ export default function Index() {
           />
           <input
             type="password"
-            placeholder="Passwort"
+            placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -165,7 +165,7 @@ export default function Index() {
 
           {forgotSent && (
             <p style={{ color: '#22C55E', fontSize: '13px', margin: 0 }}>
-              Reset-Link wurde gesendet. Prüfe dein Postfach.
+              Reset link sent. Check your inbox.
             </p>
           )}
 
@@ -189,7 +189,7 @@ export default function Index() {
             }}
           >
             {isSubmitting && <Loader2 style={{ width: 16, height: 16 }} className="animate-spin" />}
-            {isSubmitting ? 'Einloggen...' : 'Einloggen'}
+            {isSubmitting ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
 
@@ -206,7 +206,7 @@ export default function Index() {
               textDecoration: 'none',
             }}
           >
-            Passwort vergessen?
+            Forgot password?
           </button>
         </div>
       </div>

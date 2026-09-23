@@ -126,7 +126,7 @@ export function RegisterForm({ onSwitchToLogin, onRegistered }: RegisterFormProp
     }
 
     setIsLoading(false);
-    toast({ title: 'Willkommen!', description: 'Dein Konto ist bereit.' });
+    toast({ title: 'Welcome!', description: 'Your account is ready.' });
   };
 
   return (

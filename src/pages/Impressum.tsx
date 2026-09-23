@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Heart, ArrowLeft } from 'lucide-react';
 
-export default function Impressum() {
+export default function Legal Notice() {
   const navigate = useNavigate();
 
   return (
@@ -13,7 +13,7 @@ export default function Impressum() {
             className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Zurück
+            Back
           </button>
 
           <div className="flex items-center gap-2">
@@ -31,20 +31,20 @@ export default function Impressum() {
       </header>
 
       <main className="max-w-3xl mx-auto px-6 py-10 space-y-8">
-        <h1 className="text-3xl font-bold">Impressum</h1>
+        <h1 className="text-3xl font-bold">Legal Notice</h1>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold">Anbieter</h2>
+          <h2 className="text-xl font-semibold">Provider</h2>
           <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
 {`[DEIN NAME / FIRMA]
 [STRASSE UND HAUSNUMMER]
 [PLZ UND ORT]
-Schweiz`}
+Switzerland`}
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold">Kontakt</h2>
+          <h2 className="text-xl font-semibold">Contact</h2>
           <p className="text-muted-foreground leading-relaxed">
             E-Mail:{' '}
             <a href="mailto:tom@balboamove.ch" className="text-primary hover:underline">tom@balboamove.ch</a>
@@ -52,7 +52,7 @@ Schweiz`}
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold">Haftungsausschluss</h2>
+          <h2 className="text-xl font-semibold">Disclaimer</h2>
           <p className="text-muted-foreground leading-relaxed">
             Bheart ist eine Trainings-Hilfsanwendung und ersetzt keine
             medizinische Beratung. Die berechneten Trainingszonen und
@@ -64,12 +64,12 @@ Schweiz`}
         </section>
 
         <section className="space-y-3 pb-12">
-          <h2 className="text-xl font-semibold">Urheberrecht</h2>
+          <h2 className="text-xl font-semibold">Copyright</h2>
           <p className="text-muted-foreground leading-relaxed">
             Inhalte und Werke auf dieser Plattform unterliegen dem
-            schweizerischen Urheberrecht. Vervielfältigung, Bearbeitung,
+            schweizerischen Copyright. Vervielfältigung, Bearbeitung,
             Verbreitung und jede Art der Verwertung außerhalb der Grenzen des
-            Urheberrechts bedürfen der schriftlichen Zustimmung des Anbieters.
+            Copyrights bedürfen der schriftlichen Zustimmung des Providers.
           </p>
         </section>
       </main>
