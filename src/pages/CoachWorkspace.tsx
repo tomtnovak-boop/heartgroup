@@ -14,10 +14,11 @@ import { logParticipantRedirect } from '@/lib/roleRouting';
 import { setDisplayView, setTargetZones } from '@/lib/displaySync';
 import { AdminParticipantsTab } from '@/components/admin/AdminParticipantsTab';
 import { AdminCoachesTab } from '@/components/admin/AdminCoachesTab';
+import { AdminClassesTab } from '@/components/admin/AdminClassesTab';
 // Alte Ansichten (CoachDashboard/Fancy, NeutralDashboard, ZoneFocusDashboard, CoachAlertDashboard)
 // sind ausgeblendet – Dateien/Seiten bleiben bestehen und sind notfalls per URL erreichbar.
 
-type WorkspaceTab = 'namegrid' | 'target' | 'participants' | 'coaches';
+type WorkspaceTab = 'namegrid' | 'target' | 'participants' | 'coaches' | 'classes';
 
 const ZONES = [
   { n: 1, name: 'Recovery', pct: '50–60%', color: '#94A3B8' },
@@ -208,6 +209,7 @@ export default function CoachWorkspace() {
     // { key: 'coach-alert', label: 'Coach Alert' },    // ausgeblendet – Seite bleibt per URL erreichbar
     { key: 'participants', label: 'Teilnehmer', adminOnly: true },
     { key: 'coaches', label: 'Coaches', adminOnly: true },
+    { key: 'classes', label: 'Classes', adminOnly: true },
   ];
 
   const visibleTabs = tabs.filter(t => !t.adminOnly || isAdmin);
@@ -468,6 +470,11 @@ export default function CoachWorkspace() {
         {activeTab === 'coaches' && isAdmin && (
           <div style={{ height: '100%', overflow: 'auto', padding: '16px' }}>
             <AdminCoachesTab />
+          </div>
+        )}
+        {activeTab === 'classes' && isAdmin && (
+          <div style={{ height: '100%', overflow: 'auto', padding: '16px' }}>
+            <AdminClassesTab />
           </div>
         )}
       </div>

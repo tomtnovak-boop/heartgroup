@@ -23,6 +23,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
+import { AdminClassesTab } from '@/components/admin/AdminClassesTab';
 
 interface ParticipantRow {
   id: string;
@@ -51,7 +52,7 @@ export default function AdminUsers() {
   const navigate = useNavigate();
   const { isAdmin } = useAuthContext();
   const { toast } = useToast();
-  const [tab, setTab] = useState<'participants' | 'coaches'>('participants');
+  const [tab, setTab] = useState<'participants' | 'coaches' | 'classes'>('participants');
   const [participants, setParticipants] = useState<ParticipantRow[]>([]);
   const [coaches, setCoaches] = useState<CoachRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -176,6 +177,17 @@ export default function AdminUsers() {
         >
           Coaches
         </button>
+        <button
+          onClick={() => setTab('classes')}
+          style={{
+            background: tab === 'classes' ? '#ff4425' : 'transparent',
+            color: tab === 'classes' ? '#fff' : '#666',
+            border: 'none', borderRadius: '8px', padding: '8px 20px',
+            fontWeight: 700, fontSize: '14px', cursor: 'pointer',
+          }}
+        >
+          Classes
+        </button>
       </div>
 
       {/* Content */}
@@ -190,11 +202,13 @@ export default function AdminUsers() {
             onEdit={(p) => setEditUser(p)}
             onDelete={(p) => setDeleteUser({ id: p.id, name: p.name, user_id: p.user_id })}
           />
-        ) : (
+        ) : tab === 'coaches' ? (
           <CoachTable
             rows={coaches}
             onDelete={(c) => setDeleteUser({ id: c.id, name: c.name, user_id: c.user_id })}
           />
+        ) : (
+          <AdminClassesTab />
         )}
       </div>
 
