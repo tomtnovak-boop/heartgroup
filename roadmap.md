@@ -8,3 +8,6 @@
 - [x] 6. Doppelte HR-Speicherung: toten Solo-Trainings-Code (HeartRateDisplay) entfernen, Participant.tsx unverändert
 - [x] 7. ensureSessionCode nur eigene Sessions wiederverwenden
 - [x] 8. Realtime-Reconnect/Foreground Resync
+- [ ] Translate every visible German interface string in `src/` to English
+- [ ] Add `class_types` and workout class snapshot fields with secure access policies
+- [ ] Add English admin class management: create, rename, activate/deactivate, delete, and sort order
