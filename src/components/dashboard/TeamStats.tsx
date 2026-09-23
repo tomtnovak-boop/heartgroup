@@ -20,7 +20,7 @@ export function TeamStats({ participantCount, averageBPM, averageZone }: TeamSta
           </div>
           <div>
             <div className="text-2xl font-bold">{participantCount}</div>
-            <div className="text-sm text-muted-foreground">Teilnehmer</div>
+            <div className="text-sm text-muted-foreground">Participants</div>
           </div>
         </div>
 
@@ -34,7 +34,7 @@ export function TeamStats({ participantCount, averageBPM, averageZone }: TeamSta
               {averageBPM > 0 ? averageBPM : '--'}
               <span className="text-lg font-normal text-muted-foreground ml-2">bpm</span>
             </div>
-            <div className="text-sm text-muted-foreground">Ø Herzfrequenz</div>
+            <div className="text-sm text-muted-foreground">Avg Heart Rate</div>
           </div>
         </div>
 
@@ -51,7 +51,7 @@ export function TeamStats({ participantCount, averageBPM, averageZone }: TeamSta
               {averageZone > 0 ? `Zone ${averageZone}` : '--'}
             </div>
             <div className="text-sm text-muted-foreground">
-              {zoneInfo?.name || 'Ø Zone'}
+              {zoneInfo?.name || 'Avg Zone'}
             </div>
           </div>
         </div>

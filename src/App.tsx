@@ -16,7 +16,7 @@ import CoachNamegrid from "./pages/CoachNamegrid";
 import CoachTarget from "./pages/CoachTarget";
 import CoachZoneFocus from "./pages/CoachZoneFocus";
 import CoachAlert from "./pages/CoachAlert";
-import AdminTeilnehmer from "./pages/AdminTeilnehmer";
+import AdminParticipants from "./pages/AdminTeilnehmer";
 import AdminCoaches from "./pages/AdminCoaches";
 import ResetPassword from "./pages/ResetPassword";
 import AdminStats from "./pages/AdminStats";
@@ -61,7 +61,7 @@ const App = () => (
               <Route path="/coach/target" element={<ProtectedRoute requireCoach><CoachTarget /></ProtectedRoute>} />
               <Route path="/coach/zone-focus" element={<ProtectedRoute requireCoach><CoachZoneFocus /></ProtectedRoute>} />
               <Route path="/coach/coach-alert" element={<ProtectedRoute requireCoach><CoachAlert /></ProtectedRoute>} />
-              <Route path="/admin/teilnehmer" element={<ProtectedRoute requireCoach><AdminTeilnehmer /></ProtectedRoute>} />
+              <Route path="/admin/teilnehmer" element={<ProtectedRoute requireCoach><AdminParticipants /></ProtectedRoute>} />
               <Route path="/admin/coaches" element={<ProtectedRoute requireCoach><AdminCoaches /></ProtectedRoute>} />
               <Route path="/admin/stats" element={<ProtectedRoute requireCoach><AdminStats /></ProtectedRoute>} />
               <Route path="/reset-password" element={<ResetPassword />} />

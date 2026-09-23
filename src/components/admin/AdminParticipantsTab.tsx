@@ -80,11 +80,11 @@ export function AdminParticipantsTab() {
       body: { action: 'deleteParticipant', profile_id: deleteUser.id, user_id: deleteUser.user_id || null },
     });
     if (error || data?.error) {
-      toast({ title: 'Fehler beim Löschen', description: data?.error || error?.message, variant: 'destructive' });
+      toast({ title: 'Deletion failed', description: data?.error || error?.message, variant: 'destructive' });
       setIsDeleting(false);
       return;
     }
-    toast({ title: 'Teilnehmer gelöscht', description: `${deleteUser.name} wurde entfernt.` });
+    toast({ title: 'Participant deleted', description: `${deleteUser.name} was removed.` });
     setDeleteUser(null);
     setIsDeleting(false);
     fetchParticipants();
@@ -99,7 +99,7 @@ export function AdminParticipantsTab() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
         <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#fff', margin: 0 }}>
-          Teilnehmer <span style={{ color: '#666', fontWeight: 400 }}>({participants.length})</span>
+          Participants <span style={{ color: '#666', fontWeight: 400 }}>({participants.length})</span>
         </h2>
         <button
           onClick={() => setShowCreate(true)}
@@ -109,7 +109,7 @@ export function AdminParticipantsTab() {
             display: 'flex', alignItems: 'center', gap: '6px',
           }}
         >
-          <Plus style={{ width: 14, height: 14 }} /> Neuer Teilnehmer
+          <Plus style={{ width: 14, height: 14 }} /> New Participant
         </button>
       </div>
 
@@ -137,14 +137,14 @@ export function AdminParticipantsTab() {
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '48px 0', color: '#666' }}>
           <Users style={{ width: 48, height: 48, margin: '0 auto 16px', opacity: 0.5 }} />
-          <p>{searchTerm ? 'Keine Treffer.' : 'Keine Teilnehmer vorhanden.'}</p>
+          <p>{searchTerm ? 'No matches.' : 'No participants available.'}</p>
         </div>
       ) : (
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid #1a1a1a' }}>
-                {['Name', 'Geb. Datum', 'Gewicht', 'Geschlecht', 'Aktionen'].map(h => (
+                {['Name', 'Birth Date', 'Weight', 'Gender', 'Actions'].map(h => (
                   <th key={h} style={{
                     textAlign: 'left', padding: '12px 16px', fontSize: '12px',
                     fontWeight: 700, color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em',
@@ -167,7 +167,7 @@ export function AdminParticipantsTab() {
                     {row.weight ? `${row.weight} kg` : '–'}
                   </td>
                   <td style={{ padding: '14px 16px', color: '#999' }}>
-                    {row.gender === 'male' ? 'Männlich' : row.gender === 'female' ? 'Weiblich' : '–'}
+                    {row.gender === 'male' ? 'Male' : row.gender === 'female' ? 'Female' : '–'}
                   </td>
                   <td style={{ padding: '14px 16px' }}>
                     <div style={{ display: 'flex', gap: '4px' }}>
@@ -198,13 +198,13 @@ export function AdminParticipantsTab() {
       <AlertDialog open={!!deleteUser} onOpenChange={o => !o && setDeleteUser(null)}>
         <AlertDialogContent style={{ background: '#111', border: '1px solid #2a2a2a' }}>
           <AlertDialogHeader>
-            <AlertDialogTitle>{deleteUser?.name} wirklich löschen?</AlertDialogTitle>
-            <AlertDialogDescription>Diese Aktion kann nicht rückgängig gemacht werden.</AlertDialogDescription>
+            <AlertDialogTitle>{deleteUser?.name} Are you sure you want to delete</AlertDialogTitle>
+            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Abbrechen</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} disabled={isDeleting} style={{ background: '#ff4425', color: '#fff' }}>
-              {isDeleting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Löschen
+              {isDeleting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -250,10 +250,10 @@ function CreateParticipantModal({ open, onOpenChange, onCreated }: {
 
   const handleCreate = async () => {
     if (!firstName.trim() || !lastName.trim() || !email.trim()) {
-      toast({ title: 'Pflichtfelder ausfüllen', variant: 'destructive' }); return;
+      toast({ title: 'Complete all required fields', variant: 'destructive' }); return;
     }
     if (!birthDate || !weight || !gender) {
-      toast({ title: 'Geburtsdatum, Gewicht und Geschlecht sind Pflichtfelder', variant: 'destructive' }); return;
+      toast({ title: 'Date of birth, weight, and gender are required', variant: 'destructive' }); return;
     }
     setIsSubmitting(true);
 
@@ -279,8 +279,8 @@ function CreateParticipantModal({ open, onOpenChange, onCreated }: {
 
     if (error || (data as any)?.error) {
       toast({
-        title: 'Fehler',
-        description: (data as any)?.error || error?.message || 'User konnte nicht erstellt werden',
+        title: 'Error',
+        description: (data as any)?.error || error?.message || 'Could not create user',
         variant: 'destructive',
       });
       setIsSubmitting(false);
@@ -288,7 +288,7 @@ function CreateParticipantModal({ open, onOpenChange, onCreated }: {
     }
 
 
-    toast({ title: 'Teilnehmer erstellt', description: `${fullName} wurde erfolgreich angelegt.` });
+    toast({ title: 'Participant created', description: `${fullName} was created successfully.` });
     setIsSubmitting(false); reset(); onOpenChange(false); onCreated();
   };
 
@@ -297,32 +297,32 @@ function CreateParticipantModal({ open, onOpenChange, onCreated }: {
   return (
     <Dialog open={open} onOpenChange={o => { if (!o) reset(); onOpenChange(o); }}>
       <DialogContent style={{ background: '#111', border: '1px solid #2a2a2a', borderRadius: '16px', maxWidth: '480px' }}>
-        <DialogHeader><DialogTitle>Neuer Teilnehmer</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>New Participant</DialogTitle></DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5"><Label>Vorname *</Label><Input value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="Vorname" /></div>
-            <div className="space-y-1.5"><Label>Nachname *</Label><Input value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Nachname" /></div>
+            <div className="space-y-1.5"><Label>First Name *</Label><Input value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="First Name" /></div>
+            <div className="space-y-1.5"><Label>Last Name *</Label><Input value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Last Name" /></div>
           </div>
           <div className="space-y-1.5"><Label>Nickname (optional)</Label><Input value={nickname} onChange={e => setNickname(e.target.value)} placeholder="Optional" maxLength={30} /></div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5"><Label>Email *</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@example.com" /></div>
             <div className="space-y-1.5">
-              <Label>Passwort *</Label>
+              <Label>Password *</Label>
               <div className="flex gap-1">
                 <Input value={pw} readOnly className="font-mono text-xs" />
-                <Button variant="outline" size="icon" className="shrink-0" onClick={() => setPw(generatePassword())} title="Neues Passwort">
+                <Button variant="outline" size="icon" className="shrink-0" onClick={() => setPw(generatePassword())} title="New password">
                   <RefreshCw style={{ width: 14, height: 14 }} />
                 </Button>
-                <Button variant="outline" size="icon" className="shrink-0" onClick={copyPw} title="Kopieren">
+                <Button variant="outline" size="icon" className="shrink-0" onClick={copyPw} title="Copy">
                   <Copy style={{ width: 14, height: 14 }} />
                 </Button>
               </div>
-              {pwCopied && <p className="text-xs" style={{ color: '#22C55E' }}>Kopiert!</p>}
+              {pwCopied && <p className="text-xs" style={{ color: '#22C55E' }}>Copied!</p>}
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Geburtsdatum *</Label>
+              <Label>Date of Birth *</Label>
               <div className="flex gap-1">
                 <Input value={dateInput} onChange={e => handleDateInputChange(e.target.value)} placeholder="DD/MM/YYYY" className="flex-1" maxLength={10} />
                 <Popover>
@@ -333,27 +333,27 @@ function CreateParticipantModal({ open, onOpenChange, onCreated }: {
                 </Popover>
               </div>
             </div>
-            <div className="space-y-1.5"><Label>Gewicht (kg) *</Label><Input type="number" value={weight} onChange={e => setWeight(e.target.value)} placeholder="75" min={30} max={300} /></div>
+            <div className="space-y-1.5"><Label>Weight (kg) *</Label><Input type="number" value={weight} onChange={e => setWeight(e.target.value)} placeholder="75" min={30} max={300} /></div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Geschlecht *</Label>
+              <Label>Gender *</Label>
               <div style={{ display: 'flex', gap: '4px' }}>
                 {(['male', 'female'] as const).map(g => (
                   <button key={g} onClick={() => setGender(g)} style={{
                     flex: 1, background: gender === g ? '#ff4425' : '#1a1a1a', color: gender === g ? '#fff' : '#666',
                     border: gender === g ? 'none' : '1px solid #2a2a2a', borderRadius: '8px', padding: '8px', fontWeight: 600, fontSize: '13px', cursor: 'pointer',
-                  }}>{g === 'male' ? 'Männlich' : 'Weiblich'}</button>
+                  }}>{g === 'male' ? 'Male' : 'Female'}</button>
                 ))}
               </div>
             </div>
-            <div className="space-y-1.5"><Label>Max HR Override</Label><Input type="number" value={maxHrOverride} onChange={e => setMaxHrOverride(e.target.value)} placeholder="Tanaka-Formel" min={100} max={250} /></div>
+            <div className="space-y-1.5"><Label>Max HR Override</Label><Input type="number" value={maxHrOverride} onChange={e => setMaxHrOverride(e.target.value)} placeholder="Tanaka formula" min={100} max={250} /></div>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => { reset(); onOpenChange(false); }}>Abbrechen</Button>
+          <Button variant="outline" onClick={() => { reset(); onOpenChange(false); }}>Cancel</Button>
           <Button onClick={handleCreate} disabled={isSubmitting} style={{ background: '#ff4425', color: '#fff' }}>
-            {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Erstellen
+            {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Create
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -383,7 +383,7 @@ function EditParticipantModal({ user, open, onOpenChange, onUpdated }: {
   };
 
   const handleSave = async () => {
-    if (!name.trim()) { toast({ title: 'Name ist Pflichtfeld', variant: 'destructive' }); return; }
+    if (!name.trim()) { toast({ title: 'Name is required', variant: 'destructive' }); return; }
     setIsSaving(true);
     const age = birthDate ? calculateAgeFromBirthDate(birthDate) : 30;
     const maxHr = calculateMaxHR(age);
@@ -394,19 +394,19 @@ function EditParticipantModal({ user, open, onOpenChange, onUpdated }: {
       weight: weight ? parseInt(weight, 10) : null, gender: gender || null,
     }).eq('id', user.id);
     setIsSaving(false);
-    if (error) { toast({ title: 'Fehler', description: error.message, variant: 'destructive' }); return; }
-    toast({ title: 'Profil aktualisiert' }); onOpenChange(false); onUpdated();
+    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return; }
+    toast({ title: 'Profile updated' }); onOpenChange(false); onUpdated();
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent style={{ background: '#111', border: '1px solid #2a2a2a', borderRadius: '16px', maxWidth: '480px' }}>
-        <DialogHeader><DialogTitle>Teilnehmer bearbeiten</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>Edit Participant</DialogTitle></DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5"><Label>Name</Label><Input value={name} onChange={e => setName(e.target.value)} /></div>
           <div className="space-y-1.5"><Label>Nickname</Label><Input value={nickname} onChange={e => setNickname(e.target.value)} placeholder="Optional" maxLength={30} /></div>
           <div className="space-y-1.5">
-            <Label>Geburtsdatum</Label>
+            <Label>Date of Birth</Label>
             <div className="flex gap-2">
               <Input value={dateInput} onChange={e => handleDateInputChange(e.target.value)} placeholder="DD/MM/YYYY" className="flex-1" maxLength={10} />
               <Popover>
@@ -418,24 +418,24 @@ function EditParticipantModal({ user, open, onOpenChange, onUpdated }: {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5"><Label>Gewicht (kg)</Label><Input type="number" value={weight} onChange={e => setWeight(e.target.value)} placeholder="75" /></div>
+            <div className="space-y-1.5"><Label>Weight (kg)</Label><Input type="number" value={weight} onChange={e => setWeight(e.target.value)} placeholder="75" /></div>
             <div className="space-y-1.5">
-              <Label>Geschlecht</Label>
+              <Label>Gender</Label>
               <Select value={gender} onValueChange={setGender}>
-                <SelectTrigger><SelectValue placeholder="Wählen" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="male">Männlich</SelectItem>
-                  <SelectItem value="female">Weiblich</SelectItem>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
-          <div className="space-y-1.5"><Label>Max HR Override</Label><Input type="number" value={maxHrOverride} onChange={e => setMaxHrOverride(e.target.value)} placeholder="Leer = Tanaka-Formel" min={100} max={250} /></div>
+          <div className="space-y-1.5"><Label>Max HR Override</Label><Input type="number" value={maxHrOverride} onChange={e => setMaxHrOverride(e.target.value)} placeholder="Empty = Tanaka formula" min={100} max={250} /></div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Abbrechen</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handleSave} disabled={isSaving} style={{ background: '#ff4425', color: '#fff' }}>
-            {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Speichern
+            {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Save
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -272,7 +272,7 @@ export function NeutralDashboard({ participants, allProfiles, lobbyProfileIds, s
                     textTransform: 'uppercase',
                     marginTop: 2,
                   }}>
-                    ⚠ Verbindung verloren
+                    ⚠ Connection lost
                   </span>
                 )}
               </div>

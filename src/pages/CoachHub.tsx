@@ -25,15 +25,15 @@ export default function CoachHub() {
 
   const cards = [
     // Row 1 — Data & management
-    { key: 'training', icon: Heart, title: 'Mein Training', sub: 'Übersicht · Stats', route: '/participant' },
-    { key: 'stats', icon: TrendingUp, title: 'Statistiken', sub: 'Sessions · Zonen', route: '/admin/stats' },
+    { key: 'training', icon: Heart, title: 'My Training', sub: 'Overview · Stats', route: '/participant' },
+    { key: 'stats', icon: TrendingUp, title: 'Statistics', sub: 'Sessions · Zones', route: '/admin/stats' },
     ...(isAdmin ? [
-      { key: 'teilnehmer', icon: Users, title: 'Teilnehmer', sub: 'Verwalten', route: '/admin/teilnehmer' },
-      { key: 'coaches', icon: Shield, title: 'Coaches', sub: 'Verwalten', route: '/admin/coaches' },
+      { key: 'teilnehmer', icon: Users, title: 'Participants', sub: 'Manage', route: '/admin/teilnehmer' },
+      { key: 'coaches', icon: Shield, title: 'Coaches', sub: 'Manage', route: '/admin/coaches' },
     ] : []),
     // Row 2 — Live views
-    { key: 'namegrid', icon: LayoutGrid, title: 'Übersicht', sub: 'Live · Name + Zone', route: '/coach/namegrid' },
-    { key: 'target', icon: Target, title: 'Ziel-Fokus', sub: 'Live · Ziel-Zone', route: '/coach/target' },
+    { key: 'namegrid', icon: LayoutGrid, title: 'Overview', sub: 'Live · Name + Zone', route: '/coach/namegrid' },
+    { key: 'target', icon: Target, title: 'Target Focus', sub: 'Live · Target Zone', route: '/coach/target' },
     // Row 3 — Session control
     { key: 'cdash', icon: Radio, title: 'Coach Dashboard', sub: 'Session · Control', route: '/coach-dashboard' },
   ];
@@ -71,15 +71,15 @@ export default function CoachHub() {
         <div style={{ width: '100%', maxWidth: '720px' }}>
           <div style={{ marginBottom: '32px', textAlign: 'center' }}>
             <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0 }}>
-              Willkommen{firstName ? `, ${firstName}` : ''}.
+              Welcome{firstName ? `, ${firstName}` : ''}.
             </h1>
-            <p style={{ color: '#666', fontSize: '15px', marginTop: '6px' }}>Wähle eine Ansicht.</p>
+            <p style={{ color: '#666', fontSize: '15px', marginTop: '6px' }}>Choose a view.</p>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
-            {/* Section: Daten & Verwaltung */}
+            {/* Section: Data & Management */}
             <div style={{ gridColumn: 'span 4', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', marginBottom: '2px' }}>
-              Daten &amp; Verwaltung
+              Data &amp; Management
             </div>
             {cards.filter(c => ['training', 'stats', 'teilnehmer', 'coaches'].includes(c.key)).map(card => (
               <button
@@ -102,9 +102,9 @@ export default function CoachHub() {
               </button>
             ))}
 
-            {/* Section: Live Ansichten */}
+            {/* Section: Live Views */}
             <div style={{ gridColumn: 'span 4', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', marginTop: '8px', marginBottom: '2px' }}>
-              Live Ansichten
+              Live Views
             </div>
             {cards.filter(c => ['namegrid', 'target'].includes(c.key)).map(card => (
               <button

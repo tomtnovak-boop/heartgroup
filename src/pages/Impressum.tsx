@@ -13,7 +13,7 @@ export default function Impressum() {
             className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Zurück
+            Back
           </button>
 
           <div className="flex items-center gap-2">
@@ -31,45 +31,43 @@ export default function Impressum() {
       </header>
 
       <main className="max-w-3xl mx-auto px-6 py-10 space-y-8">
-        <h1 className="text-3xl font-bold">Impressum</h1>
+        <h1 className="text-3xl font-bold">Legal Notice</h1>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold">Anbieter</h2>
+          <h2 className="text-xl font-semibold">Provider</h2>
           <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
-{`[DEIN NAME / FIRMA]
-[STRASSE UND HAUSNUMMER]
-[PLZ UND ORT]
-Schweiz`}
+{`[YOUR NAME / COMPANY]
+[STREET AND NUMBER]
+[POSTAL CODE AND CITY]
+Switzerland`}
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold">Kontakt</h2>
+          <h2 className="text-xl font-semibold">Contact</h2>
           <p className="text-muted-foreground leading-relaxed">
-            E-Mail:{' '}
+            Email:{' '}
             <a href="mailto:tom@balboamove.ch" className="text-primary hover:underline">tom@balboamove.ch</a>
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold">Haftungsausschluss</h2>
+          <h2 className="text-xl font-semibold">Disclaimer</h2>
           <p className="text-muted-foreground leading-relaxed">
-            Bheart ist eine Trainings-Hilfsanwendung und ersetzt keine
-            medizinische Beratung. Die berechneten Trainingszonen und
-            Kalorienschätzungen basieren auf wissenschaftlichen Formeln (Tanaka,
-            Keytel) und sind Annäherungswerte. Konsultieren Sie vor Beginn eines
-            Trainingsprogramms einen Arzt, insbesondere bei bestehenden
-            gesundheitlichen Einschränkungen.
+            Bheart is a workout support application and does not replace medical
+            advice. Calculated training zones and calorie estimates are based on
+            scientific formulas (Tanaka, Keytel) and are approximate. Consult a
+            physician before beginning a workout program, especially if you have
+            existing health conditions.
           </p>
         </section>
 
         <section className="space-y-3 pb-12">
-          <h2 className="text-xl font-semibold">Urheberrecht</h2>
+          <h2 className="text-xl font-semibold">Copyright</h2>
           <p className="text-muted-foreground leading-relaxed">
-            Inhalte und Werke auf dieser Plattform unterliegen dem
-            schweizerischen Urheberrecht. Vervielfältigung, Bearbeitung,
-            Verbreitung und jede Art der Verwertung außerhalb der Grenzen des
-            Urheberrechts bedürfen der schriftlichen Zustimmung des Anbieters.
+            Content and works on this platform are subject to Swiss copyright law.
+            Reproduction, editing, distribution, or any other use beyond the limits
+            of copyright law requires the provider's written consent.
           </p>
         </section>
       </main>

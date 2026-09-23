@@ -106,7 +106,7 @@ export default function AdminStats() {
   // Chart data
   const chartData = useMemo(() => {
     if (mode === 'year') {
-      const months = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       return months.map((label, i) => {
         const mSessions = relevantSessions.filter(s => new Date(s.started_at).getMonth() === i);
         const mWorkouts = workouts.filter(w => new Date(w.started_at).getMonth() === i);
@@ -120,7 +120,7 @@ export default function AdminStats() {
         const wkEnd = wkStart + 7 * 86400000;
         const wSessions = relevantSessions.filter(s => { const t = new Date(s.started_at).getTime(); return t >= wkStart && t < wkEnd; });
         const wWorkouts = workouts.filter(w => { const t = new Date(w.started_at).getTime(); return t >= wkStart && t < wkEnd; });
-        return { label: `KW${wk}`, sessions: wSessions.length, participants: new Set(wWorkouts.map(w => w.profile_id)).size };
+        return { label: `W${wk}`, sessions: wSessions.length, participants: new Set(wWorkouts.map(w => w.profile_id)).size };
       });
     }
   }, [workouts, relevantSessions, mode, currentMonth]);
@@ -264,14 +264,14 @@ export default function AdminStats() {
           onMouseEnter={e => e.currentTarget.style.color = '#ff4425'} onMouseLeave={e => e.currentTarget.style.color = '#666'}>
           <ArrowLeft style={{ width: 16, height: 16 }} /> Hub
         </button>
-        <span style={{ fontWeight: 700, fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Statistiken</span>
+        <span style={{ fontWeight: 700, fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Statistics</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{ display: 'flex', background: '#1a1a1a', borderRadius: '8px', overflow: 'hidden' }}>
             {(['month', 'year'] as const).map(m => (
               <button key={m} onClick={() => setMode(m)} style={{
                 padding: '6px 14px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: mode === m ? 700 : 400,
                 background: mode === m ? '#ff4425' : 'transparent', color: mode === m ? '#fff' : '#666',
-              }}>{m === 'month' ? 'Monat' : 'Jahr'}</button>
+              }}>{m === 'month' ? 'Month' : 'Year'}</button>
             ))}
           </div>
           <button onClick={handleSignOut} style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }} title="Sign out">
@@ -297,23 +297,23 @@ export default function AdminStats() {
           <div style={{ marginBottom: '24px' }}>
             <select value={selectedCoachId} onChange={e => setSelectedCoachId(e.target.value)}
               style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: '8px', color: '#fff', padding: '8px 12px', fontSize: '14px', width: '100%', maxWidth: '280px' }}>
-              <option value="">Alle Coaches</option>
+              <option value="">All Coaches</option>
               {coaches.map(c => <option key={c.userId} value={c.userId}>{c.name}</option>)}
             </select>
           </div>
         )}
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '60px 0', color: '#666' }}>Laden...</div>
+          <div style={{ textAlign: 'center', padding: '60px 0', color: '#666' }}>Loading...</div>
         ) : (
           <>
             {/* KPI Cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '32px' }}>
               {[
                 { icon: '🏋️', value: kpis.sessionCount, label: 'Sessions' },
-                { icon: '👥', value: kpis.uniqueParticipants, label: 'Teilnehmer' },
-                { icon: '⏱️', value: fmtTime(kpis.totalSeconds), label: 'Gesamtzeit' },
-                { icon: '📊', value: kpis.avgPerSession, label: 'Ø pro Sess.' },
+                { icon: '👥', value: kpis.uniqueParticipants, label: 'Participants' },
+                { icon: '⏱️', value: fmtTime(kpis.totalSeconds), label: 'Total Time' },
+                { icon: '📊', value: kpis.avgPerSession, label: 'Avg per Session' },
               ].map((k, i) => (
                 <div key={i} style={{ background: '#111', border: '1px solid #1f1f1f', borderRadius: '14px', padding: '24px' }}>
                   <div style={{ fontSize: '24px', marginBottom: '8px' }}>{k.icon}</div>
@@ -325,7 +325,7 @@ export default function AdminStats() {
 
             {/* Chart */}
             <div style={{ marginBottom: '32px' }}>
-              <div style={{ fontSize: '14px', fontWeight: 700, color: '#ff4425', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px' }}>Sessions & Teilnehmer</div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: '#ff4425', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px' }}>Sessions & Participants</div>
               <div style={{ height: 240 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={chartData}>
@@ -334,7 +334,7 @@ export default function AdminStats() {
                     <YAxis yAxisId="right" orientation="right" tick={{ fill: '#666', fontSize: 12 }} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={{ background: '#111', border: '1px solid #2a2a2a', borderRadius: '8px', color: '#fff' }} />
                     <Bar yAxisId="left" dataKey="sessions" fill="#ff4425" opacity={0.8} radius={[4, 4, 0, 0]} name="Sessions" />
-                    <Line yAxisId="right" type="monotone" dataKey="participants" stroke="#00BFFF" strokeWidth={2} dot={false} name="Teilnehmer" />
+                    <Line yAxisId="right" type="monotone" dataKey="participants" stroke="#00BFFF" strokeWidth={2} dot={false} name="Participants" />
                   </ComposedChart>
                 </ResponsiveContainer>
               </div>
@@ -344,7 +344,7 @@ export default function AdminStats() {
 
             {/* Zone breakdown */}
             <div style={{ marginBottom: '32px' }}>
-              <div style={{ fontSize: '14px', fontWeight: 700, color: '#ff4425', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px' }}>Zeit in Zonen</div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: '#ff4425', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px' }}>Time in Zones</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {zoneTotals.map((z, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -357,21 +357,21 @@ export default function AdminStats() {
                   </div>
                 ))}
               </div>
-              <p style={{ fontSize: '11px', color: '#555', marginTop: '12px' }}>Ø über alle Teilnehmer im Zeitraum</p>
+              <p style={{ fontSize: '11px', color: '#555', marginTop: '12px' }}>Average across all participants in this period</p>
             </div>
 
             <div style={{ borderTop: '1px solid #1a1a1a', margin: '32px 0' }} />
 
-            {/* Teilnehmer-Aktivität (anonymous by default) */}
+            {/* Participant Activity (anonymous by default) */}
             <div style={{ marginBottom: '32px' }}>
-              <div style={{ fontSize: '14px', fontWeight: 700, color: '#ff4425', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px' }}>Teilnehmer-Aktivität</div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: '#ff4425', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px' }}>Participant Activity</div>
 
               {/* Anonymous overview cards */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
                 {[
-                  { icon: '👥', value: participantStats.activeCount, label: 'Aktive Teiln.' },
-                  { icon: '📈', value: `${participantStats.avgAttendance}%`, label: 'Ø Anwesenheit' },
-                  { icon: '⏱️', value: fmtTime(participantStats.avgDuration), label: 'Ø Dauer/Session' },
+                  { icon: '👥', value: participantStats.activeCount, label: 'Active Participants' },
+                  { icon: '📈', value: `${participantStats.avgAttendance}%`, label: 'Avg Attendance' },
+                  { icon: '⏱️', value: fmtTime(participantStats.avgDuration), label: 'Avg Duration/Session' },
                 ].map((k, i) => (
                   <div key={i} style={{ background: '#111', border: '1px solid #1f1f1f', borderRadius: '14px', padding: '24px' }}>
                     <div style={{ fontSize: '24px', marginBottom: '8px' }}>{k.icon}</div>
@@ -389,7 +389,7 @@ export default function AdminStats() {
                     <div style={{ flex: 1, height: '24px', background: '#1a1a1a', borderRadius: '4px', overflow: 'hidden' }}>
                       <div style={{ width: `${(b.count / maxBucket) * 100}%`, height: '100%', background: '#ff4425', opacity: 0.7, borderRadius: '4px', transition: 'width 0.3s', minWidth: b.count > 0 ? '4px' : '0' }} />
                     </div>
-                    <span style={{ fontSize: '13px', color: '#999', width: '90px' }}>{b.count} {b.count === 1 ? 'Person' : 'Personen'}</span>
+                    <span style={{ fontSize: '13px', color: '#999', width: '90px' }}>{b.count} {b.count === 1 ? 'Person' : 'People'}</span>
                   </div>
                 ))}
               </div>
@@ -400,7 +400,7 @@ export default function AdminStats() {
                 cursor: 'pointer', padding: '12px 0', display: 'flex', alignItems: 'center', gap: '6px',
               }}>
                 {showTop20 ? <ChevronUp style={{ width: 16, height: 16 }} /> : <ChevronDown style={{ width: 16, height: 16 }} />}
-                {showTop20 ? 'Top 20 Besucher ausblenden' : 'Top 20 Besucher anzeigen'}
+                {showTop20 ? 'Hide Top 20 Attendees' : 'Show Top 20 Attendees'}
               </button>
 
               {showTop20 && participantStats.entries.length > 0 && (
@@ -409,7 +409,7 @@ export default function AdminStats() {
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                       <thead>
                         <tr style={{ borderBottom: '1px solid #1f1f1f' }}>
-                          {['#', 'Name', 'Sessions', 'Anwesenheit', 'Gesamtzeit'].map(h => (
+                          {['#', 'Name', 'Sessions', 'Attendance', 'Total Time'].map(h => (
                             <th key={h} style={{ padding: '8px 12px', textAlign: 'left', color: '#666', fontWeight: 600, fontSize: '12px' }}>{h}</th>
                           ))}
                         </tr>
@@ -433,16 +433,16 @@ export default function AdminStats() {
 
             <div style={{ borderTop: '1px solid #1a1a1a', margin: '32px 0' }} />
 
-            {/* Top Sessions & Klassen-Durchschnitt */}
+            {/* Top Sessions & Class Averages */}
             <div style={{ marginBottom: '32px' }}>
-              <div style={{ fontSize: '14px', fontWeight: 700, color: '#ff4425', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px' }}>Top Sessions & Klassen-Durchschnitt</div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: '#ff4425', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px' }}>Top Sessions & Class Averages</div>
 
               {/* Klassen-Durchschnitt cards */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
                 {[
-                  { icon: '👥', value: sessionAnalysis.avgParticipants, label: 'Ø Teiln./Klasse' },
-                  { icon: '🫀', value: sessionAnalysis.avgHr > 0 ? `${sessionAnalysis.avgHr} BPM` : '–', label: 'Ø HR/Klasse' },
-                  { icon: '🔥', value: sessionAnalysis.avgCal > 0 ? `${sessionAnalysis.avgCal} kcal` : '–', label: 'Ø Kcal/Klasse' },
+                  { icon: '👥', value: sessionAnalysis.avgParticipants, label: 'Avg Participants/Class' },
+                  { icon: '🫀', value: sessionAnalysis.avgHr > 0 ? `${sessionAnalysis.avgHr} BPM` : '–', label: 'Avg HR/Class' },
+                  { icon: '🔥', value: sessionAnalysis.avgCal > 0 ? `${sessionAnalysis.avgCal} kcal` : '–', label: 'Avg kcal/Class' },
                 ].map((k, i) => (
                   <div key={i} style={{ background: '#111', border: '1px solid #1f1f1f', borderRadius: '14px', padding: '24px' }}>
                     <div style={{ fontSize: '24px', marginBottom: '8px' }}>{k.icon}</div>
@@ -454,13 +454,13 @@ export default function AdminStats() {
 
               {/* Top 5 Sessions table */}
               {sessionAnalysis.top5.length === 0 ? (
-                <p style={{ color: '#666', fontSize: '14px' }}>Keine Sessions im Zeitraum</p>
+                <p style={{ color: '#666', fontSize: '14px' }}>No sessions in this period</p>
               ) : (
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                     <thead>
                       <tr style={{ borderBottom: '1px solid #1f1f1f' }}>
-                        {['Datum', 'Teilnehmer', 'Ø HR', 'Dauer', 'Z3+Z4+Z5'].map(h => (
+                        {['Date', 'Participants', 'Ø HR', 'Duration', 'Z3+Z4+Z5'].map(h => (
                           <th key={h} style={{ padding: '8px 12px', textAlign: 'left', color: '#666', fontWeight: 600, fontSize: '12px' }}>{h}</th>
                         ))}
                       </tr>
@@ -486,12 +486,12 @@ export default function AdminStats() {
               <>
                 <div style={{ borderTop: '1px solid #1a1a1a', margin: '32px 0' }} />
                 <div style={{ marginBottom: '32px' }}>
-                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#ff4425', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px' }}>Aufschlüsselung nach Coach</div>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#ff4425', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px' }}>Breakdown by Coach</div>
                   <div style={{ overflowX: 'auto' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                       <thead>
                         <tr style={{ borderBottom: '1px solid #1f1f1f' }}>
-                          {['Coach', 'Sessions', 'Teiln.', 'Ø Teiln.', 'Zeit', 'Z1', 'Z2', 'Z3', 'Z4', 'Z5'].map(h => (
+                          {['Coach', 'Sessions', 'Participants', 'Avg Participants', 'Time', 'Z1', 'Z2', 'Z3', 'Z4', 'Z5'].map(h => (
                             <th key={h} style={{ padding: '8px 8px', textAlign: 'left', color: '#666', fontWeight: 600, fontSize: '11px' }}>{h}</th>
                           ))}
                         </tr>

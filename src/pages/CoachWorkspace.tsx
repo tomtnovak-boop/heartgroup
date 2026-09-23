@@ -14,10 +14,11 @@ import { logParticipantRedirect } from '@/lib/roleRouting';
 import { setDisplayView, setTargetZones } from '@/lib/displaySync';
 import { AdminParticipantsTab } from '@/components/admin/AdminParticipantsTab';
 import { AdminCoachesTab } from '@/components/admin/AdminCoachesTab';
+import { AdminClassesTab } from '@/components/admin/AdminClassesTab';
 // Alte Ansichten (CoachDashboard/Fancy, NeutralDashboard, ZoneFocusDashboard, CoachAlertDashboard)
 // sind ausgeblendet – Dateien/Seiten bleiben bestehen und sind notfalls per URL erreichbar.
 
-type WorkspaceTab = 'namegrid' | 'target' | 'participants' | 'coaches';
+type WorkspaceTab = 'namegrid' | 'target' | 'participants' | 'coaches' | 'classes';
 
 const ZONES = [
   { n: 1, name: 'Recovery', pct: '50–60%', color: '#94A3B8' },
@@ -28,8 +29,8 @@ const ZONES = [
 ];
 
 const PRESETS = [
-  { label: 'Aufwärmen', zones: [1, 2] },
-  { label: 'Fettverbrennung', zones: [2, 3] },
+  { label: 'Warm-up', zones: [1, 2] },
+  { label: 'Fat Burn', zones: [2, 3] },
   { label: 'Cardio', zones: [3, 4] },
   { label: 'Peak/HIIT', zones: [4, 5] },
 ];
@@ -80,7 +81,7 @@ export default function CoachWorkspace() {
     fetchProfiles();
   }, []);
 
-  // Offene Session lesen: aktiven Modus + Ziel-Zonen initial übernehmen
+  // Offene Session lesen: activeen Modus + Target Zonen initial übernehmen
   useEffect(() => {
     (async () => {
       const { data: userData } = await supabase.auth.getUser();
@@ -154,7 +155,7 @@ export default function CoachWorkspace() {
 
   const handleStartSession = () => {
     startSession(participants);
-    // Standard beim Session-Start: Übersicht (namegrid)
+    // Standard beim Session-Start: Overview (namegrid)
     setActiveTab('namegrid');
     setDisplayView('namegrid');
   };
@@ -179,7 +180,7 @@ export default function CoachWorkspace() {
     applyZones(next);
   };
 
-  // „Braucht Aufmerksamkeit": Live-Teilnehmer unterhalb/oberhalb des Zielbereichs
+  // „Braucht Aufmerksamkeit": Live-Participants unterhalb/oberhalb des Zielbereichs
   const attention = useMemo(() => {
     const [tmin, tmax] = selectedZones;
     const prof = new Map(allProfiles.map(p => [p.id, p]));
@@ -200,14 +201,15 @@ export default function CoachWorkspace() {
   const isDashboardTab = activeTab === 'namegrid' || activeTab === 'target';
 
   const tabs: { key: WorkspaceTab; label: string; adminOnly?: boolean }[] = [
-    { key: 'namegrid', label: 'Übersicht' },
-    { key: 'target', label: 'Ziel-Fokus' },
+    { key: 'namegrid', label: 'Overview' },
+    { key: 'target', label: 'Target Focus' },
     // { key: 'fancy', label: 'Dashboard Fancy' },      // ausgeblendet – Seite bleibt per URL erreichbar
     // { key: 'neutral', label: 'Dashboard Neutral' },  // ausgeblendet – Seite bleibt per URL erreichbar
     // { key: 'zone-focus', label: 'Zone Focus' },      // ausgeblendet – Seite bleibt per URL erreichbar
     // { key: 'coach-alert', label: 'Coach Alert' },    // ausgeblendet – Seite bleibt per URL erreichbar
-    { key: 'participants', label: 'Teilnehmer', adminOnly: true },
+    { key: 'participants', label: 'Participants', adminOnly: true },
     { key: 'coaches', label: 'Coaches', adminOnly: true },
+    { key: 'classes', label: 'Classes', adminOnly: true },
   ];
 
   const visibleTabs = tabs.filter(t => !t.adminOnly || isAdmin);
@@ -339,7 +341,7 @@ export default function CoachWorkspace() {
         )}
         {activeTab === 'target' && (
           <>
-            {/* Ziel-Zonen-Auswahl */}
+            {/* Target Zonen-Auswahl */}
             <div style={{
               flexShrink: 0,
               padding: '12px 16px',
@@ -395,7 +397,7 @@ export default function CoachWorkspace() {
                 })}
               </div>
               <div style={{ marginTop: 8, fontSize: 12, color: '#888' }}>
-                Aktiv: <span style={{ color: '#fff', fontWeight: 700 }}>{zoneNames(selectedZones[0], selectedZones[1])}</span>
+                Active: <span style={{ color: '#fff', fontWeight: 700 }}>{zoneNames(selectedZones[0], selectedZones[1])}</span>
               </div>
             </div>
 
@@ -413,7 +415,7 @@ export default function CoachWorkspace() {
                 {attention.low.length > 0 && (
                   <div style={{ minWidth: 0 }}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                      Zu niedrig
+                      Too low
                     </span>
                     <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
                       {attention.low.map(m => (
@@ -430,7 +432,7 @@ export default function CoachWorkspace() {
                 {attention.high.length > 0 && (
                   <div style={{ minWidth: 0 }}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: '#EF4444', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                      Zu hoch
+                      Too high
                     </span>
                     <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
                       {attention.high.map(m => (
@@ -468,6 +470,11 @@ export default function CoachWorkspace() {
         {activeTab === 'coaches' && isAdmin && (
           <div style={{ height: '100%', overflow: 'auto', padding: '16px' }}>
             <AdminCoachesTab />
+          </div>
+        )}
+        {activeTab === 'classes' && isAdmin && (
+          <div style={{ height: '100%', overflow: 'auto', padding: '16px' }}>
+            <AdminClassesTab />
           </div>
         )}
       </div>

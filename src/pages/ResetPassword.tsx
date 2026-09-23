@@ -24,18 +24,18 @@ export default function ResetPassword() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      toast({ title: 'Fehler', description: 'Passwörter stimmen nicht überein.', variant: 'destructive' });
+      toast({ title: 'Error', description: 'Passwords do not match.', variant: 'destructive' });
       return;
     }
     if (password.length < 8) {
-      toast({ title: 'Fehler', description: 'Passwort muss mindestens 8 Zeichen lang sein.', variant: 'destructive' });
+      toast({ title: 'Error', description: 'Password must be at least 8 characters long.', variant: 'destructive' });
       return;
     }
     setIsLoading(true);
     const { error } = await supabase.auth.updateUser({ password });
     setIsLoading(false);
     if (error) {
-      toast({ title: 'Fehler', description: error.message, variant: 'destructive' });
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
       return;
     }
     await clearClientSession();
@@ -56,7 +56,7 @@ export default function ResetPassword() {
           <Logo />
           {!isSuccess && (
             <p style={{ color: '#666', fontSize: '13px', marginTop: '6px' }}>
-              {isValid ? 'Neues Passwort festlegen' : 'Ungültiger oder abgelaufener Link'}
+              {isValid ? 'Set a new password' : 'Invalid or expired link'}
             </p>
           )}
         </div>
@@ -66,16 +66,16 @@ export default function ResetPassword() {
             <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(34,197,94,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
               <Check style={{ width: 32, height: 32, color: '#22C55E' }} />
             </div>
-            <h2 style={{ color: '#fff', fontSize: '20px', fontWeight: 700, margin: '0 0 8px' }}>Passwort geändert</h2>
+            <h2 style={{ color: '#fff', fontSize: '20px', fontWeight: 700, margin: '0 0 8px' }}>Password changed</h2>
             <p style={{ color: '#999', fontSize: '14px', lineHeight: '1.5', margin: 0 }}>
-              Dein Passwort wurde erfolgreich geändert. Du kannst dich jetzt in der Bheart App anmelden.
+              Your password was changed successfully. You can now sign in to the Bheart app.
             </p>
           </div>
         ) : isValid ? (
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <input
               type="password"
-              placeholder="Neues Passwort"
+              placeholder="New password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -90,7 +90,7 @@ export default function ResetPassword() {
             />
             <input
               type="password"
-              placeholder="Passwort bestätigen"
+              placeholder="Confirm password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
@@ -114,13 +114,13 @@ export default function ResetPassword() {
               }}
             >
               {isLoading && <Loader2 style={{ width: 16, height: 16 }} className="animate-spin" />}
-              {isLoading ? 'Speichern...' : 'Passwort speichern'}
+              {isLoading ? 'Saving...' : 'Save password'}
             </button>
           </form>
         ) : (
           <div style={{ textAlign: 'center' }}>
             <p style={{ color: '#999', fontSize: '14px', marginBottom: '16px' }}>
-              Bitte fordere einen neuen Reset-Link an.
+              Please request a new reset link.
             </p>
           </div>
         )}

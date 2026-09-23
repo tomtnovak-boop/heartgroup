@@ -87,7 +87,7 @@ export function TargetFocusDashboard({ participants, allProfiles, lobbyProfileId
     </div>
   );
 
-  // Warte-Zustand: Session erstellt, aber noch nicht gestartet → großer Session-Code mittig
+  // Warte-Zustand: Session erstellt, aber noch nicht gestartet → großer Session Code mittig
   if (!isSessionActive && sessionCode) {
     return (
       <div style={{
@@ -100,7 +100,7 @@ export function TargetFocusDashboard({ participants, allProfiles, lobbyProfileId
           fontSize: 'clamp(18px, 3vw, 40px)', fontWeight: 800, letterSpacing: '0.15em',
           textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)',
         }}>
-          Session-Code
+          Session Code
         </div>
         <div style={{
           fontSize: 'min(38vw, 46vh)', lineHeight: 0.95, fontWeight: 900, color: '#fff',
@@ -112,15 +112,15 @@ export function TargetFocusDashboard({ participants, allProfiles, lobbyProfileId
           fontSize: 'clamp(16px, 2.2vw, 30px)', fontWeight: 600, color: 'rgba(255,255,255,0.6)',
           maxWidth: '80%',
         }}>
-          Gib diesen Code in der Bheart-App ein, um beizutreten
+          Enter this code in the Bheart app to join
         </div>
         <div style={{
           marginTop: '2vh', fontSize: 'clamp(14px, 1.8vw, 24px)', fontWeight: 700,
           color: lobbyProfileIds.length > 0 ? '#22C55E' : 'rgba(255,255,255,0.35)',
         }}>
           {lobbyProfileIds.length > 0
-            ? `${lobbyProfileIds.length} bereit`
-            : 'Warte auf Teilnehmer …'}
+            ? `${lobbyProfileIds.length} ready`
+            : 'Waiting for participants…'}
         </div>
       </div>
     );
@@ -135,28 +135,28 @@ export function TargetFocusDashboard({ participants, allProfiles, lobbyProfileId
           <span style={{ color: '#ff4425' }}>heart</span>
         </div>
         <div style={{ fontSize: 16, fontWeight: 600, color: '#8a8a8a', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-          ZIEL-FOKUS
+          TARGET FOCUS
         </div>
       </div>
 
-      {/* Kennzahlen-Kopf: Ziel-Zone, X/Y im Ziel, Fortschritt */}
+      {/* Kennzahlen-Kopf: Target Zone, X/Y in target, Fortschritt */}
       <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 32, padding: '0 24px 12px' }}>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 600, color: '#8a8a8a', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Ziel-Zone</div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: '#8a8a8a', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Target Zone</div>
           <div style={{ fontSize: 28, fontWeight: 800 }}>{label}</div>
         </div>
         <div>
           <div style={{ fontSize: 64, fontWeight: 800, lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: '#22C55E' }}>
             {inZone.length}/{total}
           </div>
-          <div style={{ fontSize: 15, fontWeight: 600, color: '#8a8a8a' }}>im Ziel</div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: '#8a8a8a' }}>in target</div>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ height: 14, background: '#1c1c1c', borderRadius: 7, overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${pct}%`, background: '#22C55E', transition: 'width 0.6s ease' }} />
           </div>
           <div style={{ marginTop: 6, fontSize: 14, fontWeight: 600, color: '#8a8a8a' }}>
-            {pct}% der Gruppe im Ziel
+            {pct}% of the group in target
           </div>
         </div>
       </div>
@@ -165,7 +165,7 @@ export function TargetFocusDashboard({ participants, allProfiles, lobbyProfileId
       <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 2fr 1fr', gap: 12, padding: '0 24px 16px', boxSizing: 'border-box' }}>
         <div style={{ background: '#111111', borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ fontSize: 16, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>
-            ▼ Zu niedrig
+            ▼ Too low
           </div>
           <div style={{ overflowY: 'auto', minHeight: 0 }}>
             {chip(below, '#94A3B8', '#141414', '#242424', false)}
@@ -173,7 +173,7 @@ export function TargetFocusDashboard({ participants, allProfiles, lobbyProfileId
         </div>
         <div style={{ background: '#111111', borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ fontSize: 20, fontWeight: 800, color: '#22C55E', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>
-            ✓ Im Ziel
+            ✓ In target
           </div>
           <div style={{ overflowY: 'auto', minHeight: 0 }}>
             {chip(inZone, '#22C55E', '#132218', 'rgba(34,197,94,0.35)', true)}
@@ -181,7 +181,7 @@ export function TargetFocusDashboard({ participants, allProfiles, lobbyProfileId
         </div>
         <div style={{ background: '#111111', borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ fontSize: 16, fontWeight: 800, color: '#EF4444', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>
-            ▲ Zu hoch
+            ▲ Too high
           </div>
           <div style={{ overflowY: 'auto', minHeight: 0 }}>
             {chip(above, '#EF4444', '#141414', 'rgba(239,68,68,0.3)', false)}

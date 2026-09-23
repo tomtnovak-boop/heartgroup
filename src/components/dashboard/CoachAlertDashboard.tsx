@@ -151,14 +151,14 @@ export function CoachAlertDashboard({
                     </div>
                     {/* Duration */}
                     <span style={{ fontSize: 11, color: '#888', flexShrink: 0 }}>
-                      Z{a.zone} seit {Math.floor(a.durationS / 60)} min
+                      Z{a.zone} for {Math.floor(a.durationS / 60)} min
                     </span>
                     {/* Alert badge */}
                     <span style={{
                       marginLeft: 'auto', fontSize: 11, fontWeight: 700,
                       color: alertColor, flexShrink: 0,
                     }}>
-                      {a.type === 'high' ? '⚠ Zu intensiv' : '💤 Zu wenig'}
+                      {a.type === 'high' ? '⚠ Too intense' : '💤 Too low'}
                     </span>
                   </div>
                 );
@@ -234,7 +234,7 @@ export function CoachAlertDashboard({
           Ø BPM: <span style={{ color: '#fff', fontWeight: 700 }}>{avgBPM}</span>
         </span>
         <span style={{ fontSize: 12, color: '#666' }}>
-          Aktiv: <span style={{ color: '#fff', fontWeight: 700 }}>{participants.length}</span>
+          Active: <span style={{ color: '#fff', fontWeight: 700 }}>{participants.length}</span>
         </span>
       </div>
     </div>

@@ -50,6 +50,30 @@ export type Database = {
         }
         Relationships: []
       }
+      class_types: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       live_hr: {
         Row: {
           bpm: number
@@ -234,6 +258,8 @@ export type Database = {
         Row: {
           avg_bpm: number | null
           avg_zone: number | null
+          class_id: string | null
+          class_name: string | null
           created_at: string
           duration_seconds: number | null
           ended_at: string | null
@@ -254,6 +280,8 @@ export type Database = {
         Insert: {
           avg_bpm?: number | null
           avg_zone?: number | null
+          class_id?: string | null
+          class_name?: string | null
           created_at?: string
           duration_seconds?: number | null
           ended_at?: string | null
@@ -274,6 +302,8 @@ export type Database = {
         Update: {
           avg_bpm?: number | null
           avg_zone?: number | null
+          class_id?: string | null
+          class_name?: string | null
           created_at?: string
           duration_seconds?: number | null
           ended_at?: string | null
@@ -292,6 +322,13 @@ export type Database = {
           zone_5_seconds?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "workouts_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "class_types"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "workouts_profile_id_fkey"
             columns: ["profile_id"]
