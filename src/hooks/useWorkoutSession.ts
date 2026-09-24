@@ -591,7 +591,19 @@ export function useWorkoutSession() {
 
     // Finalize workouts in background
     const now = new Date().toISOString();
-    const entries = Array.from(finalWorkouts.entries());
+
+    // Skip workouts that are already finalized (e.g. by the native app) — never overwrite them
+    const finalIds = Array.from(finalWorkouts.values());
+    const { data: workoutRows } = await supabase
+      .from('workouts')
+      .select('id, ended_at')
+      .in('id', finalIds);
+    const alreadyEnded = new Set(
+      (workoutRows || []).filter(w => w.ended_at != null).map(w => w.id)
+    );
+    const entries = Array.from(finalWorkouts.entries()).filter(
+      ([, workoutId]) => !alreadyEnded.has(workoutId)
+    );
 
     const workoutStats: { workoutId: string; avgBpm: number; maxBpm: number; updatePayload: Record<string, any> }[] = [];
 
@@ -631,14 +643,19 @@ export function useWorkoutSession() {
           (durationSeconds / 60) * calculateCaloriesPerMinute(avgBpm, weight, age, gender)
         );
 
+        // Distribute zone seconds proportionally to the real duration — HR samples
+        // do not arrive on a fixed interval (native app writes 1s, web 2s)
+        const zoneSeconds = (z: 1 | 2 | 3 | 4 | 5) =>
+          Math.round(durationSeconds * (zoneCounts[z] / count));
+
         workoutStats.push({
           workoutId, avgBpm, maxBpm,
           updatePayload: {
             ended_at: now, avg_bpm: avgBpm, max_bpm: maxBpm, avg_zone: avgZone,
             duration_seconds: durationSeconds,
-            zone_1_seconds: zoneCounts[1] * intervalSeconds, zone_2_seconds: zoneCounts[2] * intervalSeconds,
-            zone_3_seconds: zoneCounts[3] * intervalSeconds, zone_4_seconds: zoneCounts[4] * intervalSeconds,
-            zone_5_seconds: zoneCounts[5] * intervalSeconds, total_calories: Math.max(0, totalCalories),
+            zone_1_seconds: zoneSeconds(1), zone_2_seconds: zoneSeconds(2),
+            zone_3_seconds: zoneSeconds(3), zone_4_seconds: zoneSeconds(4),
+            zone_5_seconds: zoneSeconds(5), total_calories: Math.max(0, totalCalories),
           },
         });
       } catch (err) {
@@ -658,7 +675,7 @@ export function useWorkoutSession() {
         rank_avg_bpm: rankAvg,
         rank_peak_bpm: rankPeak,
         session_participant_count: participantCount,
-      }).eq('id', ws.workoutId);
+      }).eq('id', ws.workoutId).is('ended_at', null);
     }));
   }, []);
 
