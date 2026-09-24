@@ -628,6 +628,10 @@ export function useWorkoutSession() {
         const maxBpm = Math.max(...hrs.map(e => e.bpm));
         const avgZone = Math.round(hrs.reduce((s, e) => s + e.zone, 0) / count);
 
+        const intervalSeconds = 2;
+        const zoneCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+        hrs.forEach(e => { zoneCounts[Math.min(Math.max(e.zone, 1), 5) as 1|2|3|4|5]++; });
+
         const durationSeconds = savedStartedAt
           ? Math.floor((new Date(now).getTime() - savedStartedAt.getTime()) / 1000)
           : count * intervalSeconds;
@@ -671,7 +675,7 @@ export function useWorkoutSession() {
         rank_avg_bpm: rankAvg,
         rank_peak_bpm: rankPeak,
         session_participant_count: participantCount,
-      }).eq('id', ws.workoutId);
+      }).eq('id', ws.workoutId).is('ended_at', null);
     }));
   }, []);
 
