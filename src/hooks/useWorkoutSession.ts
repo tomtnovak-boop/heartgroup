@@ -591,7 +591,19 @@ export function useWorkoutSession() {
 
     // Finalize workouts in background
     const now = new Date().toISOString();
-    const entries = Array.from(finalWorkouts.entries());
+
+    // Skip workouts that are already finalized (e.g. by the native app) — never overwrite them
+    const finalIds = Array.from(finalWorkouts.values());
+    const { data: workoutRows } = await supabase
+      .from('workouts')
+      .select('id, ended_at')
+      .in('id', finalIds);
+    const alreadyEnded = new Set(
+      (workoutRows || []).filter(w => w.ended_at != null).map(w => w.id)
+    );
+    const entries = Array.from(finalWorkouts.entries()).filter(
+      ([, workoutId]) => !alreadyEnded.has(workoutId)
+    );
 
     const workoutStats: { workoutId: string; avgBpm: number; maxBpm: number; updatePayload: Record<string, any> }[] = [];
 
