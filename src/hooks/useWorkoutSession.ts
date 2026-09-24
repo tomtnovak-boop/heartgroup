@@ -628,10 +628,6 @@ export function useWorkoutSession() {
         const maxBpm = Math.max(...hrs.map(e => e.bpm));
         const avgZone = Math.round(hrs.reduce((s, e) => s + e.zone, 0) / count);
 
-        const intervalSeconds = 2;
-        const zoneCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-        hrs.forEach(e => { zoneCounts[Math.min(Math.max(e.zone, 1), 5) as 1|2|3|4|5]++; });
-
         const durationSeconds = savedStartedAt
           ? Math.floor((new Date(now).getTime() - savedStartedAt.getTime()) / 1000)
           : count * intervalSeconds;
@@ -643,14 +639,19 @@ export function useWorkoutSession() {
           (durationSeconds / 60) * calculateCaloriesPerMinute(avgBpm, weight, age, gender)
         );
 
+        // Distribute zone seconds proportionally to the real duration — HR samples
+        // do not arrive on a fixed interval (native app writes 1s, web 2s)
+        const zoneSeconds = (z: 1 | 2 | 3 | 4 | 5) =>
+          Math.round(durationSeconds * (zoneCounts[z] / count));
+
         workoutStats.push({
           workoutId, avgBpm, maxBpm,
           updatePayload: {
             ended_at: now, avg_bpm: avgBpm, max_bpm: maxBpm, avg_zone: avgZone,
             duration_seconds: durationSeconds,
-            zone_1_seconds: zoneCounts[1] * intervalSeconds, zone_2_seconds: zoneCounts[2] * intervalSeconds,
-            zone_3_seconds: zoneCounts[3] * intervalSeconds, zone_4_seconds: zoneCounts[4] * intervalSeconds,
-            zone_5_seconds: zoneCounts[5] * intervalSeconds, total_calories: Math.max(0, totalCalories),
+            zone_1_seconds: zoneSeconds(1), zone_2_seconds: zoneSeconds(2),
+            zone_3_seconds: zoneSeconds(3), zone_4_seconds: zoneSeconds(4),
+            zone_5_seconds: zoneSeconds(5), total_calories: Math.max(0, totalCalories),
           },
         });
       } catch (err) {
