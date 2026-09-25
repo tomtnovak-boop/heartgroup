@@ -40,11 +40,11 @@ Deno.serve(async (req) => {
     .select("role")
     .eq("user_id", user.id)
     .in("role", ["coach", "admin"])
-    .maybeSingle();
+    .limit(1);
 
-  if (!roleCheck) {
+  if (!roleCheck || roleCheck.length === 0) {
     return new Response(JSON.stringify({ error: "Forbidden: coach or admin role required" }), {
-      status: 403,
+      status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
