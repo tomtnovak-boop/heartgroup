@@ -64,6 +64,11 @@ export default {
           4: "hsl(var(--zone-4))",
           5: "hsl(var(--zone-5))",
         },
+        metric: {
+          average: "hsl(var(--metric-average))",
+          high: "hsl(var(--metric-high))",
+          low: "hsl(var(--metric-low))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

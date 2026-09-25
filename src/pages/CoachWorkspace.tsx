@@ -484,7 +484,10 @@ export default function CoachWorkspace() {
           entries={leaderboardData}
           sessionDuration={leaderboardDuration}
           sessionDate={leaderboardDate}
-          onClose={() => setShowLeaderboard(false)}
+          onClose={() => {
+            setShowLeaderboard(false);
+            createSessionCode();
+          }}
           variant="coach"
         />
       )}

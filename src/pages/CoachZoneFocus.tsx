@@ -104,7 +104,10 @@ export default function CoachZoneFocus() {
         <ZoneFocusDashboard participants={participants} isLoading={isLoading} isSessionActive={sessionActive} sessionCode={sessionCode} lobbyProfileIds={lobbyProfileIds} />
       </div>
       {showLeaderboard && leaderboardData.length > 0 && (
-        <SessionLeaderboard entries={leaderboardData} sessionDuration={leaderboardDuration} sessionDate={leaderboardDate} onClose={() => setShowLeaderboard(false)} variant="coach" />
+        <SessionLeaderboard entries={leaderboardData} sessionDuration={leaderboardDuration} sessionDate={leaderboardDate} onClose={() => {
+          setShowLeaderboard(false);
+          createSessionCode();
+        }} variant="coach" />
       )}
     </div>
   );

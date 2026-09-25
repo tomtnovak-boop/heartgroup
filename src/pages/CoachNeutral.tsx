@@ -121,7 +121,10 @@ export default function CoachNeutral() {
         <NeutralDashboard participants={participants} allProfiles={allProfiles} lobbyProfileIds={lobbyProfileIds} sessionCode={sessionCode} isLoading={isLoading} isSessionActive={sessionActive} />
       </div>
       {showLeaderboard && leaderboardData.length > 0 && (
-        <SessionLeaderboard entries={leaderboardData} sessionDuration={leaderboardDuration} sessionDate={leaderboardDate} onClose={() => setShowLeaderboard(false)} variant="coach" />
+        <SessionLeaderboard entries={leaderboardData} sessionDuration={leaderboardDuration} sessionDate={leaderboardDate} onClose={() => {
+          setShowLeaderboard(false);
+          createSessionCode();
+        }} variant="coach" />
       )}
     </div>
   );
