@@ -321,6 +321,10 @@ function NewLiveDisplay() {
   const [allProfiles, setAllProfiles] = useState<ProfileLite[]>([]);
   const [displayView, setDisplayView] = useState<string>('namegrid');
   const [targetZones, setTargetZones] = useState<number[]>([3, 4]);
+  // TV displays load without a login, so useWorkoutSession can only learn about
+  // a running session via realtime. This override covers initial page loads.
+  const [startedAtOverride, setStartedAtOverride] = useState<Date | null>(null);
+  const effectiveActive = sessionActive || startedAtOverride !== null;
 
   useEffect(() => {
     supabase.from('profiles').select('id, name, nickname, created_at')
@@ -328,11 +332,11 @@ function NewLiveDisplay() {
       .then(({ data }) => { if (data) setAllProfiles(data); });
   }, []);
 
-  // Initial load: display_view + target_zones
+  // Initial load: started_at + display_view + target_zones
   useEffect(() => {
     supabase
       .from('active_sessions')
-      .select('display_view, target_zones')
+      .select('started_at, display_view, target_zones')
       .is('ended_at', null)
       .order('started_at', { ascending: false })
       .limit(1)
@@ -340,6 +344,7 @@ function NewLiveDisplay() {
       .then(({ data }) => {
         if (!data) return;
         const row = data as any;
+        setStartedAtOverride(row.started_at ? new Date(row.started_at) : null);
         setDisplayView(row.display_view || 'namegrid');
         setTargetZones(parseTargetZones(row.target_zones));
       });
@@ -355,7 +360,11 @@ function NewLiveDisplay() {
         table: 'active_sessions',
       }, (payload) => {
         const row = payload.new as any;
-        if (row.ended_at) return;
+        if (row.ended_at) {
+          setStartedAtOverride(null);
+          return;
+        }
+        setStartedAtOverride(row.started_at ? new Date(row.started_at) : null);
         setDisplayView(row.display_view || 'namegrid');
         setTargetZones(parseTargetZones(row.target_zones));
       })
@@ -370,7 +379,7 @@ function NewLiveDisplay() {
     return () => { wl?.release(); };
   }, []);
 
-  if (!sessionActive) {
+  if (!effectiveActive) {
     return (
       <div className="w-screen h-screen flex flex-col items-center justify-center gap-6" style={{ background: '#0a0a0a' }}>
         <Heart className="w-20 h-20 text-primary animate-pulse" fill="currentColor" />
@@ -388,7 +397,7 @@ function NewLiveDisplay() {
     lobbyProfileIds,
     sessionCode,
     isLoading,
-    isSessionActive: sessionActive,
+    isSessionActive: effectiveActive,
   };
 
   return displayView === 'target'
