@@ -50,6 +50,11 @@
     --zone-4: 38 92% 50%;
     --zone-5: 0 84% 60%;
 
+    /* Session summary metrics */
+    --metric-average: 142 71% 45%;
+    --metric-high: 0 84% 60%;
+    --metric-low: 218 11% 65%;
+
     /* Neon Glow Effects */
     --glow-zone-1: 220 10% 64%;
     --glow-zone-2: 195 100% 55%;

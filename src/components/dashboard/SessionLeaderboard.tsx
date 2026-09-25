@@ -33,11 +33,12 @@ export function SessionLeaderboard({
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
+    if (variant !== 'participant') return;
     const timer = setInterval(() => setElapsed(p => p + 1), 1000);
-    const autoClose = variant === 'participant' ? setTimeout(onClose, 300000) : undefined;
+    const autoClose = setTimeout(onClose, 300000);
     return () => {
       clearInterval(timer);
-      if (autoClose) clearTimeout(autoClose);
+      clearTimeout(autoClose);
     };
   }, [onClose, variant]);
 
@@ -125,9 +126,9 @@ function CoachLeaderboard({
         </div>
 
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <HeartRateMetric label="Average HR" value={averageHR} colorClass="text-zone-3" />
-          <HeartRateMetric label="Highest HR" value={highestHR} colorClass="text-zone-5" />
-          <HeartRateMetric label="Lowest HR" value={lowestHR} colorClass="text-zone-1" />
+          <HeartRateMetric label="Average HR" value={averageHR} colorClass="text-metric-average" />
+          <HeartRateMetric label="Highest HR" value={highestHR} colorClass="text-metric-high" />
+          <HeartRateMetric label="Lowest HR" value={lowestHR} colorClass="text-metric-low" />
         </div>
       </section>
     </div>
