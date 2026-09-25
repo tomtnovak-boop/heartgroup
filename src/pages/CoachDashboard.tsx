@@ -234,7 +234,7 @@ export default function CoachDashboard() {
   const startSession = useCallback(async () => {
     if (!session || !user) return;
     const { error } = await supabase.from('active_sessions')
-      .update({ started_at: new Date().toISOString() })
+      .update({ started_at: new Date().toISOString(), display_view: 'namegrid' })
       .eq('id', session.id);
     if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return; }
     // Write auto_end_at if timer is set
@@ -270,6 +270,7 @@ export default function CoachDashboard() {
       .order('created_at', { ascending: false }).limit(1).maybeSingle();
     if (existing && /^\d{4}$/.test(existing.session_code)) {
       setSession(existing as SessionRow);
+      setViewMode(((existing as any).display_view === 'target' ? 'target' : 'namegrid') as 'namegrid' | 'target');
       setIsRunning(false);
       setRemainSec(-1);
       setDurMin(0);
@@ -278,10 +279,11 @@ export default function CoachDashboard() {
     }
     const code = genCode();
     const { data, error } = await supabase.from('active_sessions')
-      .insert({ created_by: user.id, session_code: code })
+      .insert({ created_by: user.id, session_code: code, display_view: 'namegrid' })
       .select().single();
     if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return; }
     setSession(data as SessionRow);
+    setViewMode('namegrid');
     setIsRunning(false);
     setRemainSec(-1);
     setDurMin(0);
