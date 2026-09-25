@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart, LogOut, Play, Square, RefreshCw, ArrowLeft } from 'lucide-react';
-import { setTargetZones } from '@/lib/displaySync';
+import { setTargetZones, setDisplayView } from '@/lib/displaySync';
 
 const TARGET_ZONES = [
   { n: 1, name: 'Recovery', range: '50-60%', color: '#94A3B8' },
@@ -60,7 +60,7 @@ export default function CoachDashboard() {
   const [coachName, setCoachName] = useState('');
   const [session, setSession] = useState<SessionRow | null>(null);
   const [isRunning, setIsRunning] = useState(false);
-  const [displayMode, setDisplayMode] = useState<'fancy' | 'neutral'>('fancy');
+  const [viewMode, setViewMode] = useState<'namegrid' | 'target'>('namegrid');
 
   // stats
   const [lobbyCount, setLobbyCount] = useState(0);
@@ -92,6 +92,7 @@ export default function CoachDashboard() {
             setSession(data as SessionRow);
             const diff = new Date(data.started_at).getTime() - new Date(data.created_at).getTime();
             if (diff > 2000) setIsRunning(true);
+            setViewMode(((data as any).display_view === 'target' ? 'target' : 'namegrid') as 'namegrid' | 'target');
             // Restore timer from auto_end_at
             const autoEnd = (data as any).auto_end_at;
             if (autoEnd && diff > 2000) {
@@ -120,11 +121,12 @@ export default function CoachDashboard() {
       }, (payload: any) => {
         const row = payload.new;
         if (!row) return;
-        if (!row.ended_at) {
-          console.log('[CoachDashboard] realtime session update:', row.session_code);
-          setSession(row as SessionRow);
-          const diff = new Date(row.started_at).getTime() - new Date(row.created_at).getTime();
-          setIsRunning(diff > 2000);
+          if (!row.ended_at) {
+            console.log('[CoachDashboard] realtime session update:', row.session_code);
+            setSession(row as SessionRow);
+            const diff = new Date(row.started_at).getTime() - new Date(row.created_at).getTime();
+            setIsRunning(diff > 2000);
+            setViewMode(row.display_view === 'target' ? 'target' : 'namegrid');
           // Sync timer from auto_end_at
           const autoEnd = (row as any).auto_end_at;
           if (autoEnd && diff > 2000) {
