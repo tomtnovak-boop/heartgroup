@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Trophy, Heart, Zap, Clock, Flame } from 'lucide-react';
 import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
 
 export interface LeaderboardEntry {
   profile_id: string;
@@ -33,9 +34,12 @@ export function SessionLeaderboard({
 
   useEffect(() => {
     const timer = setInterval(() => setElapsed(p => p + 1), 1000);
-    const autoClose = setTimeout(onClose, 300000);
-    return () => { clearInterval(timer); clearTimeout(autoClose); };
-  }, [onClose]);
+    const autoClose = variant === 'participant' ? setTimeout(onClose, 300000) : undefined;
+    return () => {
+      clearInterval(timer);
+      if (autoClose) clearTimeout(autoClose);
+    };
+  }, [onClose, variant]);
 
   if (variant === 'participant') {
     return (
@@ -54,94 +58,89 @@ export function SessionLeaderboard({
     <CoachLeaderboard
       entries={entries}
       sessionDuration={sessionDuration}
-      sessionDate={sessionDate}
       onClose={onClose}
-      elapsed={elapsed}
     />
   );
 }
 
-/* ── COACH: full rankings ── */
+/* ── COACH: aggregate team result ── */
 function CoachLeaderboard({
-  entries, sessionDuration, sessionDate, onClose, elapsed,
+  entries, sessionDuration, onClose,
 }: {
   entries: LeaderboardEntry[];
   sessionDuration: number;
-  sessionDate: Date;
   onClose: () => void;
-  elapsed: number;
 }) {
-  const avgSorted = [...entries].sort((a, b) => b.avg_bpm - a.avg_bpm);
-  const peakSorted = [...entries].sort((a, b) => b.max_bpm - a.max_bpm);
-  const maxAvg = avgSorted[0]?.avg_bpm || 1;
-  const maxPeak = peakSorted[0]?.max_bpm || 1;
+  const participantCount = entries.length;
+  const totalCalories = Math.round(entries.reduce((sum, entry) => sum + (Number(entry.total_calories) || 0), 0));
+  const averageCalories = participantCount > 0 ? Math.round(totalCalories / participantCount) : 0;
+  const averageHR = participantCount > 0
+    ? Math.round(entries.reduce((sum, entry) => sum + (Number(entry.avg_bpm) || 0), 0) / participantCount)
+    : 0;
+  const highestHR = participantCount > 0 ? Math.max(...entries.map(entry => Number(entry.max_bpm) || 0)) : 0;
+  const lowestHR = participantCount > 0 ? Math.min(...entries.map(entry => Number(entry.avg_bpm) || 0)) : 0;
+  const durationMinutes = Math.floor(sessionDuration / 60);
+  const durationSeconds = Math.max(0, sessionDuration % 60);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: '#0d0d14' }}>
-      {/* Header */}
-      <div className="flex-shrink-0 px-4 pt-4 pb-2 text-center">
-        <div className="flex items-center justify-center gap-2 mb-1">
-          <Trophy className="w-4 h-4 text-yellow-400" />
-          <h1 className="text-[17px] font-bold text-white">Session Complete</h1>
-        </div>
-        <p className="text-[11px] text-white">
-          {format(sessionDate, 'MMM d, yyyy')} · {formatDur(sessionDuration)} · {entries.length} participant{entries.length !== 1 ? 's' : ''}
-        </p>
-      </div>
-
-      {/* Two columns */}
-      <div className="flex-1 min-h-0 flex gap-2 px-3 pb-1">
-        <RankingColumn title="Avg BPM" entries={avgSorted} maxValue={maxAvg} valueKey="avg_bpm" gradientFrom="#a855f7" gradientTo="#6b21a8" />
-        <RankingColumn title="Peak BPM" entries={peakSorted} maxValue={maxPeak} valueKey="max_bpm" gradientFrom="#f87171" gradientTo="#991b1b" />
-      </div>
-
-      {/* Bottom */}
-      <div className="flex-shrink-0 px-4 pb-4 pt-2">
-        <button
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-background/95 p-4 sm:p-8">
+      <section className="relative w-full max-w-3xl rounded-lg border border-border bg-card p-5 shadow-2xl sm:p-8" aria-labelledby="coach-session-summary-title">
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={onClose}
-          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium text-white hover:text-white transition-colors"
-          style={{ background: 'rgba(255,255,255,0.06)' }}
+          className="absolute right-4 top-4 text-muted-foreground hover:text-foreground"
         >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          Back to Dashboard
-        </button>
-        <p className="text-center text-[10px] text-white mt-1.5">
-          Automatically closes in {Math.floor(Math.max(0, 300 - elapsed) / 60)}:{String(Math.max(0, 300 - elapsed) % 60).padStart(2, '0')}
-        </p>
-      </div>
+          Done
+        </Button>
+
+        <header className="pr-16 text-center">
+          <h1 id="coach-session-summary-title" className="text-3xl font-black text-foreground sm:text-5xl">
+            Great work, team! 🔥
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">Session complete</p>
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+            <span className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
+              {participantCount} participant{participantCount !== 1 ? 's' : ''}
+            </span>
+            <span className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
+              Duration {durationMinutes}:{String(durationSeconds).padStart(2, '0')}
+            </span>
+          </div>
+        </header>
+
+        <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="border-l-4 border-primary bg-secondary p-5 sm:col-span-2">
+            <p className="text-xs font-bold uppercase text-muted-foreground">Total calories · all participants</p>
+            <p className="mt-3 text-5xl font-black tabular-nums text-foreground sm:text-6xl">
+              {totalCalories}<span className="ml-2 text-base font-semibold text-muted-foreground">kcal</span>
+            </p>
+          </div>
+          <div className="border-l-4 border-muted-foreground bg-secondary p-5">
+            <p className="text-xs font-bold uppercase text-muted-foreground">Avg per person</p>
+            <p className="mt-3 text-3xl font-black tabular-nums text-foreground sm:text-4xl">
+              {averageCalories}<span className="ml-2 text-sm font-semibold text-muted-foreground">kcal</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <HeartRateMetric label="Average HR" value={averageHR} colorClass="text-zone-3" />
+          <HeartRateMetric label="Highest HR" value={highestHR} colorClass="text-zone-5" />
+          <HeartRateMetric label="Lowest HR" value={lowestHR} colorClass="text-zone-1" />
+        </div>
+      </section>
     </div>
   );
 }
 
-function RankingColumn({ title, entries, maxValue, valueKey, gradientFrom, gradientTo }: {
-  title: string; entries: LeaderboardEntry[]; maxValue: number;
-  valueKey: 'avg_bpm' | 'max_bpm'; gradientFrom: string; gradientTo: string;
-}) {
+function HeartRateMetric({ label, value, colorClass }: { label: string; value: number; colorClass: string }) {
   return (
-    <div className="flex-1 flex flex-col min-h-0">
-      <div className="text-[10px] font-bold uppercase tracking-wider text-white px-1 pb-1.5">{title}</div>
-      <div className="flex-1 min-h-0 flex flex-col justify-between">
-        {entries.map((entry, idx) => {
-          const rank = idx + 1;
-          const value = entry[valueKey];
-          const barWidth = maxValue > 0 ? (value / maxValue) * 100 : 0;
-          const isTop3 = rank <= 3;
-          const opacity = isTop3 ? 1 : Math.max(0.4, 1 - (rank - 3) * 0.08);
-
-          return (
-            <div key={entry.profile_id} className="flex items-center gap-1.5 rounded px-1.5 py-0.5"
-              style={{ background: isTop3 ? 'rgba(255,255,255,0.04)' : 'transparent' }}>
-              <span className="text-[10px] font-bold text-white w-4 text-right flex-shrink-0">{rank}</span>
-              <span className="text-[11px] text-white truncate flex-shrink-0" style={{ minWidth: '40px', maxWidth: '70px' }}>{entry.name}</span>
-              <div className="flex-1 h-2.5 rounded-full overflow-hidden mx-1" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                <div className="h-full rounded-full transition-all duration-500"
-                  style={{ width: `${barWidth}%`, background: `linear-gradient(90deg, ${gradientFrom}, ${gradientTo})`, opacity }} />
-              </div>
-              <span className="text-[12px] font-bold text-white tabular-nums flex-shrink-0 w-8 text-right">{value}</span>
-            </div>
-          );
-        })}
-      </div>
+    <div className="border-t-2 border-border bg-secondary p-5 text-center">
+      <p className="text-xs font-bold uppercase text-muted-foreground">{label}</p>
+      <p className={`mt-3 text-4xl font-black tabular-nums ${colorClass}`}>
+        {value}<span className="ml-1 text-sm font-semibold text-muted-foreground">bpm</span>
+      </p>
     </div>
   );
 }
