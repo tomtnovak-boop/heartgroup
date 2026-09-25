@@ -30,6 +30,7 @@ export default function CoachHub() {
     ...(isAdmin ? [
       { key: 'teilnehmer', icon: Users, title: 'Participants', sub: 'Manage', route: '/admin/teilnehmer' },
       { key: 'coaches', icon: Shield, title: 'Coaches', sub: 'Manage', route: '/admin/coaches' },
+      { key: 'classes', icon: Layers, title: 'Classes', sub: 'Manage', route: '/admin/classes' },
     ] : []),
     // Row 2 — Live views
     { key: 'namegrid', icon: LayoutGrid, title: 'Overview', sub: 'Live · Name + Zone', route: '/coach/namegrid' },
@@ -81,7 +82,7 @@ export default function CoachHub() {
             <div style={{ gridColumn: 'span 4', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', marginBottom: '2px' }}>
               Data &amp; Management
             </div>
-            {cards.filter(c => ['training', 'stats', 'teilnehmer', 'coaches'].includes(c.key)).map(card => (
+            {cards.filter(c => ['training', 'stats', 'teilnehmer', 'coaches', 'classes'].includes(c.key)).map(card => (
               <button
                 key={card.key}
                 onClick={() => navigate(card.route)}

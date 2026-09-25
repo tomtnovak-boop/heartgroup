@@ -1,6 +1,21 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, LogOut, Play, Square, RefreshCw } from 'lucide-react';
+import { Heart, LogOut, Play, Square, RefreshCw, ArrowLeft } from 'lucide-react';
+import { setTargetZones } from '@/lib/displaySync';
+
+const TARGET_ZONES = [
+  { n: 1, name: 'Recovery', range: '50-60%', color: '#94A3B8' },
+  { n: 2, name: 'Fat Burn', range: '60-70%', color: '#0EA5E9' },
+  { n: 3, name: 'Aerobic', range: '70-80%', color: '#22C55E' },
+  { n: 4, name: 'Cardio', range: '80-90%', color: '#FBBF24' },
+  { n: 5, name: 'Max', range: '90-100%', color: '#EF4444' },
+];
+const TARGET_PRESETS = [
+  { label: 'Warm-up', zones: [1, 2] },
+  { label: 'Fat burn', zones: [2, 3] },
+  { label: 'Cardio', zones: [3, 4] },
+  { label: 'Peak', zones: [4, 5] },
+];
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -23,6 +38,7 @@ interface SessionRow {
   created_by: string;
   started_at: string;
   ended_at: string | null;
+  target_zones?: string | null;
 }
 
 interface LiveParticipant {
@@ -272,6 +288,32 @@ export default function CoachDashboard() {
 
   const handleExit = async () => { await signOut(); navigate('/'); };
 
+  const [targetZones, setTargetZonesState] = useState<number[]>([3, 4]);
+  useEffect(() => {
+    if (!session?.target_zones) return;
+    const parsed = String(session.target_zones).split(',').map(Number).filter(n => n >= 1 && n <= 5);
+    if (parsed.length) setTargetZonesState(parsed);
+  }, [session?.target_zones]);
+  const applyTargetZones = (zones: number[]) => {
+    const sorted = [...zones].sort((a, b) => a - b);
+    setTargetZonesState(sorted);
+    setTargetZones(sorted);
+  };
+  const toggleTargetZone = (n: number) => {
+    const min = Math.min(...targetZones), max = Math.max(...targetZones);
+    let next: number[];
+    if (targetZones.includes(n)) {
+      if (targetZones.length === 1) return;
+      if (n === min) next = targetZones.filter(z => z !== min);
+      else if (n === max) next = targetZones.filter(z => z !== max);
+      else next = Array.from({ length: n - min + 1 }, (_, i) => min + i);
+    } else {
+      const lo = Math.min(min, n), hi = Math.max(max, n);
+      next = Array.from({ length: hi - lo + 1 }, (_, i) => lo + i);
+    }
+    applyTargetZones(next);
+  };
+
   const initials = user?.email?.slice(0, 2).toUpperCase() || 'U';
   const sessionActive = session && !session.ended_at;
 
@@ -294,7 +336,7 @@ export default function CoachDashboard() {
     <div style={{ minHeight: '100vh', background: '#0a0a0a', color: '#fff', display: 'flex', flexDirection: 'column' }}>
       {/* ─── HEADER ─── */}
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', borderBottom: '1px solid #1f1f1f', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div onClick={() => navigate('/coach')} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
           <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'rgba(255,68,37,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Heart style={{ width: 13, height: 13, color: '#ff4425', fill: '#ff4425' }} />
           </div>
@@ -315,6 +357,10 @@ export default function CoachDashboard() {
             <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#ff4425', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#fff' }}>{initials}</div>
             <span style={{ fontSize: 13, fontWeight: 700 }}>{coachName.split(' ')[0] || ''}</span>
           </div>
+          <button onClick={() => navigate('/coach')} style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}
+            onMouseEnter={e => e.currentTarget.style.color = '#ff4425'} onMouseLeave={e => e.currentTarget.style.color = '#666'}>
+            <ArrowLeft style={{ width: 15, height: 15 }} /> Hub
+          </button>
           {/* exit */}
           <button onClick={handleExit} style={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: 8, padding: '6px 10px', color: '#aaa', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600 }}>
             <LogOut style={{ width: 14, height: 14 }} /> Exit
@@ -337,6 +383,34 @@ export default function CoachDashboard() {
             background: displayMode === 'neutral' ? '#374151' : '#1a1a1a',
             color: displayMode === 'neutral' ? '#fff' : '#888',
           }}>◻ Neutral</button>
+        </div>
+
+        {/* TARGET ZONES */}
+        <div style={{ background: '#111', border: '1px solid #1f1f1f', borderRadius: 12, padding: 14, marginBottom: 12 }}>
+          <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', marginBottom: 8 }}>Target Zones</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6, marginBottom: 8 }}>
+            {TARGET_ZONES.map(z => {
+              const on = targetZones.includes(z.n);
+              return (
+                <button key={z.n} onClick={() => toggleTargetZone(z.n)} style={{
+                  padding: '8px 2px', borderRadius: 8, cursor: 'pointer', fontSize: 11, fontWeight: 700,
+                  border: `1px solid ${on ? z.color : '#333'}`, background: on ? z.color : '#1a1a1a', color: on ? '#0a0a0a' : '#aaa',
+                }}>
+                  <div>{z.name}</div><div style={{ fontWeight: 400, fontSize: 10 }}>{z.range}</div>
+                </button>
+              );
+            })}
+          </div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+            {TARGET_PRESETS.map(p => (
+              <button key={p.label} onClick={() => applyTargetZones(p.zones)} style={{
+                padding: '5px 10px', borderRadius: 14, border: '1px solid #333', background: '#1a1a1a', color: '#ccc', fontSize: 12, cursor: 'pointer',
+              }}>{p.label}</button>
+            ))}
+          </div>
+          <div style={{ fontSize: 12, color: '#aaa' }}>
+            Target: {targetZones.map(n => TARGET_ZONES[n - 1].name).join(', ')}
+          </div>
         </div>
 
         {/* 3. STAT CARDS */}

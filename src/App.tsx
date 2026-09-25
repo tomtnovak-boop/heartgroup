@@ -20,6 +20,7 @@ import AdminParticipants from "./pages/AdminTeilnehmer";
 import AdminCoaches from "./pages/AdminCoaches";
 import ResetPassword from "./pages/ResetPassword";
 import AdminStats from "./pages/AdminStats";
+import AdminClasses from "./pages/AdminClasses";
 import Display from "./pages/Display";
 import ProfileEdit from "./pages/ProfileEdit";
 import Datenschutz from "./pages/Datenschutz";
@@ -64,6 +65,7 @@ const App = () => (
               <Route path="/admin/teilnehmer" element={<ProtectedRoute requireCoach><AdminParticipants /></ProtectedRoute>} />
               <Route path="/admin/coaches" element={<ProtectedRoute requireCoach><AdminCoaches /></ProtectedRoute>} />
               <Route path="/admin/stats" element={<ProtectedRoute requireCoach><AdminStats /></ProtectedRoute>} />
+              <Route path="/admin/classes" element={<ProtectedRoute requireCoach><AdminClasses /></ProtectedRoute>} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/display" element={<Display />} />
               <Route path="/profile/edit" element={<ProtectedRoute><ProfileEdit /></ProtectedRoute>} />
