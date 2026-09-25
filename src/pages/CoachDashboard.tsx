@@ -38,6 +38,7 @@ interface SessionRow {
   created_by: string;
   started_at: string;
   ended_at: string | null;
+  target_zones?: string | null;
 }
 
 interface LiveParticipant {
