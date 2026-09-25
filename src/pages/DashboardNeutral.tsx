@@ -154,7 +154,10 @@ export default function DashboardNeutral() {
           entries={leaderboardData}
           sessionDuration={leaderboardDuration}
           sessionDate={leaderboardDate}
-          onClose={() => setShowLeaderboard(false)}
+          onClose={() => {
+            setShowLeaderboard(false);
+            createSessionCode();
+          }}
           variant="coach"
         />
       )}
