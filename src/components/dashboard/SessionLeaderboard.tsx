@@ -73,13 +73,15 @@ function CoachLeaderboard({
   onClose: () => void;
 }) {
   const participantCount = entries.length;
-  const totalCalories = Math.round(entries.reduce((sum, entry) => sum + (Number(entry.total_calories) || 0), 0));
-  const averageCalories = participantCount > 0 ? Math.round(totalCalories / participantCount) : 0;
-  const averageHR = participantCount > 0
-    ? Math.round(entries.reduce((sum, entry) => sum + (Number(entry.avg_bpm) || 0), 0) / participantCount)
-    : 0;
-  const highestHR = participantCount > 0 ? Math.max(...entries.map(entry => Number(entry.max_bpm) || 0)) : 0;
-  const lowestHR = participantCount > 0 ? Math.min(...entries.map(entry => Number(entry.avg_bpm) || 0)) : 0;
+  const valid = (vals: unknown[]) => vals.map(Number).filter(v => Number.isFinite(v) && v > 0);
+  const cals = entries.map(e => e.total_calories).filter(v => v != null).map(Number).filter(Number.isFinite);
+  const avgs = valid(entries.map(e => e.avg_bpm));
+  const maxs = valid(entries.map(e => e.max_bpm));
+  const totalCalories: number | null = cals.length ? Math.round(cals.reduce((s, v) => s + v, 0)) : null;
+  const averageCalories: number | null = totalCalories != null && participantCount > 0 ? Math.round(totalCalories / participantCount) : null;
+  const averageHR: number | null = avgs.length ? Math.round(avgs.reduce((s, v) => s + v, 0) / avgs.length) : null;
+  const highestHR: number | null = maxs.length ? Math.max(...maxs) : null;
+  const lowestHR: number | null = avgs.length ? Math.min(...avgs) : null;
   const durationMinutes = Math.floor(sessionDuration / 60);
   const durationSeconds = Math.max(0, sessionDuration % 60);
 
