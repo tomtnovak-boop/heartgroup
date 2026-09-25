@@ -417,6 +417,7 @@ export default function CoachDashboard() {
             Target: {targetZones.map(n => TARGET_ZONES[n - 1].name).join(', ')}
           </div>
         </div>
+        )}
 
         {/* 3. STAT CARDS */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
@@ -506,21 +507,19 @@ export default function CoachDashboard() {
               <div key={p.profile_id} style={{ borderBottom: '1px solid #111', padding: '8px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, color: '#ccc' }}>{p.name}</div>
-                  {displayMode === 'fancy' && (
-                    <div style={{ display: 'flex', gap: 2, marginTop: 4, height: 6 }}>
-                      {[1, 2, 3, 4, 5].map(z => (
-                        <div key={z} style={{
-                          flex: 1, borderRadius: 2,
-                          background: z <= p.zone ? ZONE_COLORS[z] : '#222',
-                        }} />
-                      ))}
-                    </div>
-                  )}
+                  <div style={{ display: 'flex', gap: 2, marginTop: 4, height: 6 }}>
+                    {[1, 2, 3, 4, 5].map(z => (
+                      <div key={z} style={{
+                        flex: 1, borderRadius: 2,
+                        background: z <= p.zone ? ZONE_COLORS[z] : '#222',
+                      }} />
+                    ))}
+                  </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 12 }}>
                   <span style={{
                     fontSize: 20, fontWeight: 900,
-                    color: displayMode === 'fancy' ? ZONE_COLORS[p.zone] : '#fff',
+                    color: ZONE_COLORS[p.zone],
                   }}>{p.bpm}</span>
                   <span style={{
                     fontSize: 11, fontWeight: 700, padding: '2px 6px', borderRadius: 4,
