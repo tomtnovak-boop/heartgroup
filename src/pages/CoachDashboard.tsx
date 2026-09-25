@@ -375,21 +375,22 @@ export default function CoachDashboard() {
       {/* ─── CONTENT ─── */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px', maxWidth: 480, width: '100%', margin: '0 auto' }}>
 
-        {/* 2. DISPLAY MODE TOGGLE */}
+        {/* DISPLAY MODE TOGGLE */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-          <button onClick={() => setDisplayMode('fancy')} style={{
-            flex: 1, padding: '10px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 700,
-            background: displayMode === 'fancy' ? '#4f46e5' : '#1a1a2e',
-            color: displayMode === 'fancy' ? '#fff' : '#818cf8',
-          }}>✦ Fancy</button>
-          <button onClick={() => setDisplayMode('neutral')} style={{
-            flex: 1, padding: '10px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 700,
-            background: displayMode === 'neutral' ? '#374151' : '#1a1a1a',
-            color: displayMode === 'neutral' ? '#fff' : '#888',
-          }}>◻ Neutral</button>
+          <button onClick={() => { setViewMode('namegrid'); setDisplayView('namegrid'); }} style={{
+            flex: 1, padding: '10px', borderRadius: 10, border: viewMode === 'namegrid' ? '1px solid #ff4425' : '1px solid #333', cursor: 'pointer', fontSize: 14, fontWeight: 700,
+            background: viewMode === 'namegrid' ? '#ff4425' : '#1a1a1a',
+            color: viewMode === 'namegrid' ? '#fff' : '#888',
+          }}>Overview</button>
+          <button onClick={() => { setViewMode('target'); setDisplayView('target'); }} style={{
+            flex: 1, padding: '10px', borderRadius: 10, border: viewMode === 'target' ? '1px solid #ff4425' : '1px solid #333', cursor: 'pointer', fontSize: 14, fontWeight: 700,
+            background: viewMode === 'target' ? '#ff4425' : '#1a1a1a',
+            color: viewMode === 'target' ? '#fff' : '#888',
+          }}>Target Focus</button>
         </div>
 
-        {/* TARGET ZONES */}
+        {/* TARGET ZONES — only in Target Focus mode */}
+        {viewMode === 'target' && (
         <div style={{ background: '#111', border: '1px solid #1f1f1f', borderRadius: 12, padding: 14, marginBottom: 12 }}>
           <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', marginBottom: 8 }}>Target Zones</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6, marginBottom: 8 }}>
