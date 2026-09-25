@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart, LogOut, Play, Square, RefreshCw, ArrowLeft } from 'lucide-react';
-import { setTargetZones } from '@/lib/displaySync';
+import { setTargetZones, setDisplayView } from '@/lib/displaySync';
 
 const TARGET_ZONES = [
   { n: 1, name: 'Recovery', range: '50-60%', color: '#94A3B8' },
@@ -60,7 +60,7 @@ export default function CoachDashboard() {
   const [coachName, setCoachName] = useState('');
   const [session, setSession] = useState<SessionRow | null>(null);
   const [isRunning, setIsRunning] = useState(false);
-  const [displayMode, setDisplayMode] = useState<'fancy' | 'neutral'>('fancy');
+  const [viewMode, setViewMode] = useState<'namegrid' | 'target'>('namegrid');
 
   // stats
   const [lobbyCount, setLobbyCount] = useState(0);
@@ -92,6 +92,7 @@ export default function CoachDashboard() {
             setSession(data as SessionRow);
             const diff = new Date(data.started_at).getTime() - new Date(data.created_at).getTime();
             if (diff > 2000) setIsRunning(true);
+            setViewMode(((data as any).display_view === 'target' ? 'target' : 'namegrid') as 'namegrid' | 'target');
             // Restore timer from auto_end_at
             const autoEnd = (data as any).auto_end_at;
             if (autoEnd && diff > 2000) {
@@ -120,11 +121,12 @@ export default function CoachDashboard() {
       }, (payload: any) => {
         const row = payload.new;
         if (!row) return;
-        if (!row.ended_at) {
-          console.log('[CoachDashboard] realtime session update:', row.session_code);
-          setSession(row as SessionRow);
-          const diff = new Date(row.started_at).getTime() - new Date(row.created_at).getTime();
-          setIsRunning(diff > 2000);
+          if (!row.ended_at) {
+            console.log('[CoachDashboard] realtime session update:', row.session_code);
+            setSession(row as SessionRow);
+            const diff = new Date(row.started_at).getTime() - new Date(row.created_at).getTime();
+            setIsRunning(diff > 2000);
+            setViewMode(row.display_view === 'target' ? 'target' : 'namegrid');
           // Sync timer from auto_end_at
           const autoEnd = (row as any).auto_end_at;
           if (autoEnd && diff > 2000) {
@@ -232,7 +234,7 @@ export default function CoachDashboard() {
   const startSession = useCallback(async () => {
     if (!session || !user) return;
     const { error } = await supabase.from('active_sessions')
-      .update({ started_at: new Date().toISOString() })
+      .update({ started_at: new Date().toISOString(), display_view: 'namegrid' })
       .eq('id', session.id);
     if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return; }
     // Write auto_end_at if timer is set
@@ -268,6 +270,7 @@ export default function CoachDashboard() {
       .order('created_at', { ascending: false }).limit(1).maybeSingle();
     if (existing && /^\d{4}$/.test(existing.session_code)) {
       setSession(existing as SessionRow);
+      setViewMode(((existing as any).display_view === 'target' ? 'target' : 'namegrid') as 'namegrid' | 'target');
       setIsRunning(false);
       setRemainSec(-1);
       setDurMin(0);
@@ -276,10 +279,11 @@ export default function CoachDashboard() {
     }
     const code = genCode();
     const { data, error } = await supabase.from('active_sessions')
-      .insert({ created_by: user.id, session_code: code })
+      .insert({ created_by: user.id, session_code: code, display_view: 'namegrid' })
       .select().single();
     if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return; }
     setSession(data as SessionRow);
+    setViewMode('namegrid');
     setIsRunning(false);
     setRemainSec(-1);
     setDurMin(0);
@@ -371,21 +375,22 @@ export default function CoachDashboard() {
       {/* ─── CONTENT ─── */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px', maxWidth: 480, width: '100%', margin: '0 auto' }}>
 
-        {/* 2. DISPLAY MODE TOGGLE */}
+        {/* DISPLAY MODE TOGGLE */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-          <button onClick={() => setDisplayMode('fancy')} style={{
-            flex: 1, padding: '10px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 700,
-            background: displayMode === 'fancy' ? '#4f46e5' : '#1a1a2e',
-            color: displayMode === 'fancy' ? '#fff' : '#818cf8',
-          }}>✦ Fancy</button>
-          <button onClick={() => setDisplayMode('neutral')} style={{
-            flex: 1, padding: '10px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 700,
-            background: displayMode === 'neutral' ? '#374151' : '#1a1a1a',
-            color: displayMode === 'neutral' ? '#fff' : '#888',
-          }}>◻ Neutral</button>
+          <button onClick={() => { setViewMode('namegrid'); setDisplayView('namegrid'); }} style={{
+            flex: 1, padding: '10px', borderRadius: 10, border: viewMode === 'namegrid' ? '1px solid #ff4425' : '1px solid #333', cursor: 'pointer', fontSize: 14, fontWeight: 700,
+            background: viewMode === 'namegrid' ? '#ff4425' : '#1a1a1a',
+            color: viewMode === 'namegrid' ? '#fff' : '#888',
+          }}>Overview</button>
+          <button onClick={() => { setViewMode('target'); setDisplayView('target'); }} style={{
+            flex: 1, padding: '10px', borderRadius: 10, border: viewMode === 'target' ? '1px solid #ff4425' : '1px solid #333', cursor: 'pointer', fontSize: 14, fontWeight: 700,
+            background: viewMode === 'target' ? '#ff4425' : '#1a1a1a',
+            color: viewMode === 'target' ? '#fff' : '#888',
+          }}>Target Focus</button>
         </div>
 
-        {/* TARGET ZONES */}
+        {/* TARGET ZONES — only in Target Focus mode */}
+        {viewMode === 'target' && (
         <div style={{ background: '#111', border: '1px solid #1f1f1f', borderRadius: 12, padding: 14, marginBottom: 12 }}>
           <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', marginBottom: 8 }}>Target Zones</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6, marginBottom: 8 }}>
@@ -412,6 +417,7 @@ export default function CoachDashboard() {
             Target: {targetZones.map(n => TARGET_ZONES[n - 1].name).join(', ')}
           </div>
         </div>
+        )}
 
         {/* 3. STAT CARDS */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
@@ -501,21 +507,19 @@ export default function CoachDashboard() {
               <div key={p.profile_id} style={{ borderBottom: '1px solid #111', padding: '8px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, color: '#ccc' }}>{p.name}</div>
-                  {displayMode === 'fancy' && (
-                    <div style={{ display: 'flex', gap: 2, marginTop: 4, height: 6 }}>
-                      {[1, 2, 3, 4, 5].map(z => (
-                        <div key={z} style={{
-                          flex: 1, borderRadius: 2,
-                          background: z <= p.zone ? ZONE_COLORS[z] : '#222',
-                        }} />
-                      ))}
-                    </div>
-                  )}
+                  <div style={{ display: 'flex', gap: 2, marginTop: 4, height: 6 }}>
+                    {[1, 2, 3, 4, 5].map(z => (
+                      <div key={z} style={{
+                        flex: 1, borderRadius: 2,
+                        background: z <= p.zone ? ZONE_COLORS[z] : '#222',
+                      }} />
+                    ))}
+                  </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 12 }}>
                   <span style={{
                     fontSize: 20, fontWeight: 900,
-                    color: displayMode === 'fancy' ? ZONE_COLORS[p.zone] : '#fff',
+                    color: ZONE_COLORS[p.zone],
                   }}>{p.bpm}</span>
                   <span style={{
                     fontSize: 11, fontWeight: 700, padding: '2px 6px', borderRadius: 4,
