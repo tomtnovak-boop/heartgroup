@@ -25,7 +25,7 @@ function formatElapsed(seconds: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-function PinGate({ onUnlock }: { onUnlock: () => void }) {
+function PinGate({ onUnlock }: { onUnlock: (code: string) => void }) {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [shake, setShake] = useState(false);
@@ -35,14 +35,13 @@ function PinGate({ onUnlock }: { onUnlock: () => void }) {
     const { data } = await supabase
       .from('active_sessions')
       .select('session_code')
+      .eq('session_code', code)
       .is('ended_at', null)
-      .order('started_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
-    if (data && data.session_code === code) {
-      sessionStorage.setItem('display_unlocked', 'true');
-      onUnlock();
+    if (data) {
+      onUnlock(code);
     } else {
       setError('Incorrect code');
       setShake(true);
@@ -315,16 +314,18 @@ function parseTargetZones(raw: string | null | undefined): number[] {
   return (raw || '3,4').split(',').map(Number).filter(z => z >= 1 && z <= 5);
 }
 
-function NewLiveDisplay() {
+const DISPLAY_CODE_KEY = 'display_session_code';
+
+function NewLiveDisplay({ code }: { code: string }) {
   const { participants, isLoading } = useLiveHR(() => {});
-  const { isActive: sessionActive, sessionCode, lobbyProfileIds } = useWorkoutSession();
+  const { lobbyProfileIds } = useWorkoutSession();
   const [allProfiles, setAllProfiles] = useState<ProfileLite[]>([]);
   const [displayView, setDisplayView] = useState<string>('namegrid');
   const [targetZones, setTargetZones] = useState<number[]>([3, 4]);
-  // TV displays load without a login, so useWorkoutSession can only learn about
-  // a running session via realtime. This override covers initial page loads.
-  const [startedAtOverride, setStartedAtOverride] = useState<Date | null>(null);
-  const effectiveActive = sessionActive || startedAtOverride !== null;
+  // Session is bound by session_code only — never by the logged-in user.
+  const [startedAt, setStartedAt] = useState<Date | null>(null);
+  const effectiveActive = startedAt !== null;
+  const sessionCode = code;
 
   useEffect(() => {
     supabase.from('profiles').select('id, name, nickname, created_at')
@@ -332,45 +333,45 @@ function NewLiveDisplay() {
       .then(({ data }) => { if (data) setAllProfiles(data); });
   }, []);
 
-  // Initial load: started_at + display_view + target_zones
-  useEffect(() => {
-    supabase
-      .from('active_sessions')
-      .select('started_at, display_view, target_zones')
-      .is('ended_at', null)
-      .order('started_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!data) return;
-        const row = data as any;
-        setStartedAtOverride(row.started_at ? new Date(row.started_at) : null);
-        setDisplayView(row.display_view || 'namegrid');
-        setTargetZones(parseTargetZones(row.target_zones));
-      });
+  const applyRow = useCallback((row: any) => {
+    if (!row || row.ended_at) { setStartedAt(null); return; }
+    setStartedAt(row.started_at ? new Date(row.started_at) : null);
+    setDisplayView(row.display_view || 'namegrid');
+    setTargetZones(parseTargetZones(row.target_zones));
   }, []);
 
-  // Realtime: display_view + target_zones changes
+  const load = useCallback(async () => {
+    const { data } = await supabase
+      .from('active_sessions')
+      .select('session_code, started_at, ended_at, display_view, target_zones')
+      .eq('session_code', code)
+      .is('ended_at', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    applyRow(data);
+  }, [code, applyRow]);
+
   useEffect(() => {
+    load();
     const sub = supabase
-      .channel('display-new-view-sync')
+      .channel(`display-session-${code}`)
       .on('postgres_changes', {
-        event: 'UPDATE',
+        event: '*',
         schema: 'public',
         table: 'active_sessions',
-      }, (payload) => {
-        const row = payload.new as any;
-        if (row.ended_at) {
-          setStartedAtOverride(null);
-          return;
-        }
-        setStartedAtOverride(row.started_at ? new Date(row.started_at) : null);
-        setDisplayView(row.display_view || 'namegrid');
-        setTargetZones(parseTargetZones(row.target_zones));
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(sub); };
-  }, []);
+        filter: `session_code=eq.${code}`,
+      }, (payload) => applyRow(payload.new))
+      .subscribe((status) => { if (status === 'SUBSCRIBED') load(); });
+    const resync = () => { if (document.visibilityState === 'visible') load(); };
+    document.addEventListener('visibilitychange', resync);
+    window.addEventListener('focus', resync);
+    return () => {
+      document.removeEventListener('visibilitychange', resync);
+      window.removeEventListener('focus', resync);
+      supabase.removeChannel(sub);
+    };
+  }, [code, load, applyRow]);
 
   // Wake lock
   useEffect(() => {
@@ -385,8 +386,15 @@ function NewLiveDisplay() {
         <Heart className="w-20 h-20 text-primary animate-pulse" fill="currentColor" />
         <h2 className="text-2xl font-black text-white">Waiting for session...</h2>
         <p className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>
-          The display will activate when the coach starts a session
+          The display will activate when the coach starts session {code}
         </p>
+        <button
+          onClick={() => { localStorage.removeItem(DISPLAY_CODE_KEY); window.location.href = '/display'; }}
+          className="text-xs underline"
+          style={{ color: 'rgba(255,255,255,0.4)' }}
+        >
+          Use a different session code
+        </button>
       </div>
     );
   }
@@ -406,68 +414,18 @@ function NewLiveDisplay() {
 }
 
 export default function Display() {
-  const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem('display_unlocked') === 'true');
-  const [checking, setChecking] = useState(!unlocked);
+  const [code, setCode] = useState<string | null>(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get('code');
+    if (fromUrl && /^\d{4}$/.test(fromUrl)) {
+      localStorage.setItem(DISPLAY_CODE_KEY, fromUrl);
+      return fromUrl;
+    }
+    return localStorage.getItem(DISPLAY_CODE_KEY);
+  });
 
-  useEffect(() => {
-    if (unlocked) return;
-
-    const checkAndUnlock = async () => {
-      const { data } = await supabase
-        .from('active_sessions')
-        .select('session_code, display_view')
-        .is('ended_at', null)
-        .order('started_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (data) {
-        sessionStorage.setItem('display_unlocked', 'true');
-        setUnlocked(true);
-      }
-      setChecking(false);
-    };
-
-    checkAndUnlock();
-
-    const sub = supabase
-      .channel('display-auto-unlock')
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'active_sessions',
-      }, () => {
-        sessionStorage.setItem('display_unlocked', 'true');
-        setUnlocked(true);
-      })
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') checkAndUnlock();
-      });
-
-    const resync = () => {
-      if (document.visibilityState === 'visible') checkAndUnlock();
-    };
-    document.addEventListener('visibilitychange', resync);
-    window.addEventListener('focus', resync);
-
-    return () => {
-      document.removeEventListener('visibilitychange', resync);
-      window.removeEventListener('focus', resync);
-      supabase.removeChannel(sub);
-    };
-  }, [unlocked]);
-
-  if (checking) {
-    return (
-      <div className="w-screen h-screen flex items-center justify-center" style={{ background: '#0a0a0a' }}>
-        <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '14px' }}>Loading...</div>
-      </div>
-    );
+  if (!code) {
+    return <PinGate onUnlock={(c) => { localStorage.setItem(DISPLAY_CODE_KEY, c); setCode(c); }} />;
   }
 
-  if (!unlocked) {
-    return <PinGate onUnlock={() => setUnlocked(true)} />;
-  }
-
-  return <NewLiveDisplay />;
+  return <NewLiveDisplay key={code} code={code} />;
 }
