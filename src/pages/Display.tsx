@@ -386,8 +386,15 @@ function NewLiveDisplay({ code }: { code: string }) {
         <Heart className="w-20 h-20 text-primary animate-pulse" fill="currentColor" />
         <h2 className="text-2xl font-black text-white">Waiting for session...</h2>
         <p className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>
-          The display will activate when the coach starts a session
+          The display will activate when the coach starts session {code}
         </p>
+        <button
+          onClick={() => { localStorage.removeItem(DISPLAY_CODE_KEY); window.location.href = '/display'; }}
+          className="text-xs underline"
+          style={{ color: 'rgba(255,255,255,0.4)' }}
+        >
+          Use a different session code
+        </button>
       </div>
     );
   }
