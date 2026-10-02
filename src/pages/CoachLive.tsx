@@ -51,32 +51,37 @@ export default function CoachLive() {
     let cancelled = false;
     let currentId: string | null = null;
     const apply = (row: any) => {
+      if (!row?.started_at) return; // only started sessions take over the screen
       currentId = row?.id ?? null;
       liveIdRef.current = currentId;
       setDisplayViewState(row?.display_view === 'target' ? 'target' : 'namegrid');
       setTargetZonesState(parse(row?.target_zones));
       setLiveCode(row?.session_code ?? null);
-      setLiveStarted(!!row?.started_at);
+      setLiveStarted(true);
     };
+    const clear = () => { currentId = null; liveIdRef.current = null; setLiveCode(null); setLiveStarted(false); };
     const load = async (uid: string) => {
       const { data } = await supabase.from('active_sessions').select('id, session_code, started_at, display_view, target_zones')
-        .eq('created_by', uid).is('ended_at', null).order('created_at', { ascending: false }).limit(1).maybeSingle();
+        .eq('created_by', uid).is('ended_at', null).not('started_at', 'is', null)
+        .order('created_at', { ascending: false }).limit(1).maybeSingle();
       if (cancelled) return;
       if (data) apply(data);
-      else { currentId = null; setLiveCode(null); setLiveStarted(false); }
+      else clear();
     };
     let uidRef: string | null = null;
+    let poll: ReturnType<typeof setInterval> | null = null;
     (async () => {
       const { data: u } = await supabase.auth.getUser();
       const uid = u.user?.id;
       if (!uid || cancelled) return;
       uidRef = uid;
       await load(uid);
+      poll = setInterval(() => { if (uidRef) load(uidRef); }, 2000);
       ch = supabase.channel(`coach-live-view-${uid}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'active_sessions', filter: `created_by=eq.${uid}` }, (payload: any) => {
           const row = payload.new;
-          if (payload.eventType === 'INSERT' && row && !row.ended_at) { apply(row); return; }
-          if (row && !row.ended_at) { if (!currentId || row.id === currentId) apply(row); else load(uid); return; }
+          if (payload.eventType === 'INSERT' && row && !row.ended_at && row.started_at) { apply(row); return; }
+          if (row && !row.ended_at && row.started_at) { if (!currentId || row.id === currentId) apply(row); else load(uid); return; }
           load(uid);
         })
         .subscribe((status) => { if (status === 'SUBSCRIBED') load(uid); });
@@ -85,7 +90,7 @@ export default function CoachLive() {
     const onVis = () => { if (document.visibilityState === 'visible') refresh(); };
     document.addEventListener('visibilitychange', onVis);
     window.addEventListener('focus', refresh);
-    return () => { cancelled = true; document.removeEventListener('visibilitychange', onVis); window.removeEventListener('focus', refresh); if (ch) supabase.removeChannel(ch); };
+    return () => { cancelled = true; if (poll) clearInterval(poll); document.removeEventListener('visibilitychange', onVis); window.removeEventListener('focus', refresh); if (ch) supabase.removeChannel(ch); };
   }, []);
 
   useEffect(() => {
