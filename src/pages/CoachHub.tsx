@@ -48,6 +48,9 @@ export default function CoachHub() {
           console.log('[CoachHub] INSERT event:', payload.new?.id, payload.new?.started_at);
           maybeNavigate(payload.new);
         })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'active_sessions' }, (payload: any) => {
+          console.log('[CoachHub] DEBUG any-event:', payload.eventType, payload.new?.session_code);
+        })
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'active_sessions', filter: `created_by=eq.${user.id}` }, (payload: any) => {
           maybeNavigate(payload.new);
         })
