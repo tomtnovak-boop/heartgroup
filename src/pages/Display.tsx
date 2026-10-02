@@ -316,7 +316,7 @@ function parseTargetZones(raw: string | null | undefined): number[] {
 
 const DISPLAY_CODE_KEY = 'display_session_code';
 
-function NewLiveDisplay({ code }: { code: string }) {
+function NewLiveDisplay({ code, onSwitchCode }: { code: string; onSwitchCode: (c: string) => void }) {
   const { participants, isLoading } = useLiveHR(() => {});
   const { lobbyProfileIds } = useWorkoutSession();
   const [allProfiles, setAllProfiles] = useState<ProfileLite[]>([]);
@@ -324,6 +324,7 @@ function NewLiveDisplay({ code }: { code: string }) {
   const [targetZones, setTargetZones] = useState<number[]>([3, 4]);
   // Session is bound by session_code only — never by the logged-in user.
   const [startedAt, setStartedAt] = useState<Date | null>(null);
+  const [hasSession, setHasSession] = useState(false);
   const effectiveActive = startedAt !== null;
   const sessionCode = code;
 
@@ -334,7 +335,8 @@ function NewLiveDisplay({ code }: { code: string }) {
   }, []);
 
   const applyRow = useCallback((row: any) => {
-    if (!row || row.ended_at) { setStartedAt(null); return; }
+    if (!row || row.ended_at) { setStartedAt(null); setHasSession(false); return; }
+    setHasSession(true);
     setStartedAt(row.started_at ? new Date(row.started_at) : null);
     setDisplayView(row.display_view || 'namegrid');
     setTargetZones(parseTargetZones(row.target_zones));
@@ -349,8 +351,21 @@ function NewLiveDisplay({ code }: { code: string }) {
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
-    applyRow(data);
-  }, [code, applyRow]);
+    if (data) { applyRow(data); return; }
+    // Stored code no longer has an open session — follow the newest open one.
+    const { data: latest } = await supabase
+      .from('active_sessions')
+      .select('session_code')
+      .is('ended_at', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (latest && latest.session_code !== code) {
+      onSwitchCode(latest.session_code);
+      return;
+    }
+    applyRow(null);
+  }, [code, applyRow, onSwitchCode]);
 
   useEffect(() => {
     load();
@@ -363,6 +378,20 @@ function NewLiveDisplay({ code }: { code: string }) {
         filter: `session_code=eq.${code}`,
       }, (payload) => applyRow(payload.new))
       .subscribe((status) => { if (status === 'SUBSCRIBED') load(); });
+    // Follow new sessions: when a coach opens a session with a new code, switch to it.
+    const newSessionSub = supabase
+      .channel('display-new-session')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'active_sessions',
+      }, (payload) => {
+        const row = payload.new as any;
+        if (row && !row.ended_at && row.session_code && row.session_code !== code) {
+          onSwitchCode(row.session_code);
+        }
+      })
+      .subscribe();
     const resync = () => { if (document.visibilityState === 'visible') load(); };
     document.addEventListener('visibilitychange', resync);
     window.addEventListener('focus', resync);
@@ -370,8 +399,9 @@ function NewLiveDisplay({ code }: { code: string }) {
       document.removeEventListener('visibilitychange', resync);
       window.removeEventListener('focus', resync);
       supabase.removeChannel(sub);
+      supabase.removeChannel(newSessionSub);
     };
-  }, [code, load, applyRow]);
+  }, [code, load, applyRow, onSwitchCode]);
 
   // Wake lock
   useEffect(() => {
@@ -380,7 +410,7 @@ function NewLiveDisplay({ code }: { code: string }) {
     return () => { wl?.release(); };
   }, []);
 
-  if (!effectiveActive) {
+  if (!effectiveActive && !hasSession) {
     return (
       <div className="w-screen h-screen flex flex-col items-center justify-center gap-6" style={{ background: '#0a0a0a' }}>
         <Heart className="w-20 h-20 text-primary animate-pulse" fill="currentColor" />
@@ -427,5 +457,11 @@ export default function Display() {
     return <PinGate onUnlock={(c) => { localStorage.setItem(DISPLAY_CODE_KEY, c); setCode(c); }} />;
   }
 
-  return <NewLiveDisplay key={code} code={code} />;
+  return (
+    <NewLiveDisplay
+      key={code}
+      code={code}
+      onSwitchCode={(c) => { localStorage.setItem(DISPLAY_CODE_KEY, c); setCode(c); }}
+    />
+  );
 }
