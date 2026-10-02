@@ -17,6 +17,29 @@ export default function CoachHub() {
       });
   }, [user]);
 
+  // Auto-open Live View only on the moment a session of this coach starts
+  useEffect(() => {
+    if (!user) return;
+    const started = new Set<string>();
+    let cancelled = false;
+    let ch: ReturnType<typeof supabase.channel> | null = null;
+    (async () => {
+      const { data } = await supabase.from('active_sessions').select('id, started_at')
+        .eq('created_by', user.id).is('ended_at', null);
+      data?.forEach(r => { if (r.started_at) started.add(r.id); });
+      if (cancelled) return;
+      ch = supabase.channel(`coach-hub-autostart-${user.id}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'active_sessions', filter: `created_by=eq.${user.id}` }, (payload: any) => {
+          const row = payload.new;
+          if (!row?.id || row.ended_at || !row.started_at || started.has(row.id)) return;
+          started.add(row.id);
+          navigate('/coach/live');
+        })
+        .subscribe();
+    })();
+    return () => { cancelled = true; if (ch) supabase.removeChannel(ch); };
+  }, [user, navigate]);
+
   const handleSignOut = async () => {
     await signOut();
   };
