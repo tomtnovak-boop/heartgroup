@@ -45,6 +45,7 @@ export default function CoachHub() {
       if (data?.started_at) maybeNavigate(data);
       ch = supabase.channel(`coach-hub-autostart-${user.id}`)
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'active_sessions', filter: `created_by=eq.${user.id}` }, (payload: any) => {
+          console.log('[CoachHub] INSERT event:', payload.new?.id, payload.new?.started_at);
           maybeNavigate(payload.new);
         })
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'active_sessions', filter: `created_by=eq.${user.id}` }, (payload: any) => {
