@@ -51,32 +51,37 @@ export default function CoachLive() {
     let cancelled = false;
     let currentId: string | null = null;
     const apply = (row: any) => {
+      if (!row?.started_at) return; // only started sessions take over the screen
       currentId = row?.id ?? null;
       liveIdRef.current = currentId;
       setDisplayViewState(row?.display_view === 'target' ? 'target' : 'namegrid');
       setTargetZonesState(parse(row?.target_zones));
       setLiveCode(row?.session_code ?? null);
-      setLiveStarted(!!row?.started_at);
+      setLiveStarted(true);
     };
+    const clear = () => { currentId = null; liveIdRef.current = null; setLiveCode(null); setLiveStarted(false); };
     const load = async (uid: string) => {
       const { data } = await supabase.from('active_sessions').select('id, session_code, started_at, display_view, target_zones')
-        .eq('created_by', uid).is('ended_at', null).order('created_at', { ascending: false }).limit(1).maybeSingle();
+        .eq('created_by', uid).is('ended_at', null).not('started_at', 'is', null)
+        .order('created_at', { ascending: false }).limit(1).maybeSingle();
       if (cancelled) return;
       if (data) apply(data);
-      else { currentId = null; setLiveCode(null); setLiveStarted(false); }
+      else clear();
     };
     let uidRef: string | null = null;
+    let poll: ReturnType<typeof setInterval> | null = null;
     (async () => {
       const { data: u } = await supabase.auth.getUser();
       const uid = u.user?.id;
       if (!uid || cancelled) return;
       uidRef = uid;
       await load(uid);
+      poll = setInterval(() => { if (uidRef) load(uidRef); }, 2000);
       ch = supabase.channel(`coach-live-view-${uid}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'active_sessions', filter: `created_by=eq.${uid}` }, (payload: any) => {
           const row = payload.new;
-          if (payload.eventType === 'INSERT' && row && !row.ended_at) { apply(row); return; }
-          if (row && !row.ended_at) { if (!currentId || row.id === currentId) apply(row); else load(uid); return; }
+          if (payload.eventType === 'INSERT' && row && !row.ended_at && row.started_at) { apply(row); return; }
+          if (row && !row.ended_at && row.started_at) { if (!currentId || row.id === currentId) apply(row); else load(uid); return; }
           load(uid);
         })
         .subscribe((status) => { if (status === 'SUBSCRIBED') load(uid); });
@@ -85,7 +90,7 @@ export default function CoachLive() {
     const onVis = () => { if (document.visibilityState === 'visible') refresh(); };
     document.addEventListener('visibilitychange', onVis);
     window.addEventListener('focus', refresh);
-    return () => { cancelled = true; document.removeEventListener('visibilitychange', onVis); window.removeEventListener('focus', refresh); if (ch) supabase.removeChannel(ch); };
+    return () => { cancelled = true; if (poll) clearInterval(poll); document.removeEventListener('visibilitychange', onVis); window.removeEventListener('focus', refresh); if (ch) supabase.removeChannel(ch); };
   }, []);
 
   useEffect(() => {
@@ -170,7 +175,14 @@ export default function CoachLive() {
         </button>
       </AppHeader>
       <div className="flex-1 min-h-0 overflow-hidden" style={{ position: 'relative' }}>
-        {displayView === 'target' ? (
+        {!liveCode ? (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, background: '#0a0a0a', fontFamily: 'system-ui, sans-serif', textAlign: 'center' }}>
+            <style>{`@keyframes coachLivePulse { 0%,100% { opacity: 1; } 50% { opacity: 0.25; } }`}</style>
+            <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ff4425', animation: 'coachLivePulse 2s ease-in-out infinite' }} />
+            <div style={{ fontSize: 'clamp(20px, 3vw, 34px)', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.75)' }}>Waiting for session</div>
+            <div style={{ fontSize: 'clamp(14px, 1.6vw, 18px)', fontWeight: 500, color: 'rgba(255,255,255,0.4)' }}>Start a session in the Bheart app — this screen will follow automatically.</div>
+          </div>
+        ) : displayView === 'target' ? (
           <TargetFocusDashboard participants={participants} allProfiles={allProfiles} lobbyProfileIds={lobbyProfileIds} targetZones={targetZones} sessionCode={effectiveCode} isLoading={isLoading} isSessionActive={effectiveActive} />
         ) : (
           <NameGridDashboard participants={participants} allProfiles={allProfiles} lobbyProfileIds={lobbyProfileIds} sessionCode={effectiveCode} isLoading={isLoading} isSessionActive={effectiveActive} />
