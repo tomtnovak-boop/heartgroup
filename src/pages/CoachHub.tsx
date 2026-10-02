@@ -36,27 +36,31 @@ export default function CoachHub() {
       navigate('/coach/live');
     };
 
-    (async () => {
-      // Mount check: already running session → open Live View once
+    const checkOpenSession = async () => {
       const { data } = await supabase.from('active_sessions').select('id, session_code, started_at')
         .eq('created_by', user.id).is('ended_at', null)
         .order('created_at', { ascending: false }).limit(1).maybeSingle();
       if (cancelled) return;
       if (data?.started_at) maybeNavigate(data);
+    };
+
+    (async () => {
+      // Mount check: already running session → open Live View once
+      await checkOpenSession();
       ch = supabase.channel(`coach-hub-autostart-${user.id}`)
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'active_sessions', filter: `created_by=eq.${user.id}` }, (payload: any) => {
-          console.log('[CoachHub] INSERT event:', payload.new?.id, payload.new?.started_at);
           maybeNavigate(payload.new);
-        })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'active_sessions' }, (payload: any) => {
-          console.log('[CoachHub] DEBUG any-event:', payload.eventType, payload.new?.session_code);
         })
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'active_sessions', filter: `created_by=eq.${user.id}` }, (payload: any) => {
           maybeNavigate(payload.new);
         })
         .subscribe((status) => console.log('[CoachHub] autostart channel:', status));
     })();
-    return () => { cancelled = true; if (ch) supabase.removeChannel(ch); };
+
+    // Polling fallback: guarantees the switch even if a realtime event is missed
+    const poll = setInterval(checkOpenSession, 5000);
+
+    return () => { cancelled = true; clearInterval(poll); if (ch) supabase.removeChannel(ch); };
   }, [user, navigate]);
 
   const handleSignOut = async () => {
