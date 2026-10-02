@@ -9,7 +9,6 @@ import { useWorkoutSession } from '@/hooks/useWorkoutSession';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { logParticipantRedirect } from '@/lib/roleRouting';
-import { setDisplayView } from '@/lib/displaySync';
 
 export default function CoachNamegrid() {
   const { viewMode, changeView } = useViewMode('coach');
@@ -37,7 +36,6 @@ export default function CoachNamegrid() {
       .then(({ data }) => { if (data) setAllProfiles(data); });
   }, []);
 
-  useEffect(() => { setDisplayView('namegrid'); }, []);
 
   useEffect(() => {
     if (prevSessionActive.current && !sessionActive) {
