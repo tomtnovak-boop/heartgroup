@@ -154,6 +154,11 @@ export default function CoachLive() {
         lobbyCount={lobbyCount}
         onCreateSessionCode={createSessionCode}
       >
+        {liveCode && (
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: displayView === 'target' ? '#ff4425' : '#8a8a8a', border: '1px solid #2a2a2a', borderRadius: 999, padding: '4px 10px', whiteSpace: 'nowrap', fontFamily: 'system-ui, sans-serif' }}>
+            {displayView === 'target' ? 'Target Focus' : 'Overview'}
+          </span>
+        )}
         <button
           onClick={() => {
             if (liveIdRef.current) sessionStorage.setItem(`skipAutoLive:${liveIdRef.current}`, '1');
@@ -186,11 +191,11 @@ export default function CoachLive() {
         ) : (
           <NameGridDashboard participants={participants} allProfiles={allProfiles} lobbyProfileIds={lobbyProfileIds} sessionCode={effectiveCode} isLoading={isLoading} isSessionActive={effectiveActive} />
         )}
-        {effectiveActive && effectiveCode && (noOneConnected ? (
+        {liveCode && ((!liveStarted || noOneConnected) ? (
           <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0a0a0a', zIndex: 20, fontFamily: 'system-ui, sans-serif', textAlign: 'center' }}>
             <div style={{ fontSize: 'clamp(18px, 3vw, 40px)', fontWeight: 800, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)' }}>Session Code</div>
             <div style={{ fontSize: 'min(34vw, 40vh)', lineHeight: 0.95, fontWeight: 900, color: '#fff', letterSpacing: '0.08em', fontVariantNumeric: 'tabular-nums' }}>{effectiveCode}</div>
-            <div style={{ fontSize: 'clamp(16px, 2.2vw, 30px)', fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>Session running · enter this code in the Bheart app to join</div>
+            <div style={{ fontSize: 'clamp(16px, 2.2vw, 30px)', fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>{liveStarted ? 'Session running · enter this code in the Bheart app to join' : 'Enter this code in the Bheart app to join'}</div>
           </div>
         ) : (
           <div style={{ position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)', zIndex: 20, background: '#161616', border: '1px solid #2a2a2a', borderRadius: 8, padding: '6px 16px', display: 'flex', alignItems: 'baseline', gap: 10, fontFamily: 'system-ui, sans-serif', pointerEvents: 'none' }}>
