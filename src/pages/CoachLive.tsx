@@ -22,6 +22,8 @@ export default function CoachLive() {
   const [allProfiles, setAllProfiles] = useState<{ id: string; name: string; nickname?: string | null; created_at: string }[]>([]);
   const [targetZones, setTargetZonesState] = useState<number[]>([3, 4]);
   const [displayView, setDisplayViewState] = useState<string>('namegrid');
+  const [liveCode, setLiveCode] = useState<string | null>(null);
+  const [liveStarted, setLiveStarted] = useState(false);
 
   const {
     isActive: sessionActive, elapsedSeconds: sessionElapsed,
@@ -33,6 +35,9 @@ export default function CoachLive() {
   }, [recordHRData]);
 
   const { participants, averageBPM, lowestBPM, highestBPM, averageZone, isLoading, refresh } = useLiveHR(onNewHRData);
+  const effectiveCode = liveCode ?? sessionCode;
+  const effectiveActive = liveCode ? liveStarted : sessionActive;
+  const noOneConnected = !participants.some(p => p.bpm > 0 && p.connection_status !== 'disconnected');
 
   useEffect(() => {
     supabase.from('profiles').select('id, name, nickname, created_at').order('created_at', { ascending: true })
@@ -43,30 +48,42 @@ export default function CoachLive() {
     const parse = (s?: string | null) => (s || '3,4').split(',').map(Number).filter(z => z >= 1 && z <= 5);
     let ch: ReturnType<typeof supabase.channel> | null = null;
     let cancelled = false;
+    let currentId: string | null = null;
     const apply = (row: any) => {
+      currentId = row?.id ?? null;
       setDisplayViewState(row?.display_view === 'target' ? 'target' : 'namegrid');
       setTargetZonesState(parse(row?.target_zones));
+      setLiveCode(row?.session_code ?? null);
+      setLiveStarted(!!row?.started_at);
     };
     const load = async (uid: string) => {
-      const { data } = await supabase.from('active_sessions').select('display_view, target_zones')
+      const { data } = await supabase.from('active_sessions').select('id, session_code, started_at, display_view, target_zones')
         .eq('created_by', uid).is('ended_at', null).order('created_at', { ascending: false }).limit(1).maybeSingle();
-      if (data && !cancelled) apply(data);
+      if (cancelled) return;
+      if (data) apply(data);
+      else { currentId = null; setLiveCode(null); setLiveStarted(false); }
     };
+    let uidRef: string | null = null;
     (async () => {
       const { data: u } = await supabase.auth.getUser();
       const uid = u.user?.id;
       if (!uid || cancelled) return;
+      uidRef = uid;
       await load(uid);
       ch = supabase.channel(`coach-live-view-${uid}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'active_sessions', filter: `created_by=eq.${uid}` }, (payload: any) => {
           const row = payload.new;
-          if (row && !row.ended_at) apply(row);
+          if (payload.eventType === 'INSERT' && row && !row.ended_at) { apply(row); return; }
+          if (row && !row.ended_at) { if (!currentId || row.id === currentId) apply(row); else load(uid); return; }
+          load(uid);
         })
         .subscribe((status) => { if (status === 'SUBSCRIBED') load(uid); });
     })();
-    const onVis = () => { if (document.visibilityState === 'visible') supabase.auth.getUser().then(({ data }) => data.user && load(data.user.id)); };
+    const refresh = () => { if (uidRef) load(uidRef); };
+    const onVis = () => { if (document.visibilityState === 'visible') refresh(); };
     document.addEventListener('visibilitychange', onVis);
-    return () => { cancelled = true; document.removeEventListener('visibilitychange', onVis); if (ch) supabase.removeChannel(ch); };
+    window.addEventListener('focus', refresh);
+    return () => { cancelled = true; document.removeEventListener('visibilitychange', onVis); window.removeEventListener('focus', refresh); if (ch) supabase.removeChannel(ch); };
   }, []);
 
   useEffect(() => {
@@ -147,12 +164,24 @@ export default function CoachLive() {
           <Monitor className="w-3.5 h-3.5 text-muted-foreground" />
         </button>
       </AppHeader>
-      <div className="flex-1 min-h-0 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden" style={{ position: 'relative' }}>
         {displayView === 'target' ? (
-          <TargetFocusDashboard participants={participants} allProfiles={allProfiles} lobbyProfileIds={lobbyProfileIds} targetZones={targetZones} sessionCode={sessionCode} isLoading={isLoading} isSessionActive={sessionActive} />
+          <TargetFocusDashboard participants={participants} allProfiles={allProfiles} lobbyProfileIds={lobbyProfileIds} targetZones={targetZones} sessionCode={effectiveCode} isLoading={isLoading} isSessionActive={effectiveActive} />
         ) : (
-          <NameGridDashboard participants={participants} allProfiles={allProfiles} lobbyProfileIds={lobbyProfileIds} sessionCode={sessionCode} isLoading={isLoading} isSessionActive={sessionActive} />
+          <NameGridDashboard participants={participants} allProfiles={allProfiles} lobbyProfileIds={lobbyProfileIds} sessionCode={effectiveCode} isLoading={isLoading} isSessionActive={effectiveActive} />
         )}
+        {effectiveActive && effectiveCode && (noOneConnected ? (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0a0a0a', zIndex: 20, fontFamily: 'system-ui, sans-serif', textAlign: 'center' }}>
+            <div style={{ fontSize: 'clamp(18px, 3vw, 40px)', fontWeight: 800, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)' }}>Session Code</div>
+            <div style={{ fontSize: 'min(34vw, 40vh)', lineHeight: 0.95, fontWeight: 900, color: '#fff', letterSpacing: '0.08em', fontVariantNumeric: 'tabular-nums' }}>{effectiveCode}</div>
+            <div style={{ fontSize: 'clamp(16px, 2.2vw, 30px)', fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>Session running · enter this code in the Bheart app to join</div>
+          </div>
+        ) : (
+          <div style={{ position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)', zIndex: 20, background: '#161616', border: '1px solid #2a2a2a', borderRadius: 8, padding: '6px 16px', display: 'flex', alignItems: 'baseline', gap: 10, fontFamily: 'system-ui, sans-serif', pointerEvents: 'none' }}>
+            <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '0.1em', color: '#8a8a8a', textTransform: 'uppercase' }}>Code</span>
+            <span style={{ fontSize: 34, fontWeight: 900, color: '#fff', letterSpacing: '0.08em', fontVariantNumeric: 'tabular-nums' }}>{effectiveCode}</span>
+          </div>
+        ))}
       </div>
       {showLeaderboard && leaderboardData.length > 0 && (
         <SessionLeaderboard entries={leaderboardData} sessionDuration={leaderboardDuration} sessionDate={leaderboardDate} onClose={() => {
