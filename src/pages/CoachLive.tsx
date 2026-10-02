@@ -24,6 +24,7 @@ export default function CoachLive() {
   const [displayView, setDisplayViewState] = useState<string>('namegrid');
   const [liveCode, setLiveCode] = useState<string | null>(null);
   const [liveStarted, setLiveStarted] = useState(false);
+  const liveIdRef = useRef<string | null>(null);
 
   const {
     isActive: sessionActive, elapsedSeconds: sessionElapsed,
@@ -51,6 +52,7 @@ export default function CoachLive() {
     let currentId: string | null = null;
     const apply = (row: any) => {
       currentId = row?.id ?? null;
+      liveIdRef.current = currentId;
       setDisplayViewState(row?.display_view === 'target' ? 'target' : 'namegrid');
       setTargetZonesState(parse(row?.target_zones));
       setLiveCode(row?.session_code ?? null);
@@ -150,7 +152,7 @@ export default function CoachLive() {
       >
         <button
           onClick={() => {
-            if (effectiveCode) sessionStorage.setItem(`coach-hub-back-${effectiveCode}`, '1');
+            if (liveIdRef.current) sessionStorage.setItem(`skipAutoLive:${liveIdRef.current}`, '1');
             navigate('/coach');
           }}
           style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: '13px', padding: '4px 8px' }}
