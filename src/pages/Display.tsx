@@ -316,7 +316,7 @@ function parseTargetZones(raw: string | null | undefined): number[] {
 
 const DISPLAY_CODE_KEY = 'display_session_code';
 
-function NewLiveDisplay({ code }: { code: string }) {
+function NewLiveDisplay({ code, onSwitchCode }: { code: string; onSwitchCode: (c: string) => void }) {
   const { participants, isLoading } = useLiveHR(() => {});
   const { lobbyProfileIds } = useWorkoutSession();
   const [allProfiles, setAllProfiles] = useState<ProfileLite[]>([]);
@@ -324,6 +324,7 @@ function NewLiveDisplay({ code }: { code: string }) {
   const [targetZones, setTargetZones] = useState<number[]>([3, 4]);
   // Session is bound by session_code only — never by the logged-in user.
   const [startedAt, setStartedAt] = useState<Date | null>(null);
+  const [hasSession, setHasSession] = useState(false);
   const effectiveActive = startedAt !== null;
   const sessionCode = code;
 
@@ -334,7 +335,8 @@ function NewLiveDisplay({ code }: { code: string }) {
   }, []);
 
   const applyRow = useCallback((row: any) => {
-    if (!row || row.ended_at) { setStartedAt(null); return; }
+    if (!row || row.ended_at) { setStartedAt(null); setHasSession(false); return; }
+    setHasSession(true);
     setStartedAt(row.started_at ? new Date(row.started_at) : null);
     setDisplayView(row.display_view || 'namegrid');
     setTargetZones(parseTargetZones(row.target_zones));
@@ -349,8 +351,21 @@ function NewLiveDisplay({ code }: { code: string }) {
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
-    applyRow(data);
-  }, [code, applyRow]);
+    if (data) { applyRow(data); return; }
+    // Stored code no longer has an open session — follow the newest open one.
+    const { data: latest } = await supabase
+      .from('active_sessions')
+      .select('session_code')
+      .is('ended_at', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (latest && latest.session_code !== code) {
+      onSwitchCode(latest.session_code);
+      return;
+    }
+    applyRow(null);
+  }, [code, applyRow, onSwitchCode]);
 
   useEffect(() => {
     load();
