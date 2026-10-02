@@ -149,7 +149,10 @@ export default function CoachLive() {
         onCreateSessionCode={createSessionCode}
       >
         <button
-          onClick={() => navigate('/coach')}
+          onClick={() => {
+            if (effectiveCode) sessionStorage.setItem(`coach-hub-back-${effectiveCode}`, '1');
+            navigate('/coach');
+          }}
           style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: '13px', padding: '4px 8px' }}
           onMouseEnter={e => (e.currentTarget.style.color = '#ff4425')}
           onMouseLeave={e => (e.currentTarget.style.color = '#666')}
