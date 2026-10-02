@@ -9,7 +9,6 @@ import { useWorkoutSession } from '@/hooks/useWorkoutSession';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { logParticipantRedirect } from '@/lib/roleRouting';
-import { setDisplayView } from '@/lib/displaySync';
 
 export default function CoachTarget() {
   const { viewMode, changeView } = useViewMode('coach');
@@ -39,15 +38,24 @@ export default function CoachTarget() {
   }, []);
 
   useEffect(() => {
-    setDisplayView('target');
     const parse = (s?: string | null) => (s || '3,4').split(',').map(Number).filter(z => z >= 1 && z <= 5);
-    supabase.from('active_sessions').select('target_zones').is('ended_at', null).order('started_at', { ascending: false }).limit(1).maybeSingle()
-      .then(({ data }) => { if (data) setTargetZonesState(parse((data as any).target_zones)); });
-    const ch = supabase.channel('coach-target-zones').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'active_sessions' }, (payload: any) => {
-      const row = payload.new;
-      if (row && !row.ended_at) setTargetZonesState(parse(row.target_zones));
-    }).subscribe();
-    return () => { supabase.removeChannel(ch); };
+    let cancelled = false;
+    let ch: ReturnType<typeof supabase.channel> | null = null;
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      const uid = u.user?.id;
+      if (!uid || cancelled) return;
+      // Fixed view: read target zones from the coach's open session, but never switch display_view
+      const { data } = await supabase.from('active_sessions').select('target_zones')
+        .eq('created_by', uid).is('ended_at', null).order('created_at', { ascending: false }).limit(1).maybeSingle();
+      if (data && !cancelled) setTargetZonesState(parse((data as any).target_zones));
+      ch = supabase.channel(`coach-target-zones-${uid}`)
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'active_sessions', filter: `created_by=eq.${uid}` }, (payload: any) => {
+          const row = payload.new;
+          if (row && !row.ended_at) setTargetZonesState(parse(row.target_zones));
+        }).subscribe();
+    })();
+    return () => { cancelled = true; if (ch) supabase.removeChannel(ch); };
   }, []);
 
   useEffect(() => {
