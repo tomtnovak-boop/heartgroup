@@ -175,7 +175,13 @@ export default function CoachLive() {
         </button>
       </AppHeader>
       <div className="flex-1 min-h-0 overflow-hidden" style={{ position: 'relative' }}>
-        {displayView === 'target' ? (
+        {!liveCode ? (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, background: '#0a0a0a', fontFamily: 'system-ui, sans-serif', textAlign: 'center' }}>
+            <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ff4425', animation: 'pulse 2s ease-in-out infinite' }} />
+            <div style={{ fontSize: 'clamp(20px, 3vw, 34px)', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.75)' }}>Waiting for session</div>
+            <div style={{ fontSize: 'clamp(14px, 1.6vw, 18px)', fontWeight: 500, color: 'rgba(255,255,255,0.4)' }}>Start a session in the Bheart app — this screen will follow automatically.</div>
+          </div>
+        ) : displayView === 'target' ? (
           <TargetFocusDashboard participants={participants} allProfiles={allProfiles} lobbyProfileIds={lobbyProfileIds} targetZones={targetZones} sessionCode={effectiveCode} isLoading={isLoading} isSessionActive={effectiveActive} />
         ) : (
           <NameGridDashboard participants={participants} allProfiles={allProfiles} lobbyProfileIds={lobbyProfileIds} sessionCode={effectiveCode} isLoading={isLoading} isSessionActive={effectiveActive} />
