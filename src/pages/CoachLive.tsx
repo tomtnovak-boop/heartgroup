@@ -37,7 +37,7 @@ export default function CoachLive() {
   const { participants, averageBPM, lowestBPM, highestBPM, averageZone, isLoading, refresh } = useLiveHR(onNewHRData);
   const effectiveCode = liveCode ?? sessionCode;
   const effectiveActive = liveCode ? liveStarted : sessionActive;
-  const noOneConnected = !participants.some(p => p.bpm > 0 && p.connection_status !== 'disconnected' && lobbyProfileIds.includes(p.profile_id));
+  const noOneConnected = !participants.some(p => p.bpm > 0 && p.connection_status !== 'disconnected');
 
   useEffect(() => {
     supabase.from('profiles').select('id, name, nickname, created_at').order('created_at', { ascending: true })
