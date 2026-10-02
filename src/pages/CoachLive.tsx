@@ -51,18 +51,18 @@ export default function CoachLive() {
     let cancelled = false;
     let currentId: string | null = null;
     const apply = (row: any) => {
-      if (!row?.started_at) return; // only started sessions take over the screen
+      if (!row || row.ended_at) return;
       currentId = row?.id ?? null;
       liveIdRef.current = currentId;
       setDisplayViewState(row?.display_view === 'target' ? 'target' : 'namegrid');
       setTargetZonesState(parse(row?.target_zones));
       setLiveCode(row?.session_code ?? null);
-      setLiveStarted(true);
+      setLiveStarted(!!row?.started_at); // lobby session (code exists) shows the big code screen
     };
     const clear = () => { currentId = null; liveIdRef.current = null; setLiveCode(null); setLiveStarted(false); };
     const load = async (uid: string) => {
       const { data } = await supabase.from('active_sessions').select('id, session_code, started_at, display_view, target_zones')
-        .eq('created_by', uid).is('ended_at', null).not('started_at', 'is', null)
+        .eq('created_by', uid).is('ended_at', null)
         .order('created_at', { ascending: false }).limit(1).maybeSingle();
       if (cancelled) return;
       if (data) apply(data);
@@ -80,8 +80,7 @@ export default function CoachLive() {
       ch = supabase.channel(`coach-live-view-${uid}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'active_sessions', filter: `created_by=eq.${uid}` }, (payload: any) => {
           const row = payload.new;
-          if (payload.eventType === 'INSERT' && row && !row.ended_at && row.started_at) { apply(row); return; }
-          if (row && !row.ended_at && row.started_at) { if (!currentId || row.id === currentId) apply(row); else load(uid); return; }
+          if (row && !row.ended_at) { if (!currentId || row.id === currentId) { apply(row); return; } }
           load(uid);
         })
         .subscribe((status) => { if (status === 'SUBSCRIBED') load(uid); });
