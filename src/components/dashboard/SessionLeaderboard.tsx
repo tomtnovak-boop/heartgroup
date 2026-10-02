@@ -116,13 +116,13 @@ function CoachLeaderboard({
           <div className="border-l-4 border-primary bg-secondary p-5 sm:col-span-2">
             <p className="text-xs font-bold uppercase text-muted-foreground">Total calories · all participants</p>
             <p className="mt-3 text-5xl font-black tabular-nums text-foreground sm:text-6xl">
-              {totalCalories}<span className="ml-2 text-base font-semibold text-muted-foreground">kcal</span>
+              {totalCalories ?? '–'}<span className="ml-2 text-base font-semibold text-muted-foreground">kcal</span>
             </p>
           </div>
           <div className="border-l-4 border-muted-foreground bg-secondary p-5">
             <p className="text-xs font-bold uppercase text-muted-foreground">Avg per person</p>
             <p className="mt-3 text-3xl font-black tabular-nums text-foreground sm:text-4xl">
-              {averageCalories}<span className="ml-2 text-sm font-semibold text-muted-foreground">kcal</span>
+              {averageCalories ?? '–'}<span className="ml-2 text-sm font-semibold text-muted-foreground">kcal</span>
             </p>
           </div>
         </div>
@@ -137,12 +137,12 @@ function CoachLeaderboard({
   );
 }
 
-function HeartRateMetric({ label, value, colorClass }: { label: string; value: number; colorClass: string }) {
+function HeartRateMetric({ label, value, colorClass }: { label: string; value: number | null; colorClass: string }) {
   return (
     <div className="border-t-2 border-border bg-secondary p-5 text-center">
       <p className="text-xs font-bold uppercase text-muted-foreground">{label}</p>
       <p className={`mt-3 text-4xl font-black tabular-nums ${colorClass}`}>
-        {value}<span className="ml-1 text-sm font-semibold text-muted-foreground">bpm</span>
+        {value ?? '–'}<span className="ml-1 text-sm font-semibold text-muted-foreground">bpm</span>
       </p>
     </div>
   );
