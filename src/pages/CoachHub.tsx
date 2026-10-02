@@ -33,8 +33,7 @@ export default function CoachHub() {
       { key: 'classes', icon: Layers, title: 'Classes', sub: 'Manage', route: '/admin/classes' },
     ] : []),
     // Row 2 — Live views
-    { key: 'namegrid', icon: LayoutGrid, title: 'Overview', sub: 'Live · Name + Zone', route: '/coach/namegrid' },
-    { key: 'target', icon: Target, title: 'Target Focus', sub: 'Live · Target Zone', route: '/coach/target' },
+    { key: 'live', icon: Radio, title: 'Live View', sub: 'Follows phone · Overview / Target Focus', route: '/coach/live' },
     // Row 3 — Session control
     { key: 'cdash', icon: Radio, title: 'Coach Dashboard', sub: 'Session · Control', route: '/coach-dashboard' },
   ];
@@ -107,7 +106,7 @@ export default function CoachHub() {
             <div style={{ gridColumn: 'span 4', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', marginTop: '8px', marginBottom: '2px' }}>
               Live Views
             </div>
-            {cards.filter(c => ['namegrid', 'target'].includes(c.key)).map(card => (
+            {cards.filter(c => c.key === 'live').map(card => (
               <button
                 key={card.key}
                 onClick={() => navigate(card.route)}
