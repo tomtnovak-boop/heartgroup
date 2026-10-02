@@ -378,6 +378,20 @@ function NewLiveDisplay({ code, onSwitchCode }: { code: string; onSwitchCode: (c
         filter: `session_code=eq.${code}`,
       }, (payload) => applyRow(payload.new))
       .subscribe((status) => { if (status === 'SUBSCRIBED') load(); });
+    // Follow new sessions: when a coach opens a session with a new code, switch to it.
+    const newSessionSub = supabase
+      .channel('display-new-session')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'active_sessions',
+      }, (payload) => {
+        const row = payload.new as any;
+        if (row && !row.ended_at && row.session_code && row.session_code !== code) {
+          onSwitchCode(row.session_code);
+        }
+      })
+      .subscribe();
     const resync = () => { if (document.visibilityState === 'visible') load(); };
     document.addEventListener('visibilitychange', resync);
     window.addEventListener('focus', resync);
@@ -385,8 +399,9 @@ function NewLiveDisplay({ code, onSwitchCode }: { code: string; onSwitchCode: (c
       document.removeEventListener('visibilitychange', resync);
       window.removeEventListener('focus', resync);
       supabase.removeChannel(sub);
+      supabase.removeChannel(newSessionSub);
     };
-  }, [code, load, applyRow]);
+  }, [code, load, applyRow, onSwitchCode]);
 
   // Wake lock
   useEffect(() => {
@@ -395,7 +410,7 @@ function NewLiveDisplay({ code, onSwitchCode }: { code: string; onSwitchCode: (c
     return () => { wl?.release(); };
   }, []);
 
-  if (!effectiveActive) {
+  if (!effectiveActive && !hasSession) {
     return (
       <div className="w-screen h-screen flex flex-col items-center justify-center gap-6" style={{ background: '#0a0a0a' }}>
         <Heart className="w-20 h-20 text-primary animate-pulse" fill="currentColor" />
@@ -442,5 +457,11 @@ export default function Display() {
     return <PinGate onUnlock={(c) => { localStorage.setItem(DISPLAY_CODE_KEY, c); setCode(c); }} />;
   }
 
-  return <NewLiveDisplay key={code} code={code} />;
+  return (
+    <NewLiveDisplay
+      key={code}
+      code={code}
+      onSwitchCode={(c) => { localStorage.setItem(DISPLAY_CODE_KEY, c); setCode(c); }}
+    />
+  );
 }
