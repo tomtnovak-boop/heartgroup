@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Heart, LogOut, BarChart3, LayoutGrid, Users, Shield, TrendingUp, Radio, Layers, Bell, Target } from 'lucide-react';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
+import { useAutoLiveRedirect, skipAutoLiveKey } from '@/hooks/useAutoLiveRedirect';
 
 export default function CoachHub() {
   const { isAdmin, user, signOut } = useAuthContext();
@@ -17,52 +18,23 @@ export default function CoachHub() {
       });
   }, [user]);
 
-  // Auto-open Live View when a session of this coach starts (INSERT or UPDATE),
-  // and once on mount if one is already running. Respects a manual return to /coach
-  // (flag "coach-hub-back-<code>" set by the Hub button in Live View).
+  // Reliable fallback: poll every 2s for a running session → /coach/live
+  useAutoLiveRedirect(user?.id);
+
+  // Realtime (instant when events arrive); same once-per-session flag as polling
   useEffect(() => {
     if (!user) return;
-    let cancelled = false;
-    let ch: ReturnType<typeof supabase.channel> | null = null;
-
-    const manuallyLeft = (code: string | null | undefined) =>
-      !!code && sessionStorage.getItem(`coach-hub-back-${code}`) === '1';
-    // Auto-open only ONCE per session (per tab) — any later return to /coach
-    // (Hub button, browser back, logo) stays on the overview.
-    const alreadyOpened = (id: string) => sessionStorage.getItem(`coach-hub-opened-${id}`) === '1';
-
-    const maybeNavigate = (row: { id?: string; session_code?: string | null; started_at?: string | null; ended_at?: string | null }) => {
+    const maybeNavigate = (row: { id?: string; started_at?: string | null; ended_at?: string | null }) => {
       if (!row?.id || row.ended_at || !row.started_at) return;
-      if (alreadyOpened(row.id) || manuallyLeft(row.session_code)) return;
-      sessionStorage.setItem(`coach-hub-opened-${row.id}`, '1');
+      if (sessionStorage.getItem(skipAutoLiveKey(row.id)) === '1') return;
+      sessionStorage.setItem(skipAutoLiveKey(row.id), '1');
       navigate('/coach/live');
     };
-
-    const checkOpenSession = async () => {
-      const { data } = await supabase.from('active_sessions').select('id, session_code, started_at')
-        .eq('created_by', user.id).is('ended_at', null)
-        .order('created_at', { ascending: false }).limit(1).maybeSingle();
-      if (cancelled) return;
-      if (data?.started_at) maybeNavigate(data);
-    };
-
-    (async () => {
-      // Mount check: already running session → open Live View once
-      await checkOpenSession();
-      ch = supabase.channel(`coach-hub-autostart-${user.id}`)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'active_sessions', filter: `created_by=eq.${user.id}` }, (payload: any) => {
-          maybeNavigate(payload.new);
-        })
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'active_sessions', filter: `created_by=eq.${user.id}` }, (payload: any) => {
-          maybeNavigate(payload.new);
-        })
-        .subscribe((status) => console.log('[CoachHub] autostart channel:', status));
-    })();
-
-    // Polling fallback: guarantees the switch even if a realtime event is missed
-    const poll = setInterval(checkOpenSession, 5000);
-
-    return () => { cancelled = true; clearInterval(poll); if (ch) supabase.removeChannel(ch); };
+    const ch = supabase.channel(`coach-hub-autostart-${user.id}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'active_sessions', filter: `created_by=eq.${user.id}` }, (payload: any) => maybeNavigate(payload.new))
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'active_sessions', filter: `created_by=eq.${user.id}` }, (payload: any) => maybeNavigate(payload.new))
+      .subscribe((status) => console.log('[CoachHub] autostart channel:', status));
+    return () => { supabase.removeChannel(ch); };
   }, [user, navigate]);
 
   const handleSignOut = async () => {

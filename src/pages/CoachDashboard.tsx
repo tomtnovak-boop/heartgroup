@@ -19,6 +19,7 @@ const TARGET_PRESETS = [
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useAutoLiveRedirect } from '@/hooks/useAutoLiveRedirect';
 import {
   getEffectiveAge,
   getEffectiveMaxHR,
@@ -56,6 +57,7 @@ export default function CoachDashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  useAutoLiveRedirect(user?.id);
 
   const [coachName, setCoachName] = useState('');
   const [session, setSession] = useState<SessionRow | null>(null);
