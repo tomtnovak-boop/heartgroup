@@ -22,17 +22,19 @@ export default function CoachHub() {
   // (flag "coach-hub-back-<code>" set by the Hub button in Live View).
   useEffect(() => {
     if (!user) return;
-    const handled = new Set<string>();
     let cancelled = false;
     let ch: ReturnType<typeof supabase.channel> | null = null;
 
     const manuallyLeft = (code: string | null | undefined) =>
       !!code && sessionStorage.getItem(`coach-hub-back-${code}`) === '1';
+    // Auto-open only ONCE per session (per tab) — any later return to /coach
+    // (Hub button, browser back, logo) stays on the overview.
+    const alreadyOpened = (id: string) => sessionStorage.getItem(`coach-hub-opened-${id}`) === '1';
 
     const maybeNavigate = (row: { id?: string; session_code?: string | null; started_at?: string | null; ended_at?: string | null }) => {
       if (!row?.id || row.ended_at || !row.started_at) return;
-      if (handled.has(row.id) || manuallyLeft(row.session_code)) return;
-      handled.add(row.id);
+      if (alreadyOpened(row.id) || manuallyLeft(row.session_code)) return;
+      sessionStorage.setItem(`coach-hub-opened-${row.id}`, '1');
       navigate('/coach/live');
     };
 
