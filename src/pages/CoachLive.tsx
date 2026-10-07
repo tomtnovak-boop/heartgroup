@@ -60,6 +60,7 @@ export default function CoachLive() {
     let current: LiveSession | null = null;
     const sessionProfiles = new Map<string, Set<string>>();
     const completed = new Set<string>();
+    const supersededLobbies = new Set<string>();
     const finish = (row: LiveSession) => {
       if (!row.started_at || completed.has(row.id)) return;
       completed.add(row.id);
@@ -95,9 +96,12 @@ export default function CoachLive() {
             .eq('created_by', uid).eq('id', previous.id).maybeSingle();
           if (cancelled || endError) return;
           // A removed session is no longer open; preserve its observed start for the recap.
-          if (!ended || ended.ended_at) finish(ended || { ...previous, ended_at: new Date().toISOString() });
+          if (!ended || ended.ended_at) {
+            finish(ended || { ...previous, ended_at: new Date().toISOString() });
+            if (data && !data.started_at) supersededLobbies.add(data.id);
+          }
         }
-        if (data) apply(data);
+        if (data && (!supersededLobbies.has(data.id) || data.started_at)) apply(data);
         else clear();
         if (data) {
           const { data: lobby } = await supabase.from('session_lobby').select('profile_id').eq('session_code', data.session_code);
@@ -114,7 +118,7 @@ export default function CoachLive() {
         const row = payload.new as LiveSession;
         if (row?.ended_at && current?.id === row.id) {
           finish({ ...current, ...row });
-          clear();
+          // Keep the observed row until load checks for older leftover lobbies.
         }
         void load();
       })
