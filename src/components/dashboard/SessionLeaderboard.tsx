@@ -72,18 +72,20 @@ function CoachLeaderboard({
   sessionDuration: number;
   onClose: () => void;
 }) {
-  const participantCount = entries.length;
+  const safeEntries = entries.filter(e => e != null && !!e.profile_id);
+  const participantCount = new Set(safeEntries.map(e => e.profile_id)).size;
   const valid = (vals: unknown[]) => vals.map(Number).filter(v => Number.isFinite(v) && v > 0);
-  const cals = entries.map(e => e.total_calories).filter(v => v != null).map(Number).filter(Number.isFinite);
-  const avgs = valid(entries.map(e => e.avg_bpm));
-  const maxs = valid(entries.map(e => e.max_bpm));
+  const cals = safeEntries.map(e => e.total_calories).filter(v => v != null).map(Number).filter(v => Number.isFinite(v) && v >= 0);
+  const avgs = valid(safeEntries.map(e => e.avg_bpm));
+  const maxs = valid(safeEntries.map(e => e.max_bpm));
   const totalCalories: number | null = cals.length ? Math.round(cals.reduce((s, v) => s + v, 0)) : null;
-  const averageCalories: number | null = totalCalories != null && participantCount > 0 ? Math.round(totalCalories / participantCount) : null;
+  const averageCalories: number | null = cals.length && participantCount > 0 ? Math.round(cals.reduce((s, v) => s + v, 0) / participantCount) : null;
   const averageHR: number | null = avgs.length ? Math.round(avgs.reduce((s, v) => s + v, 0) / avgs.length) : null;
   const highestHR: number | null = maxs.length ? Math.max(...maxs) : null;
   const lowestHR: number | null = avgs.length ? Math.min(...avgs) : null;
-  const durationMinutes = Math.floor(sessionDuration / 60);
-  const durationSeconds = Math.max(0, sessionDuration % 60);
+  const duration = Number.isFinite(sessionDuration) ? Math.max(0, Math.floor(sessionDuration)) : 0;
+  const durationMinutes = Math.floor(duration / 60);
+  const durationSeconds = duration % 60;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-background/95 p-4 sm:p-8">
@@ -107,7 +109,7 @@ function CoachLeaderboard({
               {participantCount} participant{participantCount !== 1 ? 's' : ''}
             </span>
             <span className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
-              Duration {durationMinutes}:{String(durationSeconds).padStart(2, '0')}
+              Duration {String(durationMinutes).padStart(2, '0')}:{String(durationSeconds).padStart(2, '0')}
             </span>
           </div>
         </header>

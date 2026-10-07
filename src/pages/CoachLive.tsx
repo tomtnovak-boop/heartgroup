@@ -24,6 +24,7 @@ export default function CoachLive() {
   const [leaderboardDate, setLeaderboardDate] = useState(new Date());
   const { user, isLoading: authLoading } = useAuth();
   const [recapSession, setRecapSession] = useState<LiveSession | null>(null);
+  const [recapProfileIds, setRecapProfileIds] = useState<string[]>([]);
   const [allProfiles, setAllProfiles] = useState<{ id: string; name: string; nickname?: string | null; created_at: string }[]>([]);
   const [targetZones, setTargetZonesState] = useState<number[]>([3, 4]);
   const [displayView, setDisplayViewState] = useState<string>('namegrid');
@@ -57,11 +58,13 @@ export default function CoachLive() {
     let cancelled = false;
     let loading = false;
     let current: LiveSession | null = null;
+    const sessionProfiles = new Map<string, Set<string>>();
     const completed = new Set<string>();
     const finish = (row: LiveSession) => {
       if (!row.started_at || completed.has(row.id)) return;
       completed.add(row.id);
       setLeaderboardData([]);
+      setRecapProfileIds([...sessionProfiles.get(row.id) || []]);
       setLeaderboardDuration(Math.max(0, Math.floor((new Date(row.ended_at || Date.now()).getTime() - new Date(row.started_at).getTime()) / 1000)));
       setLeaderboardDate(new Date(row.ended_at || Date.now()));
       setRecapSession(row);
@@ -96,6 +99,12 @@ export default function CoachLive() {
         }
         if (data) apply(data);
         else clear();
+        if (data) {
+          const { data: lobby } = await supabase.from('session_lobby').select('profile_id').eq('session_code', data.session_code);
+          const ids = sessionProfiles.get(data.id) || new Set<string>();
+          lobby?.forEach(row => ids.add(row.profile_id));
+          sessionProfiles.set(data.id, ids);
+        }
       } finally { loading = false; }
     };
     void load();
@@ -136,10 +145,12 @@ export default function CoachLive() {
     const fetchResults = async () => {
       // Workouts share the session start time (including late joiners).
       // Bound both ends instead of collecting every recently ended workout.
-      const { data, error } = await supabase.from('workouts')
+      let query = supabase.from('workouts')
         .select('profile_id, avg_bpm, max_bpm, duration_seconds, total_calories')
         .gte('started_at', startedAt).lte('started_at', end)
         .not('ended_at', 'is', null).lte('ended_at', new Date(new Date(end).getTime() + 30000).toISOString());
+      if (recapProfileIds.length) query = query.in('profile_id', recapProfileIds);
+      const { data, error } = await query;
       if (cancelled || error) return;
       const entries: LeaderboardEntry[] = (data || []).filter(row => row?.profile_id).map(row => ({
         profile_id: row.profile_id, name: '',
@@ -156,7 +167,7 @@ export default function CoachLive() {
     const stopRetry = setTimeout(() => clearInterval(retry), 30000);
     const dismiss = setTimeout(closeRecap, 150000);
     return () => { cancelled = true; clearInterval(retry); clearTimeout(stopRetry); clearTimeout(dismiss); };
-  }, [recapSession, showLeaderboard, closeRecap]);
+  }, [recapSession, recapProfileIds, showLeaderboard, closeRecap]);
 
   const handleViewChange = (view: 'participant' | 'coach') => {
     changeView(view);
