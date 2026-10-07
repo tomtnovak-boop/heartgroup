@@ -11,4 +11,4 @@
 - [x] Translate every visible German interface string in `src/` to English
 - [x] Add `class_types` and workout class snapshot fields with secure access policies
 - [x] Add English admin class management: create, rename, activate/deactivate, delete, and sort order
-- [ ] Correct Coach Live code/live transition and show a session-scoped group recap before waiting
+- [x] Correct Coach Live code/live transition and show a session-scoped group recap before waiting
