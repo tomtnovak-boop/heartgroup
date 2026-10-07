@@ -10,6 +10,10 @@ import { useWorkoutSession } from '@/hooks/useWorkoutSession';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { logParticipantRedirect } from '@/lib/roleRouting';
+import { useAuth } from '@/hooks/useAuth';
+import type { Tables } from '@/integrations/supabase/types';
+
+type LiveSession = Pick<Tables<'active_sessions'>, 'id' | 'session_code' | 'started_at' | 'ended_at' | 'display_view' | 'target_zones'>;
 
 export default function CoachLive() {
   const { viewMode, changeView } = useViewMode('coach');
@@ -18,7 +22,8 @@ export default function CoachLive() {
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
   const [leaderboardDuration, setLeaderboardDuration] = useState(0);
   const [leaderboardDate, setLeaderboardDate] = useState(new Date());
-  const prevSessionActive = useRef(false);
+  const { user, isLoading: authLoading } = useAuth();
+  const [recapSession, setRecapSession] = useState<LiveSession | null>(null);
   const [allProfiles, setAllProfiles] = useState<{ id: string; name: string; nickname?: string | null; created_at: string }[]>([]);
   const [targetZones, setTargetZonesState] = useState<number[]>([3, 4]);
   const [displayView, setDisplayViewState] = useState<string>('namegrid');
@@ -36,9 +41,9 @@ export default function CoachLive() {
   }, [recordHRData]);
 
   const { participants, averageBPM, lowestBPM, highestBPM, averageZone, isLoading, refresh } = useLiveHR(onNewHRData);
-  const effectiveCode = liveCode ?? sessionCode;
-  const effectiveActive = liveCode ? liveStarted : sessionActive;
-  const noOneConnected = !participants.some(p => p.bpm > 0 && p.connection_status !== 'disconnected');
+  const effectiveCode = liveCode;
+  const effectiveActive = !!liveCode && liveStarted;
+  const noOneConnected = !participants.some(p => p.bpm > 0 && p.connection_status !== 'disconnected' && Date.now() - new Date(p.timestamp).getTime() < 30000);
 
   useEffect(() => {
     supabase.from('profiles').select('id, name, nickname, created_at').order('created_at', { ascending: true })
@@ -46,88 +51,112 @@ export default function CoachLive() {
   }, []);
 
   useEffect(() => {
+    if (authLoading || !user?.id) return;
+    const uid = user.id;
     const parse = (s?: string | null) => (s || '3,4').split(',').map(Number).filter(z => z >= 1 && z <= 5);
-    let ch: ReturnType<typeof supabase.channel> | null = null;
     let cancelled = false;
-    let currentId: string | null = null;
-    const apply = (row: any) => {
-      if (!row || row.ended_at) return;
-      currentId = row?.id ?? null;
-      liveIdRef.current = currentId;
-      setDisplayViewState(row?.display_view === 'target' ? 'target' : 'namegrid');
-      setTargetZonesState(parse(row?.target_zones));
-      setLiveCode(row?.session_code ?? null);
-      setLiveStarted(!!row?.started_at); // lobby session (code exists) shows the big code screen
+    let loading = false;
+    let current: LiveSession | null = null;
+    const completed = new Set<string>();
+    const finish = (row: LiveSession) => {
+      if (!row.started_at || completed.has(row.id)) return;
+      completed.add(row.id);
+      setLeaderboardData([]);
+      setLeaderboardDuration(Math.max(0, Math.floor((new Date(row.ended_at || Date.now()).getTime() - new Date(row.started_at).getTime()) / 1000)));
+      setLeaderboardDate(new Date(row.ended_at || Date.now()));
+      setRecapSession(row);
+      setShowLeaderboard(true);
     };
-    const clear = () => { currentId = null; liveIdRef.current = null; setLiveCode(null); setLiveStarted(false); };
-    const load = async (uid: string) => {
-      const { data } = await supabase.from('active_sessions').select('id, session_code, started_at, display_view, target_zones')
-        .eq('created_by', uid).is('ended_at', null)
-        .order('created_at', { ascending: false }).limit(1).maybeSingle();
-      if (cancelled) return;
-      if (data) apply(data);
-      else clear();
+    const apply = (row: LiveSession) => {
+      current = row;
+      liveIdRef.current = row.id;
+      setDisplayViewState(row.display_view === 'target' ? 'target' : 'namegrid');
+      setTargetZonesState(parse(row.target_zones));
+      setLiveCode(row.session_code);
+      setLiveStarted(!!row.started_at);
     };
-    let uidRef: string | null = null;
-    let poll: ReturnType<typeof setInterval> | null = null;
-    (async () => {
-      const { data: u } = await supabase.auth.getUser();
-      const uid = u.user?.id;
-      if (!uid || cancelled) return;
-      uidRef = uid;
-      await load(uid);
-      poll = setInterval(() => { if (uidRef) load(uidRef); }, 2000);
-      ch = supabase.channel(`coach-live-view-${uid}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'active_sessions', filter: `created_by=eq.${uid}` }, (payload: any) => {
-          const row = payload.new;
-          if (row && !row.ended_at) { if (!currentId || row.id === currentId) { apply(row); return; } }
-          load(uid);
-        })
-        .subscribe((status) => { if (status === 'SUBSCRIBED') load(uid); });
-    })();
-    const refresh = () => { if (uidRef) load(uidRef); };
-    const onVis = () => { if (document.visibilityState === 'visible') refresh(); };
+    const clear = () => { current = null; liveIdRef.current = null; setLiveCode(null); setLiveStarted(false); };
+    const load = async () => {
+      if (loading || cancelled) return;
+      loading = true;
+      try {
+        const { data, error } = await supabase.from('active_sessions')
+          .select('id, session_code, started_at, ended_at, display_view, target_zones')
+          .eq('created_by', uid).is('ended_at', null)
+          .order('created_at', { ascending: false }).limit(1).maybeSingle();
+        if (cancelled || error) return;
+        if (current?.started_at && current.id !== data?.id) {
+          const previous = current;
+          const { data: ended, error: endError } = await supabase.from('active_sessions')
+            .select('id, session_code, started_at, ended_at, display_view, target_zones')
+            .eq('created_by', uid).eq('id', previous.id).maybeSingle();
+          if (cancelled || endError) return;
+          // A removed session is no longer open; preserve its observed start for the recap.
+          if (!ended || ended.ended_at) finish(ended || { ...previous, ended_at: new Date().toISOString() });
+        }
+        if (data) apply(data);
+        else clear();
+      } finally { loading = false; }
+    };
+    void load();
+    const poll = setInterval(() => void load(), 2000);
+    const channel = supabase.channel(`coach-live-view-${uid}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'active_sessions', filter: `created_by=eq.${uid}` }, payload => {
+        const row = payload.new as LiveSession;
+        if (row?.ended_at && current?.id === row.id) {
+          finish({ ...current, ...row });
+          clear();
+        }
+        void load();
+      })
+      .subscribe(status => { if (status === 'SUBSCRIBED') void load(); });
+    const onVis = () => { if (document.visibilityState === 'visible') void load(); };
+    const onFocus = () => void load();
     document.addEventListener('visibilitychange', onVis);
-    window.addEventListener('focus', refresh);
-    return () => { cancelled = true; if (poll) clearInterval(poll); document.removeEventListener('visibilitychange', onVis); window.removeEventListener('focus', refresh); if (ch) supabase.removeChannel(ch); };
+    window.addEventListener('focus', onFocus);
+    return () => {
+      cancelled = true;
+      clearInterval(poll);
+      document.removeEventListener('visibilitychange', onVis);
+      window.removeEventListener('focus', onFocus);
+      void supabase.removeChannel(channel);
+    };
+  }, [user?.id, authLoading]);
+
+  const closeRecap = useCallback(() => {
+    setShowLeaderboard(false);
+    setRecapSession(null);
   }, []);
 
   useEffect(() => {
-    if (prevSessionActive.current && !sessionActive) {
-      const fetchAndShowLeaderboard = async () => {
-        const thirtySecsAgo = new Date(Date.now() - 35000).toISOString();
-        const { data: workouts } = await supabase
-          .from('workouts')
-          .select('profile_id, avg_bpm, max_bpm, duration_seconds, total_calories, started_at, ended_at')
-          .not('ended_at', 'is', null).gte('ended_at', thirtySecsAgo);
-        return workouts && workouts.length > 0 ? workouts : null;
-      };
-      const timer = setTimeout(async () => {
-        try {
-          let workouts = await fetchAndShowLeaderboard();
-          if (!workouts) {
-            await new Promise(res => setTimeout(res, 2000));
-            workouts = await fetchAndShowLeaderboard();
-          }
-          if (!workouts || workouts.length === 0) return;
-          const profileIds = [...new Set(workouts.map(w => w.profile_id))];
-          const { data: profiles } = await supabase.from('profiles').select('id, name, nickname').in('id', profileIds);
-          const profileMap = new Map(profiles?.map(p => [p.id, p.nickname || p.name]) || []);
-          const entries: LeaderboardEntry[] = workouts.map(w => ({
-            profile_id: w.profile_id, name: profileMap.get(w.profile_id) || 'Unknown',
-            avg_bpm: w.avg_bpm || 0, max_bpm: w.max_bpm || 0,
-            duration_seconds: w.duration_seconds || 0, total_calories: Number(w.total_calories) || 0,
-          }));
-          setLeaderboardData(entries);
-          setLeaderboardDuration(Math.max(...entries.map(e => e.duration_seconds), 0));
-          setLeaderboardDate(new Date());
-          setShowLeaderboard(true);
-        } catch (err) { console.error('Error fetching leaderboard:', err); }
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-    prevSessionActive.current = sessionActive;
-  }, [sessionActive]);
+    if (!showLeaderboard || !recapSession?.started_at) return;
+    let cancelled = false;
+    const startedAt = recapSession.started_at;
+    const end = recapSession.ended_at || new Date().toISOString();
+    const fetchResults = async () => {
+      // Workouts share the session start time (including late joiners).
+      // Bound both ends instead of collecting every recently ended workout.
+      const { data, error } = await supabase.from('workouts')
+        .select('profile_id, avg_bpm, max_bpm, duration_seconds, total_calories')
+        .gte('started_at', startedAt).lte('started_at', end)
+        .not('ended_at', 'is', null).lte('ended_at', new Date(new Date(end).getTime() + 30000).toISOString());
+      if (cancelled || error) return;
+      const entries: LeaderboardEntry[] = (data || []).filter(row => row?.profile_id).map(row => ({
+        profile_id: row.profile_id, name: '',
+        avg_bpm: row.avg_bpm ?? Number.NaN,
+        max_bpm: row.max_bpm ?? Number.NaN,
+        duration_seconds: row.duration_seconds ?? 0,
+        total_calories: row.total_calories == null ? undefined : Number(row.total_calories),
+      }));
+      setLeaderboardData(entries);
+    };
+    // Session end can arrive before workout finalization on the phone.
+    void fetchResults();
+    const retry = setInterval(() => void fetchResults(), 2000);
+    const stopRetry = setTimeout(() => clearInterval(retry), 30000);
+    const dismiss = setTimeout(closeRecap, 150000);
+    return () => { cancelled = true; clearInterval(retry); clearTimeout(stopRetry); clearTimeout(dismiss); };
+  }, [recapSession, showLeaderboard, closeRecap]);
 
   const handleViewChange = (view: 'participant' | 'coach') => {
     changeView(view);
@@ -146,11 +175,11 @@ export default function CoachLive() {
         activeTab="live"
         onRefresh={refresh}
         stats={{ participantCount: participants.length, averageBPM, lowestBPM, highestBPM, averageZone }}
-        sessionActive={sessionActive}
+        sessionActive={effectiveActive}
         sessionElapsed={sessionElapsed}
         onStartSession={() => startSession(participants)}
         onStopSession={stopSession}
-        sessionCode={sessionCode}
+        sessionCode={effectiveCode}
         lobbyCount={lobbyCount}
         onCreateSessionCode={createSessionCode}
       >
@@ -198,17 +227,11 @@ export default function CoachLive() {
             <div style={{ fontSize: 'clamp(16px, 2.2vw, 30px)', fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>{liveStarted ? 'Session running · enter this code in the Bheart app to join' : 'Enter this code in the Bheart app to join'}</div>
           </div>
         ) : (
-          <div style={{ position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)', zIndex: 20, background: '#161616', border: '1px solid #2a2a2a', borderRadius: 8, padding: '6px 16px', display: 'flex', alignItems: 'baseline', gap: 10, fontFamily: 'system-ui, sans-serif', pointerEvents: 'none' }}>
-            <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '0.1em', color: '#8a8a8a', textTransform: 'uppercase' }}>Code</span>
-            <span style={{ fontSize: 34, fontWeight: 900, color: '#fff', letterSpacing: '0.08em', fontVariantNumeric: 'tabular-nums' }}>{effectiveCode}</span>
-          </div>
+          null
         ))}
       </div>
-      {showLeaderboard && leaderboardData.length > 0 && (
-        <SessionLeaderboard entries={leaderboardData} sessionDuration={leaderboardDuration} sessionDate={leaderboardDate} onClose={() => {
-          setShowLeaderboard(false);
-          createSessionCode();
-        }} variant="coach" />
+      {showLeaderboard && (
+        <SessionLeaderboard entries={leaderboardData} sessionDuration={leaderboardDuration} sessionDate={leaderboardDate} onClose={closeRecap} variant="coach" />
       )}
     </div>
   );
