@@ -67,18 +67,6 @@ Deno.serve(async (req) => {
     const profileIds = (profileRows || []).map((p: { id: string }) => p.id);
 
     // Delete in FK order; each step is idempotent and failures are logged but do not abort.
-    const steps: Array<() => PromiseLike<{ error: { message: string } | null }>> = [];
-
-    if (profileIds.length > 0) {
-      steps.push(
-        () => adminClient.from("workout_hr_data").delete().in(
-          "workout_id",
-          // sub-select via workouts of these profiles
-          [] as string[],
-        ),
-      );
-    }
-
     // workout_hr_data depends on workouts — fetch workout ids first.
     if (profileIds.length > 0) {
       const { data: workouts } = await adminClient
